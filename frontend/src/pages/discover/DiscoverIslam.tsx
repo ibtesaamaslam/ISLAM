@@ -25,13 +25,18 @@ const DiscoverIslam = () => {
         setIsShahadaPlaying(false);
     };
 
-    const speak = async (text: string): Promise<void> => {
+    const speak = async (text: string, lang: string = 'en-US'): Promise<void> => {
         try {
             if (shahadaAudioRef.current) {
                 shahadaAudioRef.current.pause();
             }
 
             const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            // Use different voice config based on language if possible, or just rely on the model
+            // Fenrir is good for English. For Arabic/Urdu, we might want a different voice if available, 
+            // but currently we only have a limited set. 
+            // However, the model is multilingual.
+            
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash-preview-tts",
                 contents: [{ parts: [{ text }] }],
@@ -49,19 +54,50 @@ const DiscoverIslam = () => {
             if (!base64Audio) throw new Error("No audio");
 
             return new Promise((resolve) => {
-                const audio = new Audio(`data:audio/wav;base64,${base64Audio}`);
+                // Try mp3 first as it is the standard output
+                const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
                 shahadaAudioRef.current = audio;
-                audio.onended = () => resolve();
-                audio.onerror = () => resolve();
-                audio.play().catch(() => resolve());
+                
+                audio.onended = () => {
+                    shahadaAudioRef.current = null;
+                    resolve();
+                };
+                
+                audio.onerror = (e) => {
+                    console.error("Audio playback error", e);
+                    // If mp3 fails, try wav as fallback for the same data (unlikely but possible)
+                    try {
+                        const audioWav = new Audio(`data:audio/wav;base64,${base64Audio}`);
+                        shahadaAudioRef.current = audioWav;
+                        audioWav.onended = () => {
+                             shahadaAudioRef.current = null;
+                             resolve();
+                        };
+                        audioWav.onerror = () => resolve(); // Give up
+                        audioWav.play().catch(() => resolve());
+                    } catch {
+                        resolve();
+                    }
+                };
+                
+                audio.play().catch((e) => {
+                    console.error("Audio play failed", e);
+                    resolve();
+                });
             });
         } catch (e) {
-            console.error(e);
+            console.error("Gemini TTS failed, fallback to browser", e);
             // Fallback to browser TTS
              return new Promise((resolve) => {
+                if (!window.speechSynthesis) {
+                    resolve();
+                    return;
+                }
                 const u = new SpeechSynthesisUtterance(text);
+                u.lang = lang; // Set language for browser TTS
                 u.onend = () => resolve();
                 u.onerror = () => resolve();
+                window.speechSynthesis.cancel();
                 window.speechSynthesis.speak(u);
             });
         }
@@ -77,15 +113,15 @@ const DiscoverIslam = () => {
         playingRef.current = true;
 
         // Arabic
-        await speak("Ash-hadu an la ilaha illa Allah, wa ash-hadu anna Muhammadan Rasul Allah");
+        await speak("Ash-hadu an la ilaha illa Allah, wa ash-hadu anna Muhammadan Rasul Allah", "ar-SA");
         if (!playingRef.current) return;
 
         // Urdu
-        await speak("میں گواہی دیتا ہوں کہ اللہ کے سوا کوئی معبود نہیں اور میں گواہی دیتا ہوں کہ محمد اللہ کے رسول ہیں");
+        await speak("میں گواہی دیتا ہوں کہ اللہ کے سوا کوئی معبود نہیں اور میں گواہی دیتا ہوں کہ محمد اللہ کے رسول ہیں", "ur-PK");
         if (!playingRef.current) return;
 
         // English
-        await speak("I bear witness that there is no god but Allah, and I bear witness that Muhammad is the Messenger of Allah.");
+        await speak("I bear witness that there is no god but Allah, and I bear witness that Muhammad is the Messenger of Allah.", "en-US");
         
         setIsShahadaPlaying(false);
         playingRef.current = false;
@@ -352,6 +388,9 @@ const DiscoverIslam = () => {
                                 <div className="bg-emerald-50 rounded-2xl p-8 mb-8 border border-emerald-100">
                                     <p className="text-3xl font-serif text-emerald-900 mb-4 leading-relaxed" dir="rtl">
                                         أَشْهَدُ أَنْ لَا إِلَٰهَ إِلَّا ٱللَّٰهُ وَأَشْهَدُ أَنَّ مُحَمَّدًا رَسُولُ ٱللَّٰهِ
+                                    </p>
+                                    <p className="text-xl font-serif text-emerald-800 mb-4 leading-relaxed" dir="rtl">
+                                        میں گواہی دیتا ہوں کہ اللہ کے سوا کوئی معبود نہیں اور میں گواہی دیتا ہوں کہ محمد اللہ کے رسول ہیں
                                     </p>
                                     <p className="text-lg font-medium text-emerald-800 mb-2">
                                         Ash-hadu an la ilaha illa Allah, wa ash-hadu anna Muhammadan Rasul Allah
