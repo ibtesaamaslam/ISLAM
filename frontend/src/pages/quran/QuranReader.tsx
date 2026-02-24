@@ -46,6 +46,7 @@ const QuranReader = () => {
     const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const currentUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+    const tafseerAudioRef = useRef<HTMLAudioElement | null>(null);
     const [audioQueue, setAudioQueue] = useState<string[]>([]);
     const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
     const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -297,63 +298,84 @@ const QuranReader = () => {
     };
 
     // Tafseer Audio Logic
-    const speak = (text: string, lang: string): Promise<void> => {
-        return new Promise((resolve) => {
-            if (!window.speechSynthesis) {
-                console.error("Speech Synthesis not supported");
-                resolve();
-                return;
-            }
-
+    const speak = async (text: string, lang: string): Promise<void> => {
+        // 1. Try Gemini TTS (High Quality)
+        try {
             const safeText = text || "";
-            if (safeText.trim().length === 0) {
-                console.warn("Empty text for TTS");
-                resolve();
-                return;
-            }
-            
-            const utterance = new SpeechSynthesisUtterance(safeText);
-            utterance.lang = lang;
-            utterance.rate = 0.9; 
-            
-            // Try to find a matching voice
-            if (voices.length > 0) {
-                let voice = voices.find(v => v.lang === lang);
-                if (!voice) {
-                    voice = voices.find(v => v.lang.startsWith(lang.split('-')[0]));
-                }
-                if (voice) {
-                    utterance.voice = voice;
-                    console.log(`Using voice: ${voice.name} for ${lang}`);
-                } else {
-                    console.warn(`No voice found for ${lang}, using default`);
-                }
+            if (safeText.trim().length === 0) return;
+
+            // Stop any existing audio
+            if (tafseerAudioRef.current) {
+                tafseerAudioRef.current.pause();
+                tafseerAudioRef.current = null;
             }
 
-            // Keep reference to prevent garbage collection
-            currentUtteranceRef.current = utterance;
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash-preview-tts",
+                contents: [{ parts: [{ text: safeText }] }],
+                config: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: "Fenrir" },
+                        },
+                    },
+                },
+            });
 
-            const timeoutId = setTimeout(() => {
-                console.warn("TTS timed out");
-                resolve();
-            }, Math.max(2000, safeText.length * 100)); // Dynamic timeout
-
-            utterance.onend = () => {
-                clearTimeout(timeoutId);
-                currentUtteranceRef.current = null;
-                resolve();
-            };
+            const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
             
-            utterance.onerror = (e) => {
-                console.error("TTS Error:", e);
-                clearTimeout(timeoutId);
-                currentUtteranceRef.current = null;
-                resolve(); 
-            };
+            if (!base64Audio) throw new Error("No audio returned from Gemini");
 
-            console.log(`Speaking (${lang}): ${safeText.substring(0, 50)}...`);
-            window.speechSynthesis.speak(utterance);
-        });
+            return new Promise((resolve) => {
+                const audio = new Audio(`data:audio/wav;base64,${base64Audio}`);
+                tafseerAudioRef.current = audio;
+                
+                audio.onended = () => {
+                    tafseerAudioRef.current = null;
+                    resolve();
+                };
+                
+                audio.onerror = (e) => {
+                    console.error("Audio playback error", e);
+                    resolve();
+                };
+                
+                audio.play().catch(e => {
+                    console.error("Play error", e);
+                    resolve();
+                });
+            });
+
+        } catch (error) {
+            console.warn("Gemini TTS failed, falling back to browser TTS", error);
+            
+            // 2. Fallback to Browser TTS
+            return new Promise((resolve) => {
+                if (!window.speechSynthesis) {
+                    resolve();
+                    return;
+                }
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = lang;
+                utterance.rate = 0.9;
+                
+                // Try to match voice for fallback
+                if (voices.length > 0) {
+                    let voice = voices.find(v => v.lang === lang);
+                    if (!voice) voice = voices.find(v => v.lang.startsWith(lang.split('-')[0]));
+                    if (voice) utterance.voice = voice;
+                }
+
+                utterance.onend = () => resolve();
+                utterance.onerror = () => resolve();
+                
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(utterance);
+            });
+        }
     };
 
     const playTafseerSequence = async () => {
@@ -367,36 +389,30 @@ const QuranReader = () => {
             return;
         }
 
-        console.log("Starting Tafseer sequence");
+        console.log("Starting Tafseer sequence (AI Voice)");
         setIsTafseerPlaying(true);
         stopAudio(); 
 
-        window.speechSynthesis.cancel();
-
         // 1. Urdu Explanation
         console.log("Step 1: Urdu");
-        await new Promise(r => setTimeout(r, 100));
         await speak(tafseerData.explanation, 'ur');
         
         if (!isTafseerPlaying) return; 
 
         // 2. English Explanation
         console.log("Step 2: English");
-        await new Promise(r => setTimeout(r, 500));
         await speak(tafseerData.englishExplanation, 'en-US');
 
         if (!isTafseerPlaying) return;
 
         // 3. Did You Know
         console.log("Step 3: Did You Know");
-        await new Promise(r => setTimeout(r, 500));
         await speak("Did you know? " + tafseerData.didYouKnow, 'en-US');
 
         if (!isTafseerPlaying) return;
 
         // 4. Quiz Question
         console.log("Step 4: Quiz");
-        await new Promise(r => setTimeout(r, 500));
         await speak("Quiz time! " + tafseerData.quiz.question, 'en-US');
 
         console.log("Tafseer sequence finished");
@@ -404,6 +420,10 @@ const QuranReader = () => {
     };
 
     const stopTafseerAudio = () => {
+        if (tafseerAudioRef.current) {
+            tafseerAudioRef.current.pause();
+            tafseerAudioRef.current = null;
+        }
         if (window.speechSynthesis) {
             window.speechSynthesis.cancel();
         }

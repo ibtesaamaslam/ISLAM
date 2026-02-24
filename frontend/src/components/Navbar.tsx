@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, MessageCircle, Home, Star, Trophy } from 'lucide-react';
+import { BookOpen, MessageCircle, Home, Star, Trophy, Heart } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useGamification } from '../contexts/GamificationContext';
 
@@ -50,7 +50,8 @@ const Navbar = () => {
                 <NavItem to="/" icon={Home} label="Home" color="text-indigo-500" />
                 <NavItem to="/quran" icon={BookOpen} label="Quran" color="text-emerald-500" />
                 <NavItem to="/hadith" icon={Star} label="Hadith" color="text-amber-500" />
-                <NavItem to="/chat" icon={MessageCircle} label="Ask AI" color="text-rose-500" />
+                <NavItem to="/discover" icon={Heart} label="Discover" color="text-rose-500" />
+                <NavItem to="/chat" icon={MessageCircle} label="Ask AI" color="text-sky-500" />
                 <NavItem to="/leaderboard" icon={Trophy} label="Rank" color="text-purple-500" />
             </nav>
         </>
