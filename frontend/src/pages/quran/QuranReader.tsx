@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, ChevronRight, Play, Pause, BookOpen, Sparkles, Search, Download, Check, WifiOff, HelpCircle, Volume2, StopCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Pause, BookOpen, Sparkles, Search, Download, Check, WifiOff, HelpCircle, Volume2, StopCircle, Bookmark, History } from 'lucide-react';
 import { useGamification } from '../../contexts/GamificationContext';
 import { GoogleGenAI } from "@google/genai";
 
@@ -35,12 +35,29 @@ interface TafseerData {
     };
 }
 
+interface LastRead {
+    surah: number;
+    ayah: number;
+    surahName: string;
+    timestamp: number;
+}
+
 const QuranReader = () => {
     const [sura, setSura] = useState(1);
     const [ayas, setAyas] = useState<Aya[]>([]);
     const [surahInfo, setSurahInfo] = useState<SurahInfo | null>(null);
     const [loading, setLoading] = useState(false);
     
+    // User Preferences State
+    const [bookmarks, setBookmarks] = useState<string[]>(() => {
+        const saved = localStorage.getItem('quran_bookmarks');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [lastRead, setLastRead] = useState<LastRead | null>(() => {
+        const saved = localStorage.getItem('quran_last_read');
+        return saved ? JSON.parse(saved) : null;
+    });
+
     // Audio State
     const [playingAya, setPlayingAya] = useState<number | null>(null);
     const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
@@ -71,6 +88,56 @@ const QuranReader = () => {
     const [isDownloaded, setIsDownloaded] = useState(false);
 
     const { addPoints, unlockBadge } = useGamification();
+
+    // Save bookmarks to localStorage
+    useEffect(() => {
+        localStorage.setItem('quran_bookmarks', JSON.stringify(bookmarks));
+    }, [bookmarks]);
+
+    // Save last read to localStorage
+    useEffect(() => {
+        if (lastRead) {
+            localStorage.setItem('quran_last_read', JSON.stringify(lastRead));
+        }
+    }, [lastRead]);
+
+    // Scroll to last read ayah when surah loads if applicable
+    useEffect(() => {
+        if (lastRead && lastRead.surah === sura && !loading && ayas.length > 0) {
+            const element = document.getElementById(`ayah-${lastRead.ayah}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }, [sura, loading, ayas, lastRead]);
+
+    const toggleBookmark = (ayahNumber: number) => {
+        const bookmarkId = `${sura}:${ayahNumber}`;
+        setBookmarks(prev => {
+            if (prev.includes(bookmarkId)) {
+                return prev.filter(id => id !== bookmarkId);
+            } else {
+                return [...prev, bookmarkId];
+            }
+        });
+    };
+
+    const updateLastRead = (ayahNumber: number) => {
+        if (surahInfo) {
+            setLastRead({
+                surah: sura,
+                ayah: ayahNumber,
+                surahName: surahInfo.englishName,
+                timestamp: Date.now()
+            });
+        }
+    };
+
+    const handleContinueReading = () => {
+        if (lastRead) {
+            setSura(lastRead.surah);
+        }
+    };
 
     // Load voices
     useEffect(() => {
@@ -155,6 +222,8 @@ const QuranReader = () => {
 
                 let processedAyahs: Aya[] = [];
 
+                const ensureHttps = (url: string) => url?.replace(/^http:/, 'https:');
+
                 if (sura === 1) {
                     // Special handling for Fatiha
                     processedAyahs = arabicAyahs.slice(1).map((aya: any, idx: number) => ({
@@ -162,9 +231,9 @@ const QuranReader = () => {
                         text: aya.text,
                         translation: transAyahs[idx + 1].text,
                         urduTranslation: urduAyahs[idx + 1].text,
-                        audio: audioAyahs[idx + 1].audio,
-                        urduAudio: urduAudioAyahs[idx + 1].audio,
-                        englishAudio: englishAudioAyahs[idx + 1].audio
+                        audio: ensureHttps(audioAyahs[idx + 1].audio),
+                        urduAudio: ensureHttps(urduAudioAyahs[idx + 1].audio),
+                        englishAudio: ensureHttps(englishAudioAyahs[idx + 1].audio)
                     }));
                 } else {
                     processedAyahs = arabicAyahs.map((aya: any, idx: number) => {
@@ -186,9 +255,9 @@ const QuranReader = () => {
                             text: text,
                             translation: transAyahs[idx].text,
                             urduTranslation: urduAyahs[idx].text,
-                            audio: audioAyahs[idx].audio,
-                            urduAudio: urduAudioAyahs[idx].audio,
-                            englishAudio: englishAudioAyahs[idx].audio
+                            audio: ensureHttps(audioAyahs[idx].audio),
+                            urduAudio: ensureHttps(urduAudioAyahs[idx].audio),
+                            englishAudio: ensureHttps(englishAudioAyahs[idx].audio)
                         };
                     });
                 }
@@ -261,14 +330,28 @@ const QuranReader = () => {
         }
 
         const newAudio = new Audio(playUrl);
-        newAudio.play();
-        setAudio(newAudio);
-        audioRef.current = newAudio;
         
         newAudio.onended = () => {
             setCurrentQueueIndex(index + 1);
             playNextInQueue(queue, index + 1);
         };
+
+        newAudio.onerror = (e) => {
+            console.error("Audio playback failed for URL:", playUrl, e);
+            // Skip to next track on error
+            setCurrentQueueIndex(index + 1);
+            playNextInQueue(queue, index + 1);
+        };
+
+        newAudio.play().catch(e => {
+            console.error("Play failed:", e);
+            // Skip to next track on play error
+            setCurrentQueueIndex(index + 1);
+            playNextInQueue(queue, index + 1);
+        });
+
+        setAudio(newAudio);
+        audioRef.current = newAudio;
     };
 
     const playAudioSequence = (aya: Aya) => {
@@ -329,23 +412,40 @@ const QuranReader = () => {
             if (!base64Audio) throw new Error("No audio returned from Gemini");
 
             return new Promise((resolve) => {
-                const audio = new Audio(`data:audio/wav;base64,${base64Audio}`);
-                tafseerAudioRef.current = audio;
-                
-                audio.onended = () => {
-                    tafseerAudioRef.current = null;
+                try {
+                    // Convert base64 to blob for better browser compatibility
+                    const binaryString = window.atob(base64Audio);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    const blob = new Blob([bytes], { type: 'audio/mp3' });
+                    const url = URL.createObjectURL(blob);
+
+                    const audio = new Audio(url);
+                    tafseerAudioRef.current = audio;
+                    
+                    audio.onended = () => {
+                        tafseerAudioRef.current = null;
+                        URL.revokeObjectURL(url); // Clean up
+                        resolve();
+                    };
+                    
+                    audio.onerror = (e) => {
+                        console.error("Audio playback error", e);
+                        URL.revokeObjectURL(url);
+                        resolve();
+                    };
+                    
+                    audio.play().catch(e => {
+                        console.error("Play error", e);
+                        URL.revokeObjectURL(url);
+                        resolve();
+                    });
+                } catch (err) {
+                    console.error("Error creating audio blob", err);
                     resolve();
-                };
-                
-                audio.onerror = (e) => {
-                    console.error("Audio playback error", e);
-                    resolve();
-                };
-                
-                audio.play().catch(e => {
-                    console.error("Play error", e);
-                    resolve();
-                });
+                }
             });
 
         } catch (error) {
@@ -515,6 +615,25 @@ const QuranReader = () => {
                 {/* Search & Navigation Header */}
                 <div className="bg-white p-4 rounded-2xl shadow-lg border-b-4 border-emerald-200 sticky top-4 z-40 mb-8">
                     <div className="flex flex-col gap-4">
+                        {/* Recently Read Banner */}
+                        {lastRead && lastRead.surah !== sura && (
+                            <motion.button
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                onClick={handleContinueReading}
+                                className="bg-emerald-50 text-emerald-800 p-3 rounded-xl flex items-center justify-between w-full border border-emerald-100 hover:bg-emerald-100 transition-colors"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <History size={18} className="text-emerald-600" />
+                                    <div className="text-left">
+                                        <p className="text-xs font-bold uppercase tracking-wider text-emerald-500">Continue Reading</p>
+                                        <p className="font-bold text-sm">{lastRead.surahName} - Ayah {lastRead.ayah}</p>
+                                    </div>
+                                </div>
+                                <ChevronRight size={18} />
+                            </motion.button>
+                        )}
+
                         {/* Search Bar */}
                         <div className="relative">
                             <Search className="absolute left-3 top-3 text-emerald-400" size={20} />
@@ -606,38 +725,54 @@ const QuranReader = () => {
                     <div className="text-center py-20 text-emerald-600 font-medium animate-pulse">Loading Surah...</div>
                 ) : (
                     <div className="space-y-6">
-                        {ayas.map((aya) => (
-                            <motion.div 
-                                key={aya.number}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className={`rounded-3xl p-6 shadow-sm border-2 transition-all duration-300 ${
-                                    playingAya === aya.number 
-                                        ? 'bg-emerald-50 border-emerald-500 ring-4 ring-emerald-100 scale-[1.01]' 
-                                        : 'bg-white border-transparent'
-                                }`}
-                            >
-                                <div className="flex justify-between items-start mb-4">
-                                    <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">
-                                        {aya.number === 0 ? "Bismillah" : `Ayah ${aya.number}`}
-                                    </span>
-                                    <div className="flex gap-2">
-                                        <button 
-                                            onClick={() => fetchTafseer(aya)}
-                                            className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 transition ${tafseerOpen === aya.number ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                                        >
-                                            <BookOpen size={14} /> Tafseer
-                                        </button>
-                                        <button 
-                                            onClick={() => playAudioSequence(aya)}
-                                            className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center hover:bg-indigo-200 transition"
-                                        >
-                                            {playingAya === aya.number ? <Pause size={14} /> : <Play size={14} />}
-                                        </button>
+                        {ayas.map((aya) => {
+                            const isBookmarked = bookmarks.includes(`${sura}:${aya.number}`);
+                            return (
+                                <motion.div 
+                                    key={aya.number}
+                                    id={`ayah-${aya.number}`}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className={`rounded-3xl p-6 shadow-sm border-2 transition-all duration-300 ${
+                                        playingAya === aya.number 
+                                            ? 'bg-emerald-50 border-emerald-500 ring-4 ring-emerald-100 scale-[1.01]' 
+                                            : 'bg-white border-transparent'
+                                    }`}
+                                >
+                                    <div className="flex justify-between items-start mb-4">
+                                        <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">
+                                            {aya.number === 0 ? "Bismillah" : `Ayah ${aya.number}`}
+                                        </span>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => toggleBookmark(aya.number)}
+                                                className={`p-2 rounded-full transition-colors ${isBookmarked ? 'text-amber-500 bg-amber-50' : 'text-slate-400 hover:bg-slate-100'}`}
+                                                title={isBookmarked ? "Remove Bookmark" : "Bookmark Ayah"}
+                                            >
+                                                <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
+                                            </button>
+                                            <button 
+                                                onClick={() => {
+                                                    fetchTafseer(aya);
+                                                    updateLastRead(aya.number);
+                                                }}
+                                                className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 transition ${tafseerOpen === aya.number ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                            >
+                                                <BookOpen size={14} /> Tafseer
+                                            </button>
+                                            <button 
+                                                onClick={() => {
+                                                    playAudioSequence(aya);
+                                                    updateLastRead(aya.number);
+                                                }}
+                                                className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center hover:bg-indigo-200 transition"
+                                            >
+                                                {playingAya === aya.number ? <Pause size={14} /> : <Play size={14} />}
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                                
-                                {/* Arabic Text */}
+                                    
+                                    {/* Arabic Text */}
                                 <div className="text-right mb-6" dir="rtl">
                                     <p className={`text-3xl font-serif leading-[2.5] transition-colors duration-300 ${playingAya === aya.number && currentQueueIndex === 0 ? 'text-emerald-600' : 'text-slate-800'}`} style={{ fontFamily: 'Traditional Arabic, serif' }}>
                                         {aya.text}
@@ -654,32 +789,35 @@ const QuranReader = () => {
                                     {aya.translation}
                                 </p>
 
-                                {/* Tafseer & Quiz Section */}
-                                <AnimatePresence>
-                                    {tafseerOpen === aya.number && (
-                                        <motion.div 
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{ height: 'auto', opacity: 1 }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            className="overflow-hidden"
-                                        >
-                                            <div className="mt-6 bg-amber-50 rounded-2xl p-4 border border-amber-100">
-                                                <div className="flex justify-between items-center mb-4">
-                                                    <h4 className="text-amber-800 font-bold flex items-center gap-2">
-                                                        <Sparkles size={16} /> Tafseer (Explanation)
-                                                    </h4>
-                                                    {tafseerData && (
-                                                        <button 
-                                                            onClick={playTafseerSequence}
-                                                            className={`p-2 rounded-full transition ${isTafseerPlaying ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}`}
-                                                            title={isTafseerPlaying ? "Stop Reading" : "Read Aloud"}
-                                                        >
-                                                            {isTafseerPlaying ? <StopCircle size={18} /> : <Volume2 size={18} />}
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                
-                                                {tafseerLoading ? (
+                                    {/* Tafseer & Quiz Section */}
+                                    <AnimatePresence>
+                                        {tafseerOpen === aya.number && (
+                                            <motion.div 
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="overflow-hidden"
+                                            >
+                                                <div className="mt-6 bg-amber-50 rounded-2xl p-4 border border-amber-100">
+                                                    <div className="flex justify-between items-center mb-4">
+                                                        <h4 className="text-amber-800 font-bold flex items-center gap-2">
+                                                            <Sparkles size={16} /> Tafseer (Explanation)
+                                                        </h4>
+                                                        {tafseerData && (
+                                                            <button 
+                                                                onClick={() => {
+                                                                    playTafseerSequence();
+                                                                    updateLastRead(aya.number);
+                                                                }}
+                                                                className={`p-2 rounded-full transition ${isTafseerPlaying ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}`}
+                                                                title={isTafseerPlaying ? "Stop Reading" : "Read Aloud"}
+                                                            >
+                                                                {isTafseerPlaying ? <StopCircle size={18} /> : <Volume2 size={18} />}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    {tafseerLoading ? (
                                                     <div className="text-amber-600 text-sm animate-pulse">Asking the scholar...</div>
                                                 ) : tafseerData ? (
                                                     <div className="space-y-4">
@@ -747,9 +885,10 @@ const QuranReader = () => {
                                     )}
                                 </AnimatePresence>
                             </motion.div>
-                        ))}
-                    </div>
-                )}
+                        );
+                    })}
+                </div>
+            )}
             </div>
         </div>
     );
