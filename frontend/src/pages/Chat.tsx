@@ -8,7 +8,7 @@ const Chat = () => {
     const [query, setQuery] = useState('');
     const [messages, setMessages] = useState<{role: 'user' | 'model', content: string}[]>([]);
     const [loading, setLoading] = useState(false);
-    const { addPoints, unlockBadge } = useGamification();
+    const { addPoints, unlockAchievement } = useGamification();
 
     const handleSend = async () => {
         if (!query.trim()) return;
@@ -33,7 +33,7 @@ const Chat = () => {
 
             setMessages(prev => [...prev, { role: 'model', content: response.text }]);
             addPoints(10);
-            unlockBadge('curious_mind');
+            unlockAchievement('ai_friend');
         } catch (err) {
             console.error(err);
             setMessages(prev => [...prev, { role: 'model', content: "Oops! I'm having trouble connecting to my knowledge base right now. Try again later! 🌙" }]);

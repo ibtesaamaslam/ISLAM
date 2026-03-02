@@ -34,7 +34,7 @@ const Navbar = () => {
         <>
             {/* Points Badge (Top Right) */}
             <div className="fixed top-4 right-4 z-50">
-                <Link to="/leaderboard">
+                <Link to="/discover">
                     <motion.div 
                         whileHover={{ scale: 1.05 }}
                         className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-amber-200 flex items-center gap-2"
@@ -52,7 +52,6 @@ const Navbar = () => {
                 <NavItem to="/hadith" icon={Star} label="Hadith" color="text-amber-500" />
                 <NavItem to="/discover" icon={Heart} label="Discover" color="text-rose-500" />
                 <NavItem to="/chat" icon={MessageCircle} label="Ask AI" color="text-sky-500" />
-                <NavItem to="/leaderboard" icon={Trophy} label="Rank" color="text-purple-500" />
             </nav>
         </>
     );

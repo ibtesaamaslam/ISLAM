@@ -87,7 +87,7 @@ const QuranReader = () => {
     const [downloading, setDownloading] = useState(false);
     const [isDownloaded, setIsDownloaded] = useState(false);
 
-    const { addPoints, unlockBadge } = useGamification();
+    const { addPoints, unlockAchievement } = useGamification();
 
     // Save bookmarks to localStorage
     useEffect(() => {
@@ -135,7 +135,15 @@ const QuranReader = () => {
 
     const handleContinueReading = () => {
         if (lastRead) {
-            setSura(lastRead.surah);
+            if (sura === lastRead.surah) {
+                // Already on the surah, just scroll
+                const element = document.getElementById(`ayah-${lastRead.ayah}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else {
+                setSura(lastRead.surah);
+            }
         }
     };
 
@@ -315,7 +323,7 @@ const QuranReader = () => {
             setAudioQueue([]);
             setCurrentQueueIndex(0);
             addPoints(5);
-            unlockBadge('first_step');
+            unlockAchievement('first_step');
             return;
         }
 
@@ -573,7 +581,7 @@ const QuranReader = () => {
             setTafseerData(data);
             
             addPoints(20);
-            unlockBadge('scholar_junior');
+            unlockAchievement('scholar_junior');
         } catch (err) {
             console.error(err);
             setTafseerData({
@@ -616,7 +624,7 @@ const QuranReader = () => {
                 <div className="bg-white p-4 rounded-2xl shadow-lg border-b-4 border-emerald-200 sticky top-4 z-40 mb-8">
                     <div className="flex flex-col gap-4">
                         {/* Recently Read Banner */}
-                        {lastRead && lastRead.surah !== sura && (
+                        {lastRead && (
                             <motion.button
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}

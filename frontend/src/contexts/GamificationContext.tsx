@@ -1,19 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
-interface Badge {
-    id: string;
-    name: string;
-    icon: string;
-    description: string;
-    unlocked: boolean;
-}
+import { achievements as allAchievements, Achievement } from '../data/achievements';
 
 interface GamificationState {
     points: number;
     level: number;
-    badges: Badge[];
+    unlockedAchievements: string[];
     addPoints: (amount: number) => void;
-    unlockBadge: (badgeId: string) => void;
+    unlockAchievement: (id: string) => void;
+    achievements: Achievement[];
 }
 
 const GamificationContext = createContext<GamificationState | undefined>(undefined);
@@ -32,16 +26,9 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return saved ? parseInt(saved) : 0;
     });
 
-    const [badges, setBadges] = useState<Badge[]>(() => {
-        const saved = localStorage.getItem('islam_app_badges');
-        const defaultBadges = [
-            { id: 'first_step', name: 'First Step', icon: '🦶', description: 'Read your first Ayah', unlocked: false },
-            { id: 'quran_explorer', name: 'Quran Explorer', icon: '📖', description: 'Read 10 Ayahs', unlocked: false },
-            { id: 'hadith_hero', name: 'Hadith Hero', icon: '🌟', description: 'Learn a Hadith', unlocked: false },
-            { id: 'curious_mind', name: 'Curious Mind', icon: '🤔', description: 'Ask the AI a question', unlocked: false },
-            { id: 'scholar_junior', name: 'Junior Scholar', icon: '🎓', description: 'Read a Tafseer', unlocked: false },
-        ];
-        return saved ? JSON.parse(saved) : defaultBadges;
+    const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>(() => {
+        const saved = localStorage.getItem('unlockedAchievements');
+        return saved ? JSON.parse(saved) : [];
     });
 
     const level = Math.floor(points / 100) + 1;
@@ -51,26 +38,34 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }, [points]);
 
     useEffect(() => {
-        localStorage.setItem('islam_app_badges', JSON.stringify(badges));
-    }, [badges]);
+        localStorage.setItem('unlockedAchievements', JSON.stringify(unlockedAchievements));
+    }, [unlockedAchievements]);
 
     const addPoints = (amount: number) => {
         setPoints(prev => prev + amount);
     };
 
-    const unlockBadge = (badgeId: string) => {
-        setBadges(prev => prev.map(badge => {
-            if (badge.id === badgeId && !badge.unlocked) {
-                // Show notification logic could go here
-                alert(`🎉 Badge Unlocked: ${badge.name}!`);
-                return { ...badge, unlocked: true };
+    const unlockAchievement = (id: string) => {
+        if (!unlockedAchievements.includes(id)) {
+            setUnlockedAchievements(prev => [...prev, id]);
+            // Optional: Show notification
+            const achievement = allAchievements.find(a => a.id === id);
+            if (achievement) {
+                // You could add a toast notification here if you have a toast system
+                console.log(`Unlocked: ${achievement.title}`);
             }
-            return badge;
-        }));
+        }
     };
 
     return (
-        <GamificationContext.Provider value={{ points, level, badges, addPoints, unlockBadge }}>
+        <GamificationContext.Provider value={{ 
+            points, 
+            level, 
+            unlockedAchievements, 
+            addPoints, 
+            unlockAchievement,
+            achievements: allAchievements 
+        }}>
             {children}
         </GamificationContext.Provider>
     );

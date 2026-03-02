@@ -1,62 +1,70 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Heart, Star, Sun, Moon, Cloud, Book, MessageCircle, Sparkles, ArrowRight, X, Volume2, StopCircle, Compass, Atom, Dna, Globe, Leaf, Mountain, Wind, Droplets, Layers } from 'lucide-react';
+import { Heart, Star, Sun, Moon, Cloud, Book, MessageCircle, Sparkles, ArrowRight, X, Volume2, StopCircle, Compass, Atom, Dna, Globe, Leaf, Mountain, Wind, Droplets, Layers, Fingerprint, Target, Users, BookOpen, Clock, Coins, Utensils, MapPin, Scale, Coffee, Calendar, HeartHandshake, Undo, GraduationCap, HelpCircle, TrendingUp, Brain, Building, UserCheck, MessageSquare, Shield, Zap, Maximize, Orbit, Hammer, Baby, Thermometer, CloudRain, Waves, Hexagon, Bug, Network, Trophy, CheckCircle, XCircle, RotateCcw, Play, Loader2, Award, Lock } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import ReactMarkdown from 'react-markdown';
+import { Achievement } from '../../data/achievements';
+import { useGamification } from '../../contexts/GamificationContext';
+
+interface QuizQuestion {
+    question: string;
+    options: string[];
+    correct: number;
+}
 
 const guideCategories = [
     {
         title: "Foundations of Faith",
         icon: <Heart className="text-rose-500" />,
         steps: [
-            { title: "The Shahada", subtitle: "The Declaration of Faith", content: "The essential first step is the Shahada: sincerely declaring “There is no god but God, and Muhammad is the Messenger of God.” This statement expresses belief in the oneness of God and acceptance of Prophet Muhammad’s message." },
-            { title: "Understanding Tawḥīd", subtitle: "Oneness of God", content: "Tawḥīd is the core theological concept — belief that God is one, unique, without partners or equals. Grasping this idea shapes the Muslim worldview, worship, and ethics." },
-            { title: "Belief in the Prophets", subtitle: "and Revelation", content: "Islam teaches a chain of prophets (including Adam, Abraham, Moses, Jesus, and Muhammad) who brought guidance. Accepting that Prophet Muhammad is the final messenger is key." },
-            { title: "The Qur’an", subtitle: "Reading and Respecting", content: "The Qur’an is the central scripture. Newcomers should know how it’s organized, the availability of reliable translations, and that respectful reading is encouraged." },
+            { title: "The Shahada", subtitle: "The Declaration of Faith", icon: <Fingerprint className="text-rose-500" />, content: "The essential first step is the Shahada: sincerely declaring “There is no god but God, and Muhammad is the Messenger of God.” This statement expresses belief in the oneness of God and acceptance of Prophet Muhammad’s message." },
+            { title: "Understanding Tawḥīd", subtitle: "Oneness of God", icon: <Target className="text-rose-500" />, content: "Tawḥīd is the core theological concept — belief that God is one, unique, without partners or equals. Grasping this idea shapes the Muslim worldview, worship, and ethics." },
+            { title: "Belief in the Prophets", subtitle: "and Revelation", icon: <Users className="text-rose-500" />, content: "Islam teaches a chain of prophets (including Adam, Abraham, Moses, Jesus, and Muhammad) who brought guidance. Accepting that Prophet Muhammad is the final messenger is key." },
+            { title: "The Qur’an", subtitle: "Reading and Respecting", icon: <BookOpen className="text-rose-500" />, content: "The Qur’an is the central scripture. Newcomers should know how it’s organized, the availability of reliable translations, and that respectful reading is encouraged." },
         ]
     },
     {
         title: "Pillars of Action",
         icon: <Sun className="text-amber-500" />,
         steps: [
-            { title: "Daily Prayer (Ṣalāh)", subtitle: "Structure & Meaning", content: "Prayer is a five-times-daily practice. Learning the short prayers, their times, and the spiritual purpose behind them (remembrance, discipline, gratitude) makes the ritual approachable." },
-            { title: "Wudu", subtitle: "Ritual Purification", content: "Wudu (ablution) is the simple washing routine performed before prayer. It’s both practical hygiene and symbolic purification." },
-            { title: "Zakat & Charity", subtitle: "Social Responsibility", content: "Zakat is a prescribed form of charity. Understanding the ethical purpose — supporting the vulnerable — helps converts align values with practical giving." },
-            { title: "Fasting in Ramadan", subtitle: "Purpose and Practice", content: "Fasting cultivates empathy and discipline. Guidance on fasting rules and the social aspects like ifṭār helps newcomers participate." },
-            { title: "Hajj", subtitle: "Pilgrimage Overview", content: "Hajj is the pilgrimage to Mecca. A high-level explanation of its spiritual significance and basic rites is useful even if Hajj is a distant goal." },
+            { title: "Daily Prayer (Ṣalāh)", subtitle: "Structure & Meaning", icon: <Clock className="text-amber-500" />, content: "Prayer is a five-times-daily practice. Learning the short prayers, their times, and the spiritual purpose behind them (remembrance, discipline, gratitude) makes the ritual approachable." },
+            { title: "Wudu", subtitle: "Ritual Purification", icon: <Droplets className="text-amber-500" />, content: "Wudu (ablution) is the simple washing routine performed before prayer. It’s both practical hygiene and symbolic purification." },
+            { title: "Zakat & Charity", subtitle: "Social Responsibility", icon: <Coins className="text-amber-500" />, content: "Zakat is a prescribed form of charity. Understanding the ethical purpose — supporting the vulnerable — helps converts align values with practical giving." },
+            { title: "Fasting in Ramadan", subtitle: "Purpose and Practice", icon: <Utensils className="text-amber-500" />, content: "Fasting cultivates empathy and discipline. Guidance on fasting rules and the social aspects like ifṭār helps newcomers participate." },
+            { title: "Hajj", subtitle: "Pilgrimage Overview", icon: <MapPin className="text-amber-500" />, content: "Hajj is the pilgrimage to Mecca. A high-level explanation of its spiritual significance and basic rites is useful even if Hajj is a distant goal." },
         ]
     },
     {
         title: "Living Islam",
         icon: <Leaf className="text-emerald-500" />,
         steps: [
-            { title: "Intention (Niyyah)", subtitle: "Internal Purpose", content: "Making a conscious inner commitment transforms routine actions into spiritual deeds; teaching newcomers to form simple, sincere intentions helps integrate faith." },
-            { title: "Ethics & Morality", subtitle: "Daily Conduct", content: "Islam emphasizes compassion, honesty, and justice. Practical examples (kindness, fair dealings) demonstrate how faith translates into everyday behavior." },
-            { title: "Lifestyle Adjustments", subtitle: "Food & Habits", content: "Adopting halal dietary guidelines and mindful social habits. Present these as health- and value-based choices with simple, practical tips." },
-            { title: "Daily Habits", subtitle: "Mini-Rituals", content: "Simple habits: morning supplications, saying “Bismillah” before meals, and small acts of kindness build spiritual momentum." },
-             { title: "Marriage & Family", subtitle: "Guidance", content: "Basic Islamic perspectives on marriage, family responsibilities, and rights, emphasizing mutual respect and care." },
+            { title: "Intention (Niyyah)", subtitle: "Internal Purpose", icon: <Compass className="text-emerald-500" />, content: "Making a conscious inner commitment transforms routine actions into spiritual deeds; teaching newcomers to form simple, sincere intentions helps integrate faith." },
+            { title: "Ethics & Morality", subtitle: "Daily Conduct", icon: <Scale className="text-emerald-500" />, content: "Islam emphasizes compassion, honesty, and justice. Practical examples (kindness, fair dealings) demonstrate how faith translates into everyday behavior." },
+            { title: "Lifestyle Adjustments", subtitle: "Food & Habits", icon: <Coffee className="text-emerald-500" />, content: "Adopting halal dietary guidelines and mindful social habits. Present these as health- and value-based choices with simple, practical tips." },
+            { title: "Daily Habits", subtitle: "Mini-Rituals", icon: <Calendar className="text-emerald-500" />, content: "Simple habits: morning supplications, saying “Bismillah” before meals, and small acts of kindness build spiritual momentum." },
+             { title: "Marriage & Family", subtitle: "Guidance", icon: <HeartHandshake className="text-emerald-500" />, content: "Basic Islamic perspectives on marriage, family responsibilities, and rights, emphasizing mutual respect and care." },
         ]
     },
     {
         title: "Personal Growth",
         icon: <Sparkles className="text-purple-500" />,
         steps: [
-            { title: "Repentance (Tawbah)", subtitle: "Returning to God", content: "Repentance is immediate: sincere regret, stopping the action, and asking forgiveness. This comforting process helps understand Islam’s path of moral restoration." },
-            { title: "Learning & Study", subtitle: "Start Small", content: "A gradual learning plan prevents overwhelm. Suggest curated beginner lessons and short daily readings." },
-            { title: "Handling Doubts", subtitle: "Compassionate Inquiry", content: "Doubt is normal. Encourage honest exploration and critical thinking — reassure users that faith can coexist with sincere inquiry." },
-            { title: "Gradual Adoption", subtitle: "Patience", content: "Spiritual journeys are personal. Encourage small steps rather than immediate perfection to avoid burnout." },
-            { title: "Mental Health", subtitle: "Pastoral Care", content: "Support spiritual and psychological wellbeing. Faith is a source of strength, but professional help is also encouraged for mental health." },
+            { title: "Repentance (Tawbah)", subtitle: "Returning to God", icon: <Undo className="text-purple-500" />, content: "Repentance is immediate: sincere regret, stopping the action, and asking forgiveness. This comforting process helps understand Islam’s path of moral restoration." },
+            { title: "Learning & Study", subtitle: "Start Small", icon: <GraduationCap className="text-purple-500" />, content: "A gradual learning plan prevents overwhelm. Suggest curated beginner lessons and short daily readings." },
+            { title: "Handling Doubts", subtitle: "Compassionate Inquiry", icon: <HelpCircle className="text-purple-500" />, content: "Doubt is normal. Encourage honest exploration and critical thinking — reassure users that faith can coexist with sincere inquiry." },
+            { title: "Gradual Adoption", subtitle: "Patience", icon: <TrendingUp className="text-purple-500" />, content: "Spiritual journeys are personal. Encourage small steps rather than immediate perfection to avoid burnout." },
+            { title: "Mental Health", subtitle: "Pastoral Care", icon: <Brain className="text-purple-500" />, content: "Support spiritual and psychological wellbeing. Faith is a source of strength, but professional help is also encouraged for mental health." },
         ]
     },
     {
         title: "Community & Society",
         icon: <Globe className="text-sky-500" />,
         steps: [
-            { title: "Find a Community", subtitle: "Local Mosque", content: "A welcoming local mosque provides practical help and social support. Guidance on what to expect when visiting a mosque reduces anxiety." },
-            { title: "Mentorship", subtitle: "Scholar Guidance", content: "Having a trustworthy mentor or qualified scholar to answer questions is invaluable compared to relying solely on internet sources." },
-            { title: "Social Dynamics", subtitle: "Family & Friends", content: "Prepare newcomers with communication tips and patience strategies for managing relationships with non-Muslim family and friends." },
-            { title: "Community Service", subtitle: "Volunteering", content: "Connecting faith to action through volunteering — practical ways to live values and build a supportive social circle." },
-             { title: "Privacy & Safety", subtitle: "Public Identity", content: "Advice on managing online presence and safe ways to share one's journey publicly, especially in sensitive environments." },
+            { title: "Find a Community", subtitle: "Local Mosque", icon: <Building className="text-sky-500" />, content: "A welcoming local mosque provides practical help and social support. Guidance on what to expect when visiting a mosque reduces anxiety." },
+            { title: "Mentorship", subtitle: "Scholar Guidance", icon: <UserCheck className="text-sky-500" />, content: "Having a trustworthy mentor or qualified scholar to answer questions is invaluable compared to relying solely on internet sources." },
+            { title: "Social Dynamics", subtitle: "Family & Friends", icon: <MessageSquare className="text-sky-500" />, content: "Prepare newcomers with communication tips and patience strategies for managing relationships with non-Muslim family and friends." },
+            { title: "Community Service", subtitle: "Volunteering", icon: <Heart className="text-sky-500" />, content: "Connecting faith to action through volunteering — practical ways to live values and build a supportive social circle." },
+             { title: "Privacy & Safety", subtitle: "Public Identity", icon: <Shield className="text-sky-500" />, content: "Advice on managing online presence and safe ways to share one's journey publicly, especially in sensitive environments." },
         ]
     }
 ];
@@ -66,41 +74,41 @@ const scienceTopics = [
         category: "Astronomy & Physics",
         icon: <Atom className="text-indigo-500" />,
         items: [
-            { title: "The Big Bang", reference: "Quran 21:30", content: "“Do not the disbelievers see that the heavens and the earth were a closed-up mass (ratqan), then We opened them out?” This aligns with the Big Bang theory that the universe began from a single singularity." },
-            { title: "Expansion of the Universe", reference: "Quran 51:47", content: "“And the heaven We constructed with strength, and indeed, We are [its] expander.” Modern astrophysics confirmed in the 20th century that the universe is continuously expanding." },
-            { title: "Orbits of Celestial Bodies", reference: "Quran 21:33", content: "“It is He who created the night and the day and the sun and the moon; all [heavenly bodies] in an orbit are swimming.” This accurately describes the motion of celestial bodies." },
-            { title: "The Sun's Trajectory", reference: "Quran 36:38", content: "“And the sun runs [on course] toward its stopping point.” The sun is not stationary; it moves within the Milky Way galaxy." },
-            { title: "Iron Sent from Space", reference: "Quran 57:25", content: "“And We sent down iron...” Scientists have discovered that iron cannot be formed within the earth; it originated from supernova explosions and was sent down via meteorites." }
+            { title: "The Big Bang", reference: "Quran 21:30", icon: <Zap className="text-indigo-500" />, content: "“Do not the disbelievers see that the heavens and the earth were a closed-up mass (ratqan), then We opened them out?” This aligns with the Big Bang theory that the universe began from a single singularity." },
+            { title: "Expansion of the Universe", reference: "Quran 51:47", icon: <Maximize className="text-indigo-500" />, content: "“And the heaven We constructed with strength, and indeed, We are [its] expander.” Modern astrophysics confirmed in the 20th century that the universe is continuously expanding." },
+            { title: "Orbits of Celestial Bodies", reference: "Quran 21:33", icon: <Orbit className="text-indigo-500" />, content: "“It is He who created the night and the day and the sun and the moon; all [heavenly bodies] in an orbit are swimming.” This accurately describes the motion of celestial bodies." },
+            { title: "The Sun's Trajectory", reference: "Quran 36:38", icon: <Sun className="text-indigo-500" />, content: "“And the sun runs [on course] toward its stopping point.” The sun is not stationary; it moves within the Milky Way galaxy." },
+            { title: "Iron Sent from Space", reference: "Quran 57:25", icon: <Hammer className="text-indigo-500" />, content: "“And We sent down iron...” Scientists have discovered that iron cannot be formed within the earth; it originated from supernova explosions and was sent down via meteorites." }
         ]
     },
     {
         category: "Human Biology",
         icon: <Dna className="text-rose-500" />,
         items: [
-            { title: "Embryonic Development", reference: "Quran 23:12-14", content: "The Quran describes the stages of the fetus: from a drop (Nutfah) to a clinging clot (Alaqah), to a chewed lump (Mudghah), then bones clothed with flesh. This matches modern embryology." },
-            { title: "Creation from Water", reference: "Quran 21:30", content: "“...and made from water every living thing?” Cytoplasm, the basic substance of the cell, is 80% water, and every living organism consists primarily of water." },
-            { title: "Pain Receptors", reference: "Quran 4:56", content: "The Quran mentions that skins will be replaced so they may taste the punishment, implying that pain receptors are located in the skin, a fact discovered by modern anatomy." },
-            { title: "The Frontal Lobe", reference: "Quran 96:15-16", content: "The Quran refers to the “lying, sinning forelock.” Modern neuroscience identifies the prefrontal cortex (forehead area) as the center for decision-making, planning, and lying." }
+            { title: "Embryonic Development", reference: "Quran 23:12-14", icon: <Baby className="text-rose-500" />, content: "The Quran describes the stages of the fetus: from a drop (Nutfah) to a clinging clot (Alaqah), to a chewed lump (Mudghah), then bones clothed with flesh. This matches modern embryology." },
+            { title: "Creation from Water", reference: "Quran 21:30", icon: <Droplets className="text-rose-500" />, content: "“...and made from water every living thing?” Cytoplasm, the basic substance of the cell, is 80% water, and every living organism consists primarily of water." },
+            { title: "Pain Receptors", reference: "Quran 4:56", icon: <Thermometer className="text-rose-500" />, content: "The Quran mentions that skins will be replaced so they may taste the punishment, implying that pain receptors are located in the skin, a fact discovered by modern anatomy." },
+            { title: "The Frontal Lobe", reference: "Quran 96:15-16", icon: <Brain className="text-rose-500" />, content: "The Quran refers to the “lying, sinning forelock.” Modern neuroscience identifies the prefrontal cortex (forehead area) as the center for decision-making, planning, and lying." }
         ]
     },
     {
         category: "Geology & Earth",
         icon: <Mountain className="text-stone-500" />,
         items: [
-            { title: "Mountains as Pegs", reference: "Quran 78:6-7", content: "“Have We not made the earth a resting place? And the mountains as stakes?” Mountains have deep roots (isostasy) that stabilize the earth's crust, like pegs holding a tent." },
-            { title: "The Water Cycle", reference: "Quran 39:21", content: "“Do you not see that Allah sends down rain from the sky and makes it flow as springs in the earth?” This describes the infiltration of groundwater, a key part of the water cycle." },
-            { title: "Layers of the Atmosphere", reference: "Quran 67:3", content: "“He who created seven heavens in layers.” The atmosphere is composed of distinct layers (troposphere, stratosphere, etc.), each with specific functions." },
-            { title: "Barrier Between Seas", reference: "Quran 55:19-20", content: "“He released the two seas... Between them is a barrier which they do not transgress.” Oceanography confirms that bodies of water with different salinities and densities meet but do not immediately mix." }
+            { title: "Mountains as Pegs", reference: "Quran 78:6-7", icon: <Mountain className="text-stone-500" />, content: "“Have We not made the earth a resting place? And the mountains as stakes?” Mountains have deep roots (isostasy) that stabilize the earth's crust, like pegs holding a tent." },
+            { title: "The Water Cycle", reference: "Quran 39:21", icon: <CloudRain className="text-stone-500" />, content: "“Do you not see that Allah sends down rain from the sky and makes it flow as springs in the earth?” This describes the infiltration of groundwater, a key part of the water cycle." },
+            { title: "Layers of the Atmosphere", reference: "Quran 67:3", icon: <Layers className="text-stone-500" />, content: "“He who created seven heavens in layers.” The atmosphere is composed of distinct layers (troposphere, stratosphere, etc.), each with specific functions." },
+            { title: "Barrier Between Seas", reference: "Quran 55:19-20", icon: <Waves className="text-stone-500" />, content: "“He released the two seas... Between them is a barrier which they do not transgress.” Oceanography confirms that bodies of water with different salinities and densities meet but do not immediately mix." }
         ]
     },
     {
         category: "Nature & Zoology",
         icon: <Leaf className="text-green-500" />,
         items: [
-            { title: "Pollinating Winds", reference: "Quran 15:22", content: "“And We have sent the fertilizing winds...” Winds play a crucial role in pollination for many plants, a botanical fact." },
-            { title: "Female Bees", reference: "Quran 16:68-69", content: "The Quran addresses the bee using the female grammatical gender when describing its work (building hives, gathering nectar). Science confirms worker bees are female." },
-            { title: "Communication of Ants", reference: "Quran 27:18", content: "“An ant said, 'O ants, enter your dwellings...'” Entomologists have discovered that ants have a complex chemical communication system to warn and guide the colony." },
-            { title: "The Spider's Web", reference: "Quran 29:41", content: "The Quran compares false reliance to a spider's web, noting it is the “weakest of houses.” It also uses the female gender for the spider building the web; biologically, the female builds the web." }
+            { title: "Pollinating Winds", reference: "Quran 15:22", icon: <Wind className="text-green-500" />, content: "“And We have sent the fertilizing winds...” Winds play a crucial role in pollination for many plants, a botanical fact." },
+            { title: "Female Bees", reference: "Quran 16:68-69", icon: <Hexagon className="text-green-500" />, content: "The Quran addresses the bee using the female grammatical gender when describing its work (building hives, gathering nectar). Science confirms worker bees are female." },
+            { title: "Communication of Ants", reference: "Quran 27:18", icon: <Bug className="text-green-500" />, content: "“An ant said, 'O ants, enter your dwellings...'” Entomologists have discovered that ants have a complex chemical communication system to warn and guide the colony." },
+            { title: "The Spider's Web", reference: "Quran 29:41", icon: <Network className="text-green-500" />, content: "The Quran compares false reliance to a spider's web, noting it is the “weakest of houses.” It also uses the female gender for the spider building the web; biologically, the female builds the web." }
         ]
     }
 ];
@@ -188,6 +196,32 @@ const DiscoverIslam = () => {
     const shahadaAudioRef = useRef<HTMLAudioElement | null>(null);
     const playingRef = useRef(false);
 
+    // Quiz State
+    const [quizState, setQuizState] = useState<'start' | 'loading' | 'playing' | 'result'>('start');
+    const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+    const [currentQuestion, setCurrentQuestion] = useState(0);
+    const [score, setScore] = useState(0);
+    const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+    const [showExplanation, setShowExplanation] = useState(false);
+    const [quizTopic, setQuizTopic] = useState<string>('');
+    
+    // Achievements State
+    const { unlockedAchievements, unlockAchievement, achievements } = useGamification();
+    const [showAchievement, setShowAchievement] = useState<Achievement | null>(null);
+    const prevUnlockedCount = useRef(unlockedAchievements.length);
+
+    useEffect(() => {
+        if (unlockedAchievements.length > prevUnlockedCount.current) {
+            const lastId = unlockedAchievements[unlockedAchievements.length - 1];
+            const achievement = achievements.find(a => a.id === lastId);
+            if (achievement) {
+                setShowAchievement(achievement);
+                setTimeout(() => setShowAchievement(null), 3000);
+            }
+        }
+        prevUnlockedCount.current = unlockedAchievements.length;
+    }, [unlockedAchievements, achievements]);
+
     const navItems = [
         { id: 'basics', title: 'The 5 Pillars', icon: <Star className="text-amber-500" />, isGuide: false, guideIndex: -1 },
         { id: 'beliefs', title: 'Articles of Faith', icon: <Heart className="text-rose-500" />, isGuide: false, guideIndex: -1 },
@@ -199,8 +233,75 @@ const DiscoverIslam = () => {
             guideIndex: idx
         })),
         { id: 'science', title: 'Islam & Science', icon: <Atom className="text-indigo-500" />, isGuide: false, guideIndex: -1 },
+        { id: 'achievements', title: 'Achievements', icon: <Trophy className="text-yellow-500" />, isGuide: false, guideIndex: -1 },
         { id: 'ask', title: 'Ask a Friend', icon: <MessageCircle className="text-emerald-500" />, isGuide: false, guideIndex: -1 }
     ];
+
+    const generateQuiz = async (topic: string) => {
+        setQuizTopic(topic);
+        setQuizState('loading');
+        setActiveSection('quiz');
+        
+        try {
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            const prompt = `Generate 10 multiple-choice questions about "${topic}" in Islam suitable for children. 
+            Return ONLY a JSON array with this structure: 
+            [{ "question": "string", "options": ["string", "string", "string", "string"], "correct": number (0-3) }]`;
+            
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: prompt,
+                config: { responseMimeType: "application/json" }
+            });
+            
+            const questions = JSON.parse(response.text);
+            setQuizQuestions(questions);
+            setQuizState('playing');
+            setCurrentQuestion(0);
+            setScore(0);
+            setSelectedAnswer(null);
+            setShowExplanation(false);
+        } catch (error) {
+            console.error("Quiz generation failed", error);
+            setQuizState('start'); // Or show error
+        }
+    };
+
+    const handleAnswer = (index: number) => {
+        if (selectedAnswer !== null) return;
+        setSelectedAnswer(index);
+        setShowExplanation(true);
+        
+        let newScore = score;
+        if (index === quizQuestions[currentQuestion].correct) {
+            newScore = score + 1;
+            setScore(newScore);
+        }
+        
+        setTimeout(() => {
+            if (currentQuestion < quizQuestions.length - 1) {
+                setCurrentQuestion(currentQuestion + 1);
+                setSelectedAnswer(null);
+                setShowExplanation(false);
+            } else {
+                setQuizState('result');
+                // Check achievements
+                achievements.forEach(achievement => {
+                    if (achievement.condition(newScore, quizTopic)) {
+                        unlockAchievement(achievement.id);
+                    }
+                });
+            }
+        }, 1500);
+    };
+
+    const resetQuiz = () => {
+        setQuizState('start');
+        setCurrentQuestion(0);
+        setScore(0);
+        setSelectedAnswer(null);
+        setShowExplanation(false);
+    };
 
     const stopShahadaAudio = () => {
         playingRef.current = false;
@@ -422,6 +523,14 @@ const DiscoverIslam = () => {
                                         </motion.div>
                                     ))}
                                 </div>
+                                <div className="text-center mt-8">
+                                    <button 
+                                        onClick={() => generateQuiz('basics')}
+                                        className="bg-emerald-500 text-white px-8 py-3 rounded-full font-bold hover:bg-emerald-600 transition-colors shadow-lg flex items-center gap-2 mx-auto"
+                                    >
+                                        <Play size={20} /> Take a Quiz on the 5 Pillars
+                                    </button>
+                                </div>
                             </div>
                         )}
 
@@ -455,6 +564,14 @@ const DiscoverIslam = () => {
                                         Allah is the Arabic word for God. He is the Creator of the stars, the oceans, the animals, and you! He is not a man or a woman, and He has no partners. He is the Most Merciful and the Most Kind.
                                     </p>
                                 </div>
+                                <div className="text-center mt-8">
+                                    <button 
+                                        onClick={() => generateQuiz('beliefs')}
+                                        className="bg-emerald-500 text-white px-8 py-3 rounded-full font-bold hover:bg-emerald-600 transition-colors shadow-lg flex items-center gap-2 mx-auto"
+                                    >
+                                        <Play size={20} /> Take a Quiz on Faith
+                                    </button>
+                                </div>
                             </div>
                         )}
 
@@ -480,8 +597,8 @@ const DiscoverIslam = () => {
                                             className="bg-white p-6 rounded-2xl shadow-sm border border-emerald-50 hover:shadow-md transition-all hover:border-emerald-200"
                                         >
                                             <div className="flex items-start gap-4">
-                                                <div className="bg-emerald-100 text-emerald-700 w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0 mt-1">
-                                                    {stepIdx + 1}
+                                                <div className="bg-emerald-100 text-emerald-700 w-12 h-12 rounded-full flex items-center justify-center font-bold flex-shrink-0 mt-1">
+                                                    {step.icon ? React.cloneElement(step.icon as any, { size: 20 }) : stepIdx + 1}
                                                 </div>
                                                 <div>
                                                     <h4 className="font-bold text-emerald-800 text-lg mb-1">{step.title}</h4>
@@ -491,6 +608,14 @@ const DiscoverIslam = () => {
                                             </div>
                                         </motion.div>
                                     ))}
+                                </div>
+                                <div className="text-center mt-8">
+                                    <button 
+                                        onClick={() => generateQuiz(`guide-${guideCategories[activeGuideCategory].title}`)}
+                                        className="bg-emerald-500 text-white px-8 py-3 rounded-full font-bold hover:bg-emerald-600 transition-colors shadow-lg flex items-center gap-2 mx-auto"
+                                    >
+                                        <Play size={20} /> Take a Quiz on {guideCategories[activeGuideCategory].title}
+                                    </button>
                                 </div>
                             </div>
                         )}
@@ -519,7 +644,12 @@ const DiscoverIslam = () => {
                                                     className="bg-slate-50 p-6 rounded-2xl border border-slate-100 hover:border-emerald-200 transition-colors"
                                                 >
                                                     <div className="flex justify-between items-start mb-3">
-                                                        <h4 className="font-bold text-slate-800 text-lg">{item.title}</h4>
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="bg-emerald-50 p-2 rounded-full">
+                                                                {item.icon && React.cloneElement(item.icon as any, { size: 18 })}
+                                                            </div>
+                                                            <h4 className="font-bold text-slate-800 text-lg">{item.title}</h4>
+                                                        </div>
                                                         <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap">
                                                             {item.reference}
                                                         </span>
@@ -530,6 +660,140 @@ const DiscoverIslam = () => {
                                         </div>
                                     </div>
                                 ))}
+                                <div className="text-center mt-8">
+                                    <button 
+                                        onClick={() => generateQuiz('science')}
+                                        className="bg-emerald-500 text-white px-8 py-3 rounded-full font-bold hover:bg-emerald-600 transition-colors shadow-lg flex items-center gap-2 mx-auto"
+                                    >
+                                        <Play size={20} /> Take a Quiz on Islam & Science
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === 'achievements' && (
+                            <div className="max-w-4xl mx-auto">
+                                <div className="text-center mb-8">
+                                    <h2 className="text-3xl font-bold text-emerald-800 mb-4">Your Achievements</h2>
+                                    <p className="text-slate-600 text-lg">Collect badges as you learn!</p>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {achievements.map((achievement) => {
+                                        const isUnlocked = unlockedAchievements.includes(achievement.id);
+                                        return (
+                                            <div 
+                                                key={achievement.id}
+                                                className={`p-4 rounded-2xl border-2 text-center transition-all ${
+                                                    isUnlocked 
+                                                        ? 'bg-white border-emerald-200 shadow-md' 
+                                                        : 'bg-slate-50 border-slate-100 opacity-60 grayscale'
+                                                }`}
+                                            >
+                                                <div className="text-4xl mb-2">{achievement.icon}</div>
+                                                <h3 className="font-bold text-slate-800 text-sm mb-1">{achievement.title}</h3>
+                                                <p className="text-xs text-slate-500">{achievement.description}</p>
+                                                {!isUnlocked && <Lock size={12} className="mx-auto mt-2 text-slate-400" />}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === 'quiz' && (
+                            <div className="max-w-2xl mx-auto">
+                                {quizState === 'loading' && (
+                                    <div className="text-center py-20">
+                                        <Loader2 size={48} className="animate-spin text-emerald-500 mx-auto mb-4" />
+                                        <h3 className="text-xl font-bold text-slate-700">Generating your quiz...</h3>
+                                    </div>
+                                )}
+
+                                {quizState === 'playing' && (
+                                    <div className="bg-white rounded-3xl p-8 shadow-lg border border-emerald-100">
+                                        <div className="flex justify-between items-center mb-8 text-sm font-bold text-slate-500 uppercase tracking-wider">
+                                            <span>Question {currentQuestion + 1} of {quizQuestions.length}</span>
+                                            <span>Score: {score}</span>
+                                        </div>
+
+                                        <h3 className="text-2xl font-bold text-slate-800 mb-8 leading-relaxed">
+                                            {quizQuestions[currentQuestion].question}
+                                        </h3>
+
+                                        <div className="space-y-4">
+                                            {quizQuestions[currentQuestion].options.map((option, idx) => {
+                                                const isSelected = selectedAnswer === idx;
+                                                const isCorrect = idx === quizQuestions[currentQuestion].correct;
+                                                const showResult = selectedAnswer !== null;
+                                                
+                                                let buttonClass = "w-full p-4 rounded-xl text-left font-medium transition-all border-2 ";
+                                                if (showResult) {
+                                                    if (isCorrect) buttonClass += "bg-emerald-100 border-emerald-500 text-emerald-800";
+                                                    else if (isSelected) buttonClass += "bg-rose-100 border-rose-500 text-rose-800";
+                                                    else buttonClass += "bg-slate-50 border-slate-100 text-slate-400";
+                                                } else {
+                                                    buttonClass += "bg-slate-50 border-slate-100 hover:border-emerald-300 hover:bg-emerald-50 text-slate-700";
+                                                }
+
+                                                return (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => handleAnswer(idx)}
+                                                        disabled={selectedAnswer !== null}
+                                                        className={buttonClass}
+                                                    >
+                                                        <div className="flex justify-between items-center">
+                                                            <span>{option}</span>
+                                                            {showResult && isCorrect && <CheckCircle className="text-emerald-600" />}
+                                                            {showResult && isSelected && !isCorrect && <XCircle className="text-rose-600" />}
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {quizState === 'result' && (
+                                    <div className="text-center bg-white rounded-3xl p-12 shadow-lg border border-emerald-100">
+                                        <div className="mb-6">
+                                            {score === quizQuestions.length ? (
+                                                <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto text-yellow-500">
+                                                    <Trophy size={48} />
+                                                </div>
+                                            ) : score > quizQuestions.length / 2 ? (
+                                                <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-500">
+                                                    <Star size={48} />
+                                                </div>
+                                            ) : (
+                                                <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-500">
+                                                    <RotateCcw size={48} />
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        <h3 className="text-3xl font-bold text-slate-800 mb-2">Quiz Complete!</h3>
+                                        <p className="text-xl text-slate-600 mb-8">
+                                            You scored <span className="font-bold text-emerald-600">{score}</span> out of <span className="font-bold">{quizQuestions.length}</span>
+                                        </p>
+
+                                        <div className="flex gap-4 justify-center">
+                                            <button 
+                                                onClick={() => setActiveSection('achievements')}
+                                                className="bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors flex items-center gap-2"
+                                            >
+                                                <Award size={20} /> View Achievements
+                                            </button>
+                                            <button 
+                                                onClick={() => generateQuiz(quizTopic)}
+                                                className="bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-600 transition-colors flex items-center gap-2"
+                                            >
+                                                <RotateCcw size={20} /> Try Another Quiz
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 

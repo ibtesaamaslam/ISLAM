@@ -66,7 +66,7 @@ const HadithViewer = () => {
     const [hadith, setHadith] = useState<Hadith | null>(null);
     const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const { addPoints, unlockBadge } = useGamification();
+    const { addPoints, unlockAchievement } = useGamification();
 
     const fetchRandomHadith = () => {
         setLoading(true);
@@ -75,7 +75,7 @@ const HadithViewer = () => {
             setHadith(random);
             setLoading(false);
             addPoints(15);
-            unlockBadge('hadith_hero');
+            unlockAchievement('hadith_hero');
         }, 500);
     };
 
