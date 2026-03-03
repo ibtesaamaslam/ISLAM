@@ -19,7 +19,9 @@ const Chat = () => {
         setLoading(true);
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+            if (!apiKey) throw new Error("API Key missing");
+            const ai = new GoogleGenAI({ apiKey });
             const prompt = `You are a friendly, wise, and gentle Islamic teacher for kids. 
             Your name is "Noor". 
             Answer the following question about Islam, Quran, or Hadith in a simple, encouraging, and kid-friendly way. 

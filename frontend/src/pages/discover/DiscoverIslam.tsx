@@ -243,7 +243,9 @@ const DiscoverIslam = () => {
         setActiveSection('quiz');
         
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+            if (!apiKey) throw new Error("API Key missing");
+            const ai = new GoogleGenAI({ apiKey });
             const prompt = `Generate 10 multiple-choice questions about "${topic}" in Islam suitable for children. 
             Return ONLY a JSON array with this structure: 
             [{ "question": "string", "options": ["string", "string", "string", "string"], "correct": number (0-3) }]`;
@@ -416,7 +418,9 @@ const DiscoverIslam = () => {
         if (!chatInput.trim()) return;
         setLoading(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+            if (!apiKey) throw new Error("API Key missing");
+            const ai = new GoogleGenAI({ apiKey });
             const prompt = `You are a friendly, welcoming, and wise Muslim friend talking to a non-Muslim child who is curious about Islam. 
             Answer their question simply, gently, and with love. Use analogies suitable for kids.
             

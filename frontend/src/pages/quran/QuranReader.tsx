@@ -27,6 +27,7 @@ interface SurahInfo {
 interface TafseerData {
     explanation: string;
     englishExplanation: string;
+    backgroundHistory: string;
     didYouKnow: string;
     quiz: {
         question: string;
@@ -299,21 +300,67 @@ const QuranReader = () => {
         setDownloading(true);
         try {
             const cache = await caches.open('quran-audio');
-            // Download all audio versions
-            const promises = ayas.flatMap(aya => [
-                cache.add(aya.audio),
-                cache.add(aya.urduAudio),
-                cache.add(aya.englishAudio)
-            ]);
-            await Promise.all(promises);
-            setIsDownloaded(true);
-            addPoints(50);
-            alert("Surah downloaded for offline listening!");
+            
+            // Collect all unique URLs
+            const urls = Array.from(new Set(ayas.flatMap(aya => [
+                aya.audio,
+                aya.urduAudio,
+                aya.englishAudio
+            ]).filter(Boolean)));
+
+            // Process in batches to avoid network congestion
+            const BATCH_SIZE = 5;
+            let successCount = 0;
+
+            for (let i = 0; i < urls.length; i += BATCH_SIZE) {
+                const batch = urls.slice(i, i + BATCH_SIZE);
+                await Promise.all(batch.map(async (url) => {
+                    try {
+                        const match = await cache.match(url);
+                        if (!match) {
+                            await cache.add(url);
+                        }
+                        successCount++;
+                    } catch (e) {
+                        console.warn(`Failed to cache ${url}`, e);
+                    }
+                }));
+                // Small delay to be nice to the network
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            if (successCount > 0) {
+                setIsDownloaded(true);
+                addPoints(50);
+                alert(`Downloaded ${successCount} audio files for offline listening!`);
+            } else {
+                throw new Error("No files could be downloaded");
+            }
         } catch (err) {
             console.error("Download failed", err);
             alert("Failed to download. Please check your connection.");
         } finally {
             setDownloading(false);
+        }
+    };
+
+    const deleteSurahAudio = async () => {
+        if (!('caches' in window)) return;
+        try {
+            const cache = await caches.open('quran-audio');
+            
+            // Collect all unique URLs
+            const urls = Array.from(new Set(ayas.flatMap(aya => [
+                aya.audio,
+                aya.urduAudio,
+                aya.englishAudio
+            ]).filter(Boolean)));
+
+            await Promise.all(urls.map(url => cache.delete(url)));
+            setIsDownloaded(false);
+            alert("Surah removed from offline storage.");
+        } catch (err) {
+            console.error("Delete failed", err);
         }
     };
 
@@ -401,7 +448,10 @@ const QuranReader = () => {
                 tafseerAudioRef.current = null;
             }
 
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            const apiKey = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+            if (!apiKey) throw new Error("API Key missing");
+
+            const ai = new GoogleGenAI({ apiKey });
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash-preview-tts",
                 contents: [{ parts: [{ text: safeText }] }],
@@ -513,14 +563,20 @@ const QuranReader = () => {
 
         if (!isTafseerPlaying) return;
 
-        // 3. Did You Know
-        console.log("Step 3: Did You Know");
+        // 3. Background History
+        console.log("Step 3: Background History");
+        await speak("Background History: " + tafseerData.backgroundHistory, 'en-US');
+
+        if (!isTafseerPlaying) return;
+
+        // 4. Did You Know
+        console.log("Step 4: Did You Know");
         await speak("Did you know? " + tafseerData.didYouKnow, 'en-US');
 
         if (!isTafseerPlaying) return;
 
-        // 4. Quiz Question
-        console.log("Step 4: Quiz");
+        // 5. Quiz Question
+        console.log("Step 5: Quiz");
         await speak("Quiz time! " + tafseerData.quiz.question, 'en-US');
 
         console.log("Tafseer sequence finished");
@@ -555,13 +611,18 @@ const QuranReader = () => {
         setTafseerLoading(true);
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            const apiKey = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+            if (!apiKey) {
+                throw new Error("API Key is missing. Please set GEMINI_API_KEY in your environment variables.");
+            }
+            const ai = new GoogleGenAI({ apiKey });
             const prompt = `
-            You are an Islamic teacher for kids. Provide a JSON response with:
-            1. "explanation": A very simple, kid-friendly Tafseer (explanation) in Urdu for the following Quran Ayah.
-            2. "englishExplanation": A very simple, kid-friendly Tafseer (explanation) in English for the following Quran Ayah.
-            3. "didYouKnow": A fun fact related to this Ayah or Surah in English.
-            4. "quiz": A simple multiple choice question object with "question" (string), "options" (array of 3 strings), and "correctIndex" (number 0-2).
+            You are an Islamic scholar. Provide a JSON response with:
+            1. "explanation": A clear, general Tafseer (explanation) in Urdu for the following Quran Ayah.
+            2. "englishExplanation": A clear, general Tafseer (explanation) in English for the following Quran Ayah.
+            3. "backgroundHistory": A detailed "Asbab al-Nuzul" (Background History) explaining when this Ayah was revealed and the story behind it.
+            4. "didYouKnow": A fun fact related to this Ayah or Surah in English.
+            5. "quiz": A simple multiple choice question object with "question" (string), "options" (array of 3 strings), and "correctIndex" (number 0-2).
 
             Surah: ${surahInfo?.englishName} (${sura}), Ayah: ${aya.number}
             Arabic: ${aya.text}
@@ -586,7 +647,8 @@ const QuranReader = () => {
             console.error(err);
             setTafseerData({
                 explanation: "معاف کیجئے، ابھی تفسیر دستیاب نہیں ہے۔",
-                englishExplanation: "Sorry, I couldn't load the full interactive Tafseer right now.",
+                englishExplanation: "Sorry, I couldn't load the full interactive Tafseer right now. Please ensure your API key is configured correctly.",
+                backgroundHistory: "Background history is unavailable at the moment.",
                 didYouKnow: "The Quran is full of wisdom!",
                 quiz: { question: "Who revealed the Quran?", options: ["Allah", "Angels", "Humans"], correctIndex: 0 }
             });
@@ -700,9 +762,22 @@ const QuranReader = () => {
                                         </p>
                                         <div className="flex items-center gap-2 mt-2">
                                             {isDownloaded ? (
-                                                <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                    <Check size={10} /> Offline Ready
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                        <Check size={10} /> Offline Ready
+                                                    </span>
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if(confirm('Remove this Surah from offline storage?')) {
+                                                                deleteSurahAudio();
+                                                            }
+                                                        }}
+                                                        className="text-[10px] bg-rose-50 text-rose-500 px-2 py-0.5 rounded-full hover:bg-rose-100 transition-colors"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
                                             ) : (
                                                 <button 
                                                     onClick={downloadSurahAudio}
@@ -842,6 +917,16 @@ const QuranReader = () => {
                                                             <span className="text-[10px] bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full mb-2 inline-block">English</span>
                                                             <p className="text-amber-900 leading-relaxed whitespace-pre-wrap">
                                                                 {tafseerData.englishExplanation}
+                                                            </p>
+                                                        </div>
+
+                                                        {/* Background History */}
+                                                        <div className="bg-white/60 p-3 rounded-xl border-l-4 border-indigo-300">
+                                                            <h5 className="text-xs font-bold text-indigo-800 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                                                <BookOpen size={12} /> Background History (Asbab al-Nuzul)
+                                                            </h5>
+                                                            <p className="text-indigo-900 leading-relaxed text-sm whitespace-pre-wrap">
+                                                                {tafseerData.backgroundHistory}
                                                             </p>
                                                         </div>
                                                         

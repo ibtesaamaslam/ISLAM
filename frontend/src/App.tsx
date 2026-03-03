@@ -6,6 +6,7 @@ import HadithViewer from './pages/hadiths/HadithViewer';
 import Chat from './pages/Chat';
 import DiscoverIslam from './pages/discover/DiscoverIslam';
 import { GamificationProvider } from './contexts/GamificationContext';
+import AchievementToast from './components/AchievementToast';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
             <Route path="/discover" element={<DiscoverIslam />} />
           </Routes>
           <Navbar />
+          <AchievementToast />
         </div>
       </Router>
     </GamificationProvider>

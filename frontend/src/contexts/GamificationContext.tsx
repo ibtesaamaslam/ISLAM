@@ -8,6 +8,8 @@ interface GamificationState {
     addPoints: (amount: number) => void;
     unlockAchievement: (id: string) => void;
     achievements: Achievement[];
+    notification: Achievement | null;
+    clearNotification: () => void;
 }
 
 const GamificationContext = createContext<GamificationState | undefined>(undefined);
@@ -31,6 +33,8 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return saved ? JSON.parse(saved) : [];
     });
 
+    const [notification, setNotification] = useState<Achievement | null>(null);
+
     const level = Math.floor(points / 100) + 1;
 
     useEffect(() => {
@@ -48,14 +52,16 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const unlockAchievement = (id: string) => {
         if (!unlockedAchievements.includes(id)) {
             setUnlockedAchievements(prev => [...prev, id]);
-            // Optional: Show notification
             const achievement = allAchievements.find(a => a.id === id);
             if (achievement) {
-                // You could add a toast notification here if you have a toast system
-                console.log(`Unlocked: ${achievement.title}`);
+                setNotification(achievement);
+                // Auto-clear after 4 seconds
+                setTimeout(() => setNotification(null), 4000);
             }
         }
     };
+
+    const clearNotification = () => setNotification(null);
 
     return (
         <GamificationContext.Provider value={{ 
@@ -64,7 +70,9 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             unlockedAchievements, 
             addPoints, 
             unlockAchievement,
-            achievements: allAchievements 
+            achievements: allAchievements,
+            notification,
+            clearNotification
         }}>
             {children}
         </GamificationContext.Provider>
