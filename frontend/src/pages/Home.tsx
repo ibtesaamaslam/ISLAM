@@ -20,15 +20,21 @@ const Home = () => {
                 <motion.header 
                     initial={{ y: -50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="flex justify-between items-center mb-12 bg-white/80 backdrop-blur-md p-4 rounded-full shadow-lg border-4 border-white"
+                    className="inline-flex items-center mb-12 bg-white/80 backdrop-blur-md p-4 pr-8 rounded-full shadow-lg border-4 border-white"
                 >
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-tr from-blue-500 to-cyan-400 rounded-full flex items-center justify-center shadow-md border-4 border-white">
-                            <CloudSun className="text-white" size={24} />
+                    <div className="flex items-center gap-4">
+                        <div className="relative w-14 h-14 bg-gradient-to-br from-rose-500 to-orange-400 rounded-2xl rotate-3 flex items-center justify-center shadow-[0_4px_0_rgba(0,0,0,0.1)] border-4 border-white group transition-transform hover:rotate-6">
+                            <Heart className="text-white fill-white/20" size={28} strokeWidth={2.5} />
+                            <Sparkles className="text-yellow-300 absolute -top-2 -right-2 animate-pulse" size={20} fill="currentColor" />
                         </div>
-                        <span className="text-3xl font-black tracking-tight text-blue-900">
-                            Deen<span className="text-pink-500">Daily</span>
-                        </span>
+                        <div className="flex flex-col leading-none">
+                            <span className="text-2xl md:text-3xl font-black tracking-tight text-slate-800">
+                                RECLAIM <span className="text-rose-500">YOUR HEART</span>
+                            </span>
+                            <span className="text-[10px] md:text-xs font-medium text-slate-500 tracking-wide ml-1 mt-1 italic">
+                                "Verily, in the remembrance of Allah do hearts find rest."
+                            </span>
+                        </div>
                     </div>
                 </motion.header>
 
