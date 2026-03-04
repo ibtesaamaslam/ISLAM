@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, Play, Pause, BookOpen, Sparkles, Search, Download, Check, WifiOff, HelpCircle, Volume2, StopCircle, Bookmark, History } from 'lucide-react';
 import { useGamification } from '../../contexts/GamificationContext';
 import { GoogleGenAI } from "@google/genai";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface Aya {
     number: number;
@@ -76,6 +78,73 @@ const QuranReader = () => {
     const [tafseerOpen, setTafseerOpen] = useState<number | null>(null);
     const [tafseerData, setTafseerData] = useState<TafseerData | null>(null);
     const [tafseerLoading, setTafseerLoading] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [pdfData, setPdfData] = useState<any>(null);
+    const pdfRef = useRef<HTMLDivElement>(null);
+
+    const handleDownload = async () => {
+        if (ayas.length === 0 || !surahInfo) return;
+        setIsDownloading(true);
+
+        try {
+            // 1. Fetch Summary
+            const response = await fetch('/api/surah-summary', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    surahName: surahInfo.englishName,
+                    surahNumber: surahInfo.number,
+                    ayahCount: surahInfo.numberOfAyahs
+                })
+            });
+            
+            if (!response.ok) throw new Error('Failed to fetch summary');
+            const summaryData = await response.json();
+
+            setPdfData(summaryData);
+            
+            // Wait for render
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            if (!pdfRef.current) throw new Error('PDF element not found');
+
+            const canvas = await html2canvas(pdfRef.current, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                windowWidth: 1200 // Ensure consistent width
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const imgWidth = pdfWidth;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
+
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pdfHeight;
+            }
+
+            pdf.save(`${surahInfo.englishName}_Full_Guide.pdf`);
+
+        } catch (error) {
+            console.error('Download failed', error);
+            alert('Failed to generate PDF. Please try again.');
+        } finally {
+            setIsDownloading(false);
+            setPdfData(null); 
+        }
+    };
     const [quizAnswered, setQuizAnswered] = useState(false);
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
     const [isCorrect, setIsCorrect] = useState(false);
@@ -711,37 +780,64 @@ const QuranReader = () => {
         }
 
         try {
+            let data;
             const apiKey = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
-            if (!apiKey) {
-                throw new Error("API Key is missing. Please set GEMINI_API_KEY in your environment variables.");
+
+            // Helper function to fetch from API
+            const fetchFromApi = async () => {
+                const response = await fetch('/api/tafseer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        surah: `${surahInfo?.englishName} (${sura})`,
+                        ayah: aya.number,
+                        arabic: aya.text,
+                        urduTranslation: aya.urduTranslation,
+                        englishTranslation: aya.translation
+                    })
+                });
+                if (!response.ok) throw new Error('Failed to fetch tafseer from API');
+                return await response.json();
+            };
+
+            if (apiKey) {
+                try {
+                    const ai = new GoogleGenAI({ apiKey });
+                    const prompt = `
+                    You are an Islamic scholar. Provide a JSON response with:
+                    1. "explanation": A clear, general Tafseer (explanation) in Urdu for the following Quran Ayah.
+                    2. "englishExplanation": A clear, general Tafseer (explanation) in English for the following Quran Ayah.
+                    3. "backgroundHistory": A detailed "Asbab al-Nuzul" (Background History) explaining when this Ayah was revealed and the story behind it in English.
+                    4. "backgroundHistoryUrdu": A detailed "Asbab al-Nuzul" (Background History) explaining when this Ayah was revealed and the story behind it in Urdu.
+                    5. "historicalContext": A brief section providing historical context or related events mentioned in the Quran or authentic Hadith relevant to this Ayah in English.
+                    6. "historicalContextUrdu": A brief section providing historical context or related events mentioned in the Quran or authentic Hadith relevant to this Ayah in Urdu.
+                    7. "didYouKnow": A fun fact related to this Ayah or Surah in English.
+                    8. "quiz": A simple multiple choice question object with "question" (string), "options" (array of 3 strings), and "correctIndex" (number 0-2).
+
+                    Surah: ${surahInfo?.englishName} (${sura}), Ayah: ${aya.number}
+                    Arabic: ${aya.text}
+                    Urdu Translation: ${aya.urduTranslation}
+                    English Translation: ${aya.translation}
+                    
+                    Format: JSON only. No markdown.
+                    `;
+
+                    const response = await ai.models.generateContent({
+                        model: "gemini-2.5-flash",
+                        contents: prompt,
+                        config: { responseMimeType: "application/json" }
+                    });
+
+                    data = JSON.parse(response.text);
+                } catch (clientError) {
+                    console.warn("Client-side generation failed, trying server-side...", clientError);
+                    data = await fetchFromApi();
+                }
+            } else {
+                // No API key, try server-side directly
+                data = await fetchFromApi();
             }
-            const ai = new GoogleGenAI({ apiKey });
-            const prompt = `
-            You are an Islamic scholar. Provide a JSON response with:
-            1. "explanation": A clear, general Tafseer (explanation) in Urdu for the following Quran Ayah.
-            2. "englishExplanation": A clear, general Tafseer (explanation) in English for the following Quran Ayah.
-            3. "backgroundHistory": A detailed "Asbab al-Nuzul" (Background History) explaining when this Ayah was revealed and the story behind it in English.
-            4. "backgroundHistoryUrdu": A detailed "Asbab al-Nuzul" (Background History) explaining when this Ayah was revealed and the story behind it in Urdu.
-            5. "historicalContext": A brief section providing historical context or related events mentioned in the Quran or authentic Hadith relevant to this Ayah in English.
-            6. "historicalContextUrdu": A brief section providing historical context or related events mentioned in the Quran or authentic Hadith relevant to this Ayah in Urdu.
-            7. "didYouKnow": A fun fact related to this Ayah or Surah in English.
-            8. "quiz": A simple multiple choice question object with "question" (string), "options" (array of 3 strings), and "correctIndex" (number 0-2).
 
-            Surah: ${surahInfo?.englishName} (${sura}), Ayah: ${aya.number}
-            Arabic: ${aya.text}
-            Urdu Translation: ${aya.urduTranslation}
-            English Translation: ${aya.translation}
-            
-            Format: JSON only. No markdown.
-            `;
-
-            const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
-                contents: prompt,
-                config: { responseMimeType: "application/json" }
-            });
-
-            const data = JSON.parse(response.text);
             setTafseerData(data);
             
             // Save to Local Storage
@@ -919,6 +1015,24 @@ const QuranReader = () => {
                                                         )}
                                                     </button>
                                                 )}
+                                                
+                                                <button
+                                                    onClick={handleDownload}
+                                                    disabled={isDownloading}
+                                                    className="mt-2 w-full bg-indigo-500 text-white px-3 py-2 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-600 transition shadow-sm active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                                                >
+                                                    {isDownloading ? (
+                                                        <span className="animate-pulse flex items-center gap-2">
+                                                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                            Generating PDF...
+                                                        </span>
+                                                    ) : (
+                                                        <>
+                                                            <Download size={14} strokeWidth={3} />
+                                                            Download PDF Guide
+                                                        </>
+                                                    )}
+                                                </button>
                                             </div>
                                         </div>
                                     )}
@@ -1123,6 +1237,105 @@ const QuranReader = () => {
                                     </motion.div>
                                 );
                             })}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Hidden PDF Content */}
+            <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
+                <div ref={pdfRef} className="w-[800px] bg-white p-12 font-sans text-slate-900">
+                    {pdfData && surahInfo && (
+                        <div className="space-y-8">
+                            {/* Header */}
+                            <div className="text-center border-b-4 border-slate-100 pb-8">
+                                <h1 className="text-4xl font-black text-slate-800 mb-2">{surahInfo.englishName}</h1>
+                                <h2 className="text-2xl font-serif text-slate-600 mb-4">{surahInfo.name}</h2>
+                                <div className="flex justify-center gap-4 text-sm font-bold text-slate-500 uppercase tracking-widest">
+                                    <span>Surah {surahInfo.number}</span>
+                                    <span>•</span>
+                                    <span>{surahInfo.revelationType}</span>
+                                    <span>•</span>
+                                    <span>{surahInfo.numberOfAyahs} Ayahs</span>
+                                </div>
+                            </div>
+
+                            {/* Introduction */}
+                            <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
+                                <h3 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
+                                    <BookOpen className="text-indigo-500" /> Introduction
+                                </h3>
+                                <p className="text-slate-700 leading-relaxed">{pdfData.introduction}</p>
+                            </div>
+
+                            {/* Background */}
+                            <div>
+                                <h3 className="text-xl font-black text-slate-800 mb-4">Background of Revelation</h3>
+                                <p className="text-slate-700 leading-relaxed">{pdfData.background}</p>
+                            </div>
+
+                            {/* Key Themes */}
+                            <div className="bg-indigo-50 p-6 rounded-3xl border-2 border-indigo-100">
+                                <h3 className="text-xl font-black text-indigo-900 mb-4">Key Themes</h3>
+                                <ul className="space-y-2">
+                                    {pdfData.keyThemes?.map((theme: string, idx: number) => (
+                                        <li key={idx} className="flex items-start gap-3 text-indigo-800">
+                                            <div className="mt-1.5 w-2 h-2 bg-indigo-400 rounded-full shrink-0" />
+                                            {theme}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            {/* Ayahs */}
+                            <div>
+                                <h3 className="text-xl font-black text-slate-800 mb-6">Verses</h3>
+                                <div className="space-y-6">
+                                    {ayas.map((aya) => (
+                                        <div key={aya.number} className="border-b border-slate-100 pb-6 last:border-0 page-break-inside-avoid">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <span className="bg-slate-100 text-slate-500 text-xs font-bold px-2 py-1 rounded-lg">
+                                                    {sura}:{aya.number}
+                                                </span>
+                                                <p className="text-right font-serif text-2xl leading-loose text-slate-800 w-full pl-8" dir="rtl">
+                                                    {aya.text}
+                                                </p>
+                                            </div>
+                                            <p className="text-slate-600 mb-2 italic">{aya.translation}</p>
+                                            <p className="text-slate-500 text-sm text-right font-serif" dir="rtl">{aya.urduTranslation}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Summary */}
+                            <div className="bg-emerald-50 p-6 rounded-3xl border-2 border-emerald-100">
+                                <h3 className="text-xl font-black text-emerald-900 mb-4">Summary</h3>
+                                <p className="text-emerald-800 leading-relaxed">{pdfData.summary}</p>
+                            </div>
+
+                            {/* Quiz */}
+                            <div className="page-break-inside-avoid">
+                                <h3 className="text-xl font-black text-slate-800 mb-6">Knowledge Check</h3>
+                                <div className="grid grid-cols-1 gap-4">
+                                    {pdfData.quiz?.map((q: any, idx: number) => (
+                                        <div key={idx} className="bg-white p-4 rounded-2xl border-2 border-slate-100">
+                                            <p className="font-bold text-slate-800 mb-3">{idx + 1}. {q.question}</p>
+                                            <div className="space-y-2">
+                                                {q.options.map((opt: string, i: number) => (
+                                                    <div key={i} className={`p-2 rounded-lg text-sm ${opt === q.correctAnswer ? 'bg-emerald-100 text-emerald-700 font-bold' : 'bg-slate-50 text-slate-600'}`}>
+                                                        {opt}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="text-center text-slate-400 text-sm pt-8 border-t border-slate-100">
+                                Generated by Reclaim Your Heart App
+                            </div>
                         </div>
                     )}
                 </div>

@@ -244,19 +244,42 @@ const DiscoverIslam = () => {
         
         try {
             const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-            if (!apiKey) throw new Error("API Key missing");
-            const ai = new GoogleGenAI({ apiKey });
-            const prompt = `Generate 10 multiple-choice questions about "${topic}" in Islam suitable for children. 
-            Return ONLY a JSON array with this structure: 
-            [{ "question": "string", "options": ["string", "string", "string", "string"], "correct": number (0-3) }]`;
+            let questions;
+
+            // Helper function to fetch from API
+            const fetchFromApi = async () => {
+                const response = await fetch('/api/quiz', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic })
+                });
+                if (!response.ok) throw new Error('Failed to fetch quiz');
+                return await response.json();
+            };
+
+            if (apiKey) {
+                try {
+                    const ai = new GoogleGenAI({ apiKey });
+                    const prompt = `Generate 10 multiple-choice questions about "${topic}" in Islam suitable for children. 
+                    Return ONLY a JSON array with this structure: 
+                    [{ "question": "string", "options": ["string", "string", "string", "string"], "correct": number (0-3) }]`;
+                    
+                    const response = await ai.models.generateContent({
+                        model: "gemini-2.5-flash",
+                        contents: prompt,
+                        config: { responseMimeType: "application/json" }
+                    });
+                    
+                    questions = JSON.parse(response.text);
+                } catch (clientError) {
+                    console.warn("Client-side quiz generation failed, trying server-side...", clientError);
+                    questions = await fetchFromApi();
+                }
+            } else {
+                // No API key, try server-side directly
+                questions = await fetchFromApi();
+            }
             
-            const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
-                contents: prompt,
-                config: { responseMimeType: "application/json" }
-            });
-            
-            const questions = JSON.parse(response.text);
             setQuizQuestions(questions);
             setQuizState('playing');
             setCurrentQuestion(0);

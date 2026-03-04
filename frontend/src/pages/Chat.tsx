@@ -20,20 +20,44 @@ const Chat = () => {
 
         try {
             const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-            if (!apiKey) throw new Error("API Key missing");
-            const ai = new GoogleGenAI({ apiKey });
-            const prompt = `You are a friendly, wise, and gentle Islamic teacher for kids. 
-            Your name is "Noor". 
-            Answer the following question about Islam, Quran, or Hadith in a simple, encouraging, and kid-friendly way. 
-            Use emojis. Keep it short (under 100 words). 
-            Question: ${userMsg.content}`;
+            let text;
 
-            const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
-                contents: prompt
-            });
+            // Helper function to fetch from API
+            const fetchFromApi = async () => {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: userMsg.content })
+                });
+                if (!response.ok) throw new Error('Failed to fetch chat response');
+                const data = await response.json();
+                return data.text;
+            };
 
-            setMessages(prev => [...prev, { role: 'model', content: response.text }]);
+            if (apiKey) {
+                try {
+                    const ai = new GoogleGenAI({ apiKey });
+                    const prompt = `You are a friendly, wise, and gentle Islamic teacher for kids. 
+                    Your name is "Noor". 
+                    Answer the following question about Islam, Quran, or Hadith in a simple, encouraging, and kid-friendly way. 
+                    Use emojis. Keep it short (under 100 words). 
+                    Question: ${userMsg.content}`;
+
+                    const response = await ai.models.generateContent({
+                        model: "gemini-2.5-flash",
+                        contents: prompt
+                    });
+                    text = response.text;
+                } catch (clientError) {
+                    console.warn("Client-side generation failed, trying server-side...", clientError);
+                    text = await fetchFromApi();
+                }
+            } else {
+                // No API key, try server-side directly
+                text = await fetchFromApi();
+            }
+
+            setMessages(prev => [...prev, { role: 'model', content: text }]);
             addPoints(10);
             unlockAchievement('ai_friend');
         } catch (err) {
