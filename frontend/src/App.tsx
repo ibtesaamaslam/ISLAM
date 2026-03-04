@@ -12,7 +12,7 @@ function App() {
   return (
     <GamificationProvider>
       <Router>
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+        <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-yellow-200 selection:text-slate-900">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/quran" element={<QuranReader />} />

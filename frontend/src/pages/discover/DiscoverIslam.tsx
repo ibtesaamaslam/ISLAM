@@ -320,7 +320,10 @@ const DiscoverIslam = () => {
                 shahadaAudioRef.current.pause();
             }
 
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+            if (!apiKey) throw new Error("API Key missing");
+
+            const ai = new GoogleGenAI({ apiKey });
             
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash-preview-tts",
@@ -336,7 +339,7 @@ const DiscoverIslam = () => {
             });
 
             const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-            if (!base64Audio) throw new Error("No audio");
+            if (!base64Audio) throw new Error("No audio data received");
 
             return new Promise((resolve) => {
                 try {
@@ -345,7 +348,12 @@ const DiscoverIslam = () => {
                     for (let i = 0; i < binaryString.length; i++) {
                         bytes[i] = binaryString.charCodeAt(i);
                     }
-                    const blob = new Blob([bytes], { type: 'audio/mp3' });
+                    
+                    if (bytes.length === 0) {
+                        throw new Error("Empty audio buffer");
+                    }
+
+                    const blob = new Blob([bytes], { type: 'audio/mpeg' }); // Changed to audio/mpeg
                     const url = URL.createObjectURL(blob);
 
                     const audio = new Audio(url);
@@ -360,34 +368,48 @@ const DiscoverIslam = () => {
                     audio.onerror = (e) => {
                         console.error("Audio playback error", e);
                         URL.revokeObjectURL(url);
-                        resolve();
+                        // Fallback to browser TTS if audio element fails
+                        fallbackToBrowserTTS(text, lang).then(resolve);
                     };
                     
                     audio.play().catch((e) => {
                         console.error("Audio play failed", e);
                         URL.revokeObjectURL(url);
-                        resolve();
+                        fallbackToBrowserTTS(text, lang).then(resolve);
                     });
                 } catch (err) {
                     console.error("Error creating audio blob", err);
-                    resolve();
+                    fallbackToBrowserTTS(text, lang).then(resolve);
                 }
             });
         } catch (e) {
             console.error("Gemini TTS failed, fallback to browser", e);
-             return new Promise((resolve) => {
-                if (!window.speechSynthesis) {
-                    resolve();
-                    return;
-                }
-                const u = new SpeechSynthesisUtterance(text);
-                u.lang = lang;
-                u.onend = () => resolve();
-                u.onerror = () => resolve();
-                window.speechSynthesis.cancel();
-                window.speechSynthesis.speak(u);
-            });
+            return fallbackToBrowserTTS(text, lang);
         }
+    };
+
+    const fallbackToBrowserTTS = (text: string, lang: string): Promise<void> => {
+        return new Promise((resolve) => {
+            if (!window.speechSynthesis) {
+                resolve();
+                return;
+            }
+            
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = lang;
+            
+            // Handle end and error events
+            u.onend = () => resolve();
+            u.onerror = (e) => {
+                console.error("Browser TTS error", e);
+                resolve();
+            };
+            
+            window.speechSynthesis.speak(u);
+        });
     };
 
     const playShahadaSequence = async () => {
@@ -399,16 +421,76 @@ const DiscoverIslam = () => {
         setIsShahadaPlaying(true);
         playingRef.current = true;
 
-        // Arabic
-        await speak("Ash-hadu an la ilaha illa Allah, wa ash-hadu anna Muhammadan Rasul Allah", "ar-SA");
+        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+        // 1. Arabic Segments
+        const arabicSegments = [
+            "Ash-hadu",
+            "an la ilaha",
+            "illa Allah,",
+            "wa ash-hadu",
+            "anna",
+            "Muhammadan",
+            "Rasul Allah"
+        ];
+
+        for (const segment of arabicSegments) {
+            if (!playingRef.current) return;
+            await speak(segment, "ar-SA");
+            await delay(1000);
+        }
+
         if (!playingRef.current) return;
 
-        // Urdu
-        await speak("میں گواہی دیتا ہوں کہ اللہ کے سوا کوئی معبود نہیں اور میں گواہی دیتا ہوں کہ محمد اللہ کے رسول ہیں", "ur-PK");
+        // 2. Urdu Segments
+        const urduSegments = [
+            "میں گواہی دیتا ہوں کہ",
+            "اللہ کے سوا کوئی معبود نہیں",
+            "اور میں گواہی دیتا ہوں",
+            "کہ محمد اللہ کے رسول ہیں"
+        ];
+
+        for (const segment of urduSegments) {
+            if (!playingRef.current) return;
+            await speak(segment, "ur-PK");
+            await delay(1000);
+        }
+
         if (!playingRef.current) return;
 
-        // English
-        await speak("I bear witness that there is no god but Allah, and I bear witness that Muhammad is the Messenger of Allah.", "en-US");
+        // 3. English Segments
+        const englishSegments = [
+            "I bear witness",
+            "that there is no god",
+            "but Allah,",
+            "and I bear witness",
+            "that Muhammad",
+            "is the Messenger of Allah"
+        ];
+
+        for (const segment of englishSegments) {
+            if (!playingRef.current) return;
+            await speak(segment, "en-US");
+            await delay(1000);
+        }
+
+        if (!playingRef.current) return;
+
+        // 4. Explanation
+        await speak("What does this mean?", "en-US");
+        await delay(1000);
+
+        const explanations = [
+            "You believe that Allah is the only God who created and loves us.",
+            "You believe that Muhammad (peace be upon him) is His final messenger who taught us how to be good.",
+            "Saying this with your heart makes you a Muslim!"
+        ];
+
+        for (const explanation of explanations) {
+            if (!playingRef.current) return;
+            await speak(explanation, "en-US");
+            await delay(1000);
+        }
         
         setIsShahadaPlaying(false);
         playingRef.current = false;
@@ -448,50 +530,58 @@ const DiscoverIslam = () => {
     const activeGuideCategory = navItems.find(item => item.id === activeSection)?.guideIndex;
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-sky-100 to-emerald-50 pb-32">
+        <div className="min-h-screen bg-gradient-to-b from-sky-100 to-emerald-50 pb-32 font-sans selection:bg-yellow-200 selection:text-emerald-900">
             {/* Hero Section */}
-            <div className="relative overflow-hidden bg-emerald-600 text-white p-8 rounded-b-[3rem] shadow-xl">
-                <div className="absolute top-0 left-0 w-full h-full opacity-10">
-                    <Cloud size={300} className="absolute -top-10 -left-10" />
-                    <Star size={100} className="absolute top-20 right-20" />
-                    <Moon size={150} className="absolute bottom-0 right-0" />
+            <div className="relative overflow-hidden bg-emerald-500 text-white p-8 md:p-12 rounded-b-[3rem] shadow-xl border-b-8 border-emerald-600">
+                <div className="absolute top-0 left-0 w-full h-full opacity-20">
+                    <Cloud size={300} className="absolute -top-10 -left-10 text-white animate-pulse" />
+                    <Star size={100} className="absolute top-20 right-20 text-yellow-300" />
+                    <Moon size={150} className="absolute bottom-0 right-0 text-white" />
                 </div>
                 <div className="relative z-10 text-center mt-8">
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="inline-block bg-white/20 backdrop-blur-sm px-6 py-2 rounded-full mb-4 border-2 border-white/30"
+                    >
+                        <span className="font-black uppercase tracking-widest text-sm text-yellow-300 drop-shadow-md">Adventure Time! 🌍</span>
+                    </motion.div>
                     <motion.h1 
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-4xl md:text-6xl font-bold mb-4 font-serif"
+                        className="text-5xl md:text-7xl font-black mb-6 drop-shadow-lg"
                     >
                         Discover Peace
                     </motion.h1>
-                    <p className="text-xl md:text-2xl text-emerald-100 max-w-2xl mx-auto">
+                    <p className="text-xl md:text-2xl text-emerald-50 max-w-2xl mx-auto font-bold leading-relaxed">
                         Welcome to a journey of love, kindness, and understanding. 
-                        Let's explore the beautiful world of Islam together!
+                        Let's explore the beautiful world of Islam together! 🚀
                     </p>
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 mt-8 max-w-6xl">
+            <div className="container mx-auto px-4 mt-12 max-w-6xl">
                 <div className="grid md:grid-cols-4 gap-8">
                     {/* Sidebar Navigation */}
-                    <div className="md:col-span-1 space-y-2">
+                    <div className="md:col-span-1 space-y-3">
                         {navItems.map((item) => (
                             <button
                                 key={item.id}
                                 onClick={() => setActiveSection(item.id)}
-                                className={`w-full text-left p-4 rounded-xl transition-all flex items-center gap-3 ${
+                                className={`w-full text-left p-4 rounded-2xl transition-all flex items-center gap-3 font-bold border-2 shadow-sm active:scale-95 ${
                                     activeSection === item.id
-                                        ? 'bg-emerald-500 text-white shadow-md'
-                                        : 'bg-white text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 shadow-sm'
+                                        ? 'bg-emerald-500 text-white border-emerald-600 shadow-emerald-200'
+                                        : 'bg-white text-slate-600 border-slate-100 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600'
                                 }`}
                             >
-                                <div className={`p-2 rounded-full ${activeSection === item.id ? 'bg-white/20' : 'bg-emerald-50'}`}>
+                                <div className={`p-2 rounded-xl ${activeSection === item.id ? 'bg-white/20' : 'bg-emerald-50'}`}>
                                     {React.cloneElement(item.icon as any, { 
-                                        size: 18,
+                                        size: 20,
+                                        strokeWidth: 3,
                                         className: activeSection === item.id ? 'text-white' : '' 
                                     })}
                                 </div>
-                                <span className="font-bold text-sm">{item.title}</span>
+                                <span className="text-sm">{item.title}</span>
                             </button>
                         ))}
                     </div>
@@ -502,92 +592,106 @@ const DiscoverIslam = () => {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.3 }}
-                        className="md:col-span-3 bg-white rounded-3xl p-8 shadow-xl border-2 border-emerald-100"
+                        className="md:col-span-3 bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl border-4 border-emerald-100 relative overflow-hidden"
                     >
+                        {/* Decorative background blob */}
+                        <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-50 rounded-full opacity-50 blur-3xl pointer-events-none" />
+
                         {activeSection === 'basics' && (
-                            <div className="space-y-12">
-                                <div className="text-center mb-8">
-                                    <h2 className="text-3xl font-bold text-emerald-800 mb-4">The 5 Pillars of Islam</h2>
-                                    <p className="text-slate-600 text-lg">Just like a house needs strong pillars to stand, Islam is built on 5 beautiful actions.</p>
+                            <div className="space-y-12 relative z-10">
+                                <div className="text-center mb-10">
+                                    <h2 className="text-4xl font-black text-emerald-600 mb-4 flex items-center justify-center gap-3">
+                                        <Star className="text-yellow-400 fill-yellow-400" size={40} />
+                                        The 5 Pillars of Islam
+                                    </h2>
+                                    <p className="text-slate-500 text-lg font-bold">Just like a house needs strong pillars to stand, Islam is built on 5 beautiful actions! 🏠</p>
                                 </div>
-                                <div className="grid md:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 gap-6">
                                     {basicsContent.map((pillar, idx) => (
                                         <motion.div 
                                             key={idx}
-                                            whileHover={{ y: -5 }}
-                                            className="bg-slate-50 p-6 rounded-3xl text-center border border-slate-100 hover:border-emerald-200 transition-all shadow-sm hover:shadow-md"
+                                            whileHover={{ y: -8 }}
+                                            className="bg-white p-6 rounded-[2rem] border-4 border-slate-100 hover:border-emerald-300 transition-all shadow-sm hover:shadow-xl group flex items-start gap-6 text-left"
                                         >
-                                            <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-3xl">
-                                                {pillar.icon}
+                                            <div className="bg-emerald-50 w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner group-hover:scale-110 transition-transform duration-300">
+                                                {React.cloneElement(pillar.icon as any, { size: 40, strokeWidth: 2.5 })}
                                             </div>
-                                            <h3 className="text-xl font-bold text-emerald-800 mb-1">{pillar.title}</h3>
-                                            <p className="text-emerald-600 text-xs font-bold uppercase tracking-wider mb-3">{pillar.subtitle}</p>
-                                            <p className="text-slate-700 font-medium mb-3">{pillar.description}</p>
-                                            <p className="text-slate-500 text-sm leading-relaxed">{pillar.details}</p>
+                                            <div>
+                                                <h3 className="text-2xl font-black text-emerald-700 mb-2">{pillar.title}</h3>
+                                                <p className="text-emerald-500 text-xs font-black uppercase tracking-widest mb-2 bg-emerald-50 py-1 px-3 rounded-full inline-block">{pillar.subtitle}</p>
+                                                <p className="text-slate-700 font-bold mb-2 text-lg">{pillar.description}</p>
+                                                <p className="text-slate-500 text-sm leading-relaxed font-medium">{pillar.details}</p>
+                                            </div>
                                         </motion.div>
                                     ))}
                                 </div>
-                                <div className="text-center mt-8">
+                                <div className="text-center mt-10">
                                     <button 
                                         onClick={() => generateQuiz('basics')}
-                                        className="bg-emerald-500 text-white px-8 py-3 rounded-full font-bold hover:bg-emerald-600 transition-colors shadow-lg flex items-center gap-2 mx-auto"
+                                        className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black hover:bg-emerald-600 transition-all shadow-[0_6px_0_#059669] active:shadow-none active:translate-y-[6px] flex items-center gap-3 mx-auto text-lg"
                                     >
-                                        <Play size={20} /> Take a Quiz on the 5 Pillars
+                                        <Play size={24} fill="currentColor" /> Take a Fun Quiz!
                                     </button>
                                 </div>
                             </div>
                         )}
 
                         {activeSection === 'beliefs' && (
-                            <div className="space-y-12">
-                                <div className="text-center mb-8">
-                                    <h2 className="text-3xl font-bold text-emerald-800 mb-4">The 6 Articles of Faith</h2>
-                                    <p className="text-slate-600 text-lg">The core beliefs that every Muslim holds in their heart.</p>
+                            <div className="space-y-12 relative z-10">
+                                <div className="text-center mb-10">
+                                    <h2 className="text-4xl font-black text-emerald-600 mb-4 flex items-center justify-center gap-3">
+                                        <Heart className="text-rose-400 fill-rose-400" size={40} />
+                                        The 6 Articles of Faith
+                                    </h2>
+                                    <p className="text-slate-500 text-lg font-bold">The core beliefs that every Muslim holds in their heart. ❤️</p>
                                 </div>
                                 <div className="grid md:grid-cols-2 gap-6">
                                     {beliefsContent.map((item, idx) => (
                                         <motion.div 
                                             key={idx}
                                             whileHover={{ scale: 1.02 }}
-                                            className="bg-white p-6 rounded-2xl shadow-sm border border-emerald-50 flex items-start gap-4 hover:shadow-md transition-all"
+                                            className="bg-white p-6 rounded-[2rem] shadow-sm border-4 border-emerald-50 flex items-start gap-5 hover:shadow-lg transition-all hover:border-emerald-200"
                                         >
-                                            <div className="bg-emerald-50 p-3 rounded-full flex-shrink-0">
-                                                {item.icon}
+                                            <div className="bg-emerald-100 p-4 rounded-2xl flex-shrink-0 text-emerald-600">
+                                                {React.cloneElement(item.icon as any, { size: 28, strokeWidth: 3 })}
                                             </div>
                                             <div>
-                                                <h3 className="text-xl font-bold text-emerald-800 mb-2">{item.title}</h3>
-                                                <p className="text-slate-600 leading-relaxed text-lg">{item.content}</p>
+                                                <h3 className="text-xl font-black text-emerald-800 mb-2">{item.title}</h3>
+                                                <p className="text-slate-600 leading-relaxed text-lg font-medium">{item.content}</p>
                                             </div>
                                         </motion.div>
                                     ))}
                                 </div>
                                 
-                                <div className="bg-emerald-100 rounded-3xl p-8 text-center mt-8 border border-emerald-200">
-                                    <h3 className="text-2xl font-bold text-emerald-800 mb-4">Who is Allah?</h3>
-                                    <p className="text-emerald-900 text-lg leading-relaxed max-w-3xl mx-auto">
-                                        Allah is the Arabic word for God. He is the Creator of the stars, the oceans, the animals, and you! He is not a man or a woman, and He has no partners. He is the Most Merciful and the Most Kind.
+                                <div className="bg-emerald-50 rounded-[2.5rem] p-10 text-center mt-10 border-4 border-emerald-100 relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-200 rounded-full -mr-10 -mt-10 opacity-20" />
+                                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-yellow-200 rounded-full -ml-10 -mb-10 opacity-30" />
+                                    
+                                    <h3 className="text-3xl font-black text-emerald-800 mb-4 relative z-10">Who is Allah?</h3>
+                                    <p className="text-emerald-900 text-xl leading-relaxed max-w-3xl mx-auto font-medium relative z-10">
+                                        Allah is the Arabic word for God. He is the Creator of the stars, the oceans, the animals, and you! He is not a man or a woman, and He has no partners. He is the Most Merciful and the Most Kind. 🌟
                                     </p>
                                 </div>
-                                <div className="text-center mt-8">
+                                <div className="text-center mt-10">
                                     <button 
                                         onClick={() => generateQuiz('beliefs')}
-                                        className="bg-emerald-500 text-white px-8 py-3 rounded-full font-bold hover:bg-emerald-600 transition-colors shadow-lg flex items-center gap-2 mx-auto"
+                                        className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black hover:bg-emerald-600 transition-all shadow-[0_6px_0_#059669] active:shadow-none active:translate-y-[6px] flex items-center gap-3 mx-auto text-lg"
                                     >
-                                        <Play size={20} /> Take a Quiz on Faith
+                                        <Play size={24} fill="currentColor" /> Take a Quiz on Faith
                                     </button>
                                 </div>
                             </div>
                         )}
 
                         {activeGuideCategory !== undefined && activeGuideCategory >= 0 && (
-                            <div className="space-y-8">
-                                <div className="flex items-center gap-4 mb-8 border-b border-slate-200 pb-6">
-                                    <div className="bg-white p-4 rounded-2xl shadow-sm">
-                                        {React.cloneElement(guideCategories[activeGuideCategory].icon as any, { size: 32 })}
+                            <div className="space-y-8 relative z-10">
+                                <div className="flex items-center gap-6 mb-10 border-b-4 border-slate-100 pb-8">
+                                    <div className="bg-emerald-100 p-6 rounded-[2rem] shadow-sm text-emerald-600">
+                                        {React.cloneElement(guideCategories[activeGuideCategory].icon as any, { size: 48, strokeWidth: 2.5 })}
                                     </div>
                                     <div>
-                                        <h3 className="text-3xl font-bold text-slate-800">{guideCategories[activeGuideCategory].title}</h3>
-                                        <p className="text-emerald-600 font-medium">Step-by-step guidance</p>
+                                        <h3 className="text-4xl font-black text-slate-800 mb-2">{guideCategories[activeGuideCategory].title}</h3>
+                                        <p className="text-emerald-500 font-bold text-lg uppercase tracking-wider bg-emerald-50 px-4 py-1 rounded-full inline-block">Step-by-step guidance</p>
                                     </div>
                                 </div>
                                 
@@ -595,110 +699,127 @@ const DiscoverIslam = () => {
                                     {guideCategories[activeGuideCategory].steps.map((step, stepIdx) => (
                                         <motion.div
                                             key={stepIdx}
-                                            initial={{ opacity: 0, y: 10 }}
+                                            initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: stepIdx * 0.1 }}
-                                            className="bg-white p-6 rounded-2xl shadow-sm border border-emerald-50 hover:shadow-md transition-all hover:border-emerald-200"
+                                            className="bg-white p-8 rounded-[2rem] shadow-sm border-4 border-emerald-50 hover:shadow-lg transition-all hover:border-emerald-200 group"
                                         >
-                                            <div className="flex items-start gap-4">
-                                                <div className="bg-emerald-100 text-emerald-700 w-12 h-12 rounded-full flex items-center justify-center font-bold flex-shrink-0 mt-1">
-                                                    {step.icon ? React.cloneElement(step.icon as any, { size: 20 }) : stepIdx + 1}
+                                            <div className="flex items-start gap-6">
+                                                <div className="bg-emerald-100 text-emerald-700 w-16 h-16 rounded-2xl flex items-center justify-center font-black text-xl flex-shrink-0 mt-1 shadow-inner group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300">
+                                                    {step.icon ? React.cloneElement(step.icon as any, { size: 28, strokeWidth: 2.5 }) : stepIdx + 1}
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-bold text-emerald-800 text-lg mb-1">{step.title}</h4>
-                                                    <p className="text-emerald-600 text-xs font-bold uppercase tracking-wider mb-2">{step.subtitle}</p>
-                                                    <p className="text-slate-600 leading-relaxed">{step.content}</p>
+                                                    <h4 className="font-black text-emerald-800 text-2xl mb-2">{step.title}</h4>
+                                                    <p className="text-emerald-500 text-xs font-black uppercase tracking-widest mb-3 bg-emerald-50 px-3 py-1 rounded-full inline-block">{step.subtitle}</p>
+                                                    <p className="text-slate-600 leading-relaxed text-lg font-medium">{step.content}</p>
                                                 </div>
                                             </div>
                                         </motion.div>
                                     ))}
                                 </div>
-                                <div className="text-center mt-8">
+                                <div className="text-center mt-10">
                                     <button 
                                         onClick={() => generateQuiz(`guide-${guideCategories[activeGuideCategory].title}`)}
-                                        className="bg-emerald-500 text-white px-8 py-3 rounded-full font-bold hover:bg-emerald-600 transition-colors shadow-lg flex items-center gap-2 mx-auto"
+                                        className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black hover:bg-emerald-600 transition-all shadow-[0_6px_0_#059669] active:shadow-none active:translate-y-[6px] flex items-center gap-3 mx-auto text-lg"
                                     >
-                                        <Play size={20} /> Take a Quiz on {guideCategories[activeGuideCategory].title}
+                                        <Play size={24} fill="currentColor" /> Quiz Time! 🧠
                                     </button>
                                 </div>
                             </div>
                         )}
 
                         {activeSection === 'science' && (
-                            <div className="space-y-12">
-                                <div className="text-center mb-8">
-                                    <h2 className="text-3xl font-bold text-emerald-800 mb-4">Islam & Science</h2>
-                                    <p className="text-slate-600 text-lg">Exploring the scientific miracles mentioned in the Quran centuries ago.</p>
+                            <div className="space-y-12 relative z-10">
+                                <div className="text-center mb-10">
+                                    <h2 className="text-4xl font-black text-emerald-600 mb-4 flex items-center justify-center gap-3">
+                                        <Atom className="text-indigo-500" size={40} />
+                                        Islam & Science
+                                    </h2>
+                                    <p className="text-slate-600 text-lg font-bold">Exploring the scientific miracles mentioned in the Quran centuries ago! 🧪</p>
                                 </div>
 
                                 {scienceTopics.map((topic, idx) => (
-                                    <div key={idx} className="bg-white rounded-3xl p-8 shadow-lg border border-emerald-100">
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <div className="bg-emerald-50 p-3 rounded-full">
-                                                {topic.icon}
+                                    <div key={idx} className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-lg border-4 border-emerald-100 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-50 rounded-bl-full -mr-10 -mt-10 opacity-50" />
+                                        
+                                        <div className="flex items-center gap-4 mb-8 relative z-10">
+                                            <div className="bg-emerald-100 p-4 rounded-2xl text-emerald-600">
+                                                {React.cloneElement(topic.icon as any, { size: 32, strokeWidth: 2.5 })}
                                             </div>
-                                            <h3 className="text-2xl font-bold text-emerald-900">{topic.category}</h3>
+                                            <h3 className="text-3xl font-black text-emerald-900">{topic.category}</h3>
                                         </div>
                                         
-                                        <div className="grid md:grid-cols-2 gap-6">
+                                        <div className="grid md:grid-cols-2 gap-6 relative z-10">
                                             {topic.items.map((item, itemIdx) => (
                                                 <motion.div 
                                                     key={itemIdx}
-                                                    whileHover={{ scale: 1.01 }}
-                                                    className="bg-slate-50 p-6 rounded-2xl border border-slate-100 hover:border-emerald-200 transition-colors"
+                                                    whileHover={{ scale: 1.02 }}
+                                                    className="bg-slate-50 p-6 rounded-[2rem] border-2 border-slate-100 hover:border-emerald-300 transition-all hover:bg-white hover:shadow-md"
                                                 >
-                                                    <div className="flex justify-between items-start mb-3">
+                                                    <div className="flex justify-between items-start mb-4">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="bg-emerald-50 p-2 rounded-full">
-                                                                {item.icon && React.cloneElement(item.icon as any, { size: 18 })}
+                                                            <div className="bg-white p-3 rounded-xl shadow-sm text-emerald-600">
+                                                                {item.icon && React.cloneElement(item.icon as any, { size: 20, strokeWidth: 2.5 })}
                                                             </div>
-                                                            <h4 className="font-bold text-slate-800 text-lg">{item.title}</h4>
+                                                            <h4 className="font-black text-slate-800 text-lg">{item.title}</h4>
                                                         </div>
-                                                        <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap">
+                                                        <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1 rounded-full whitespace-nowrap uppercase tracking-wider">
                                                             {item.reference}
                                                         </span>
                                                     </div>
-                                                    <p className="text-slate-600 leading-relaxed">{item.content}</p>
+                                                    <p className="text-slate-600 leading-relaxed font-medium">{item.content}</p>
                                                 </motion.div>
                                             ))}
                                         </div>
                                     </div>
                                 ))}
-                                <div className="text-center mt-8">
+                                <div className="text-center mt-10">
                                     <button 
                                         onClick={() => generateQuiz('science')}
-                                        className="bg-emerald-500 text-white px-8 py-3 rounded-full font-bold hover:bg-emerald-600 transition-colors shadow-lg flex items-center gap-2 mx-auto"
+                                        className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black hover:bg-emerald-600 transition-all shadow-[0_6px_0_#059669] active:shadow-none active:translate-y-[6px] flex items-center gap-3 mx-auto text-lg"
                                     >
-                                        <Play size={20} /> Take a Quiz on Islam & Science
+                                        <Play size={24} fill="currentColor" /> Take a Science Quiz!
                                     </button>
                                 </div>
                             </div>
                         )}
 
                         {activeSection === 'achievements' && (
-                            <div className="max-w-4xl mx-auto">
-                                <div className="text-center mb-8">
-                                    <h2 className="text-3xl font-bold text-emerald-800 mb-4">Your Achievements</h2>
-                                    <p className="text-slate-600 text-lg">Collect badges as you learn!</p>
+                            <div className="max-w-5xl mx-auto relative z-10">
+                                <div className="text-center mb-10">
+                                    <h2 className="text-4xl font-black text-emerald-800 mb-4 flex items-center justify-center gap-3">
+                                        <Trophy className="text-yellow-500 fill-yellow-500" size={40} />
+                                        Your Achievements
+                                    </h2>
+                                    <p className="text-slate-600 text-lg font-bold">Collect badges as you learn! Can you get them all? 🏆</p>
                                 </div>
                                 
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-1 gap-6">
                                     {achievements.map((achievement) => {
                                         const isUnlocked = unlockedAchievements.includes(achievement.id);
                                         return (
-                                            <div 
+                                            <motion.div 
                                                 key={achievement.id}
-                                                className={`p-4 rounded-2xl border-2 text-center transition-all ${
+                                                whileHover={{ scale: 1.02 }}
+                                                className={`p-6 rounded-[2rem] border-4 transition-all relative overflow-hidden flex items-center gap-6 text-left ${
                                                     isUnlocked 
-                                                        ? 'bg-white border-emerald-200 shadow-md' 
-                                                        : 'bg-slate-50 border-slate-100 opacity-60 grayscale'
+                                                        ? 'bg-white border-emerald-200 shadow-lg' 
+                                                        : 'bg-slate-50 border-slate-100 opacity-70 grayscale'
                                                 }`}
                                             >
-                                                <div className="text-4xl mb-2">{achievement.icon}</div>
-                                                <h3 className="font-bold text-slate-800 text-sm mb-1">{achievement.title}</h3>
-                                                <p className="text-xs text-slate-500">{achievement.description}</p>
-                                                {!isUnlocked && <Lock size={12} className="mx-auto mt-2 text-slate-400" />}
-                                            </div>
+                                                {isUnlocked && <div className="absolute top-0 right-0 w-16 h-16 bg-yellow-100 rounded-bl-full -mr-8 -mt-8 opacity-50" />}
+                                                
+                                                <div className="text-5xl transform transition-transform hover:scale-110 duration-300 flex-shrink-0">{achievement.icon}</div>
+                                                <div>
+                                                    <h3 className="font-black text-slate-800 text-lg mb-1 uppercase tracking-wide">{achievement.title}</h3>
+                                                    <p className="text-sm text-slate-500 font-bold leading-relaxed">{achievement.description}</p>
+                                                    {!isUnlocked && (
+                                                        <div className="mt-2 bg-slate-200 text-slate-500 text-[10px] font-black uppercase tracking-widest py-1 px-3 rounded-full inline-flex items-center gap-1">
+                                                            <Lock size={10} /> Locked
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </motion.div>
                                         );
                                     })}
                                 </div>
@@ -706,22 +827,33 @@ const DiscoverIslam = () => {
                         )}
 
                         {activeSection === 'quiz' && (
-                            <div className="max-w-2xl mx-auto">
+                            <div className="max-w-3xl mx-auto relative z-10">
                                 {quizState === 'loading' && (
-                                    <div className="text-center py-20">
-                                        <Loader2 size={48} className="animate-spin text-emerald-500 mx-auto mb-4" />
-                                        <h3 className="text-xl font-bold text-slate-700">Generating your quiz...</h3>
+                                    <div className="text-center py-20 flex flex-col items-center gap-6">
+                                        <div className="w-20 h-20 border-8 border-emerald-100 border-t-emerald-500 rounded-full animate-spin" />
+                                        <h3 className="text-2xl font-black text-slate-700 animate-pulse">Cooking up a fun quiz... 🍳</h3>
                                     </div>
                                 )}
 
                                 {quizState === 'playing' && (
-                                    <div className="bg-white rounded-3xl p-8 shadow-lg border border-emerald-100">
-                                        <div className="flex justify-between items-center mb-8 text-sm font-bold text-slate-500 uppercase tracking-wider">
-                                            <span>Question {currentQuestion + 1} of {quizQuestions.length}</span>
-                                            <span>Score: {score}</span>
+                                    <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl border-4 border-emerald-100 relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-full h-2 bg-slate-100">
+                                            <div 
+                                                className="h-full bg-emerald-500 transition-all duration-500 ease-out"
+                                                style={{ width: `${((currentQuestion + 1) / quizQuestions.length) * 100}%` }}
+                                            />
                                         </div>
 
-                                        <h3 className="text-2xl font-bold text-slate-800 mb-8 leading-relaxed">
+                                        <div className="flex justify-between items-center mb-10 mt-4">
+                                            <span className="font-black text-slate-400 uppercase tracking-widest text-sm bg-slate-100 px-4 py-2 rounded-full">
+                                                Question {currentQuestion + 1} / {quizQuestions.length}
+                                            </span>
+                                            <span className="font-black text-emerald-600 uppercase tracking-widest text-sm bg-emerald-100 px-4 py-2 rounded-full flex items-center gap-2">
+                                                <Star size={14} fill="currentColor" /> Score: {score}
+                                            </span>
+                                        </div>
+
+                                        <h3 className="text-3xl font-black text-slate-800 mb-10 leading-relaxed">
                                             {quizQuestions[currentQuestion].question}
                                         </h3>
 
@@ -731,13 +863,13 @@ const DiscoverIslam = () => {
                                                 const isCorrect = idx === quizQuestions[currentQuestion].correct;
                                                 const showResult = selectedAnswer !== null;
                                                 
-                                                let buttonClass = "w-full p-4 rounded-xl text-left font-medium transition-all border-2 ";
+                                                let buttonClass = "w-full p-5 rounded-2xl text-left font-bold text-lg transition-all border-4 shadow-sm ";
                                                 if (showResult) {
                                                     if (isCorrect) buttonClass += "bg-emerald-100 border-emerald-500 text-emerald-800";
                                                     else if (isSelected) buttonClass += "bg-rose-100 border-rose-500 text-rose-800";
-                                                    else buttonClass += "bg-slate-50 border-slate-100 text-slate-400";
+                                                    else buttonClass += "bg-slate-50 border-slate-100 text-slate-400 opacity-50";
                                                 } else {
-                                                    buttonClass += "bg-slate-50 border-slate-100 hover:border-emerald-300 hover:bg-emerald-50 text-slate-700";
+                                                    buttonClass += "bg-white border-slate-100 hover:border-emerald-300 hover:bg-emerald-50 text-slate-700 hover:shadow-md active:scale-[0.99]";
                                                 }
 
                                                 return (
@@ -749,8 +881,8 @@ const DiscoverIslam = () => {
                                                     >
                                                         <div className="flex justify-between items-center">
                                                             <span>{option}</span>
-                                                            {showResult && isCorrect && <CheckCircle className="text-emerald-600" />}
-                                                            {showResult && isSelected && !isCorrect && <XCircle className="text-rose-600" />}
+                                                            {showResult && isCorrect && <CheckCircle className="text-emerald-600" size={28} strokeWidth={3} />}
+                                                            {showResult && isSelected && !isCorrect && <XCircle className="text-rose-600" size={28} strokeWidth={3} />}
                                                         </div>
                                                     </button>
                                                 );
@@ -760,40 +892,55 @@ const DiscoverIslam = () => {
                                 )}
 
                                 {quizState === 'result' && (
-                                    <div className="text-center bg-white rounded-3xl p-12 shadow-lg border border-emerald-100">
-                                        <div className="mb-6">
+                                    <div className="text-center bg-white rounded-[3rem] p-12 shadow-2xl border-8 border-emerald-100 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-50 rounded-full -mr-20 -mt-20 opacity-50" />
+                                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-50 rounded-full -ml-20 -mb-20 opacity-50" />
+                                        
+                                        <div className="mb-8 relative z-10">
                                             {score === quizQuestions.length ? (
-                                                <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto text-yellow-500">
-                                                    <Trophy size={48} />
-                                                </div>
+                                                <motion.div 
+                                                    initial={{ scale: 0, rotate: -180 }}
+                                                    animate={{ scale: 1, rotate: 0 }}
+                                                    className="w-32 h-32 bg-yellow-100 rounded-full flex items-center justify-center mx-auto text-yellow-500 shadow-lg border-4 border-yellow-200"
+                                                >
+                                                    <Trophy size={64} strokeWidth={2.5} />
+                                                </motion.div>
                                             ) : score > quizQuestions.length / 2 ? (
-                                                <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-500">
-                                                    <Star size={48} />
-                                                </div>
+                                                <motion.div 
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    className="w-32 h-32 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-500 shadow-lg border-4 border-emerald-200"
+                                                >
+                                                    <Star size={64} strokeWidth={2.5} />
+                                                </motion.div>
                                             ) : (
-                                                <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-500">
-                                                    <RotateCcw size={48} />
-                                                </div>
+                                                <motion.div 
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    className="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400 shadow-lg border-4 border-slate-200"
+                                                >
+                                                    <RotateCcw size={64} strokeWidth={2.5} />
+                                                </motion.div>
                                             )}
                                         </div>
                                         
-                                        <h3 className="text-3xl font-bold text-slate-800 mb-2">Quiz Complete!</h3>
-                                        <p className="text-xl text-slate-600 mb-8">
-                                            You scored <span className="font-bold text-emerald-600">{score}</span> out of <span className="font-bold">{quizQuestions.length}</span>
+                                        <h3 className="text-4xl font-black text-slate-800 mb-4 relative z-10">Quiz Complete! 🎉</h3>
+                                        <p className="text-2xl text-slate-600 mb-10 font-medium relative z-10">
+                                            You scored <span className="font-black text-emerald-500 text-3xl">{score}</span> out of <span className="font-black text-slate-800 text-3xl">{quizQuestions.length}</span>
                                         </p>
 
-                                        <div className="flex gap-4 justify-center">
+                                        <div className="flex flex-col md:flex-row gap-4 justify-center relative z-10">
                                             <button 
                                                 onClick={() => setActiveSection('achievements')}
-                                                className="bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors flex items-center gap-2"
+                                                className="bg-slate-100 text-slate-700 px-8 py-4 rounded-2xl font-black hover:bg-slate-200 transition-colors flex items-center justify-center gap-3 shadow-sm border-2 border-slate-200"
                                             >
-                                                <Award size={20} /> View Achievements
+                                                <Award size={24} /> View Achievements
                                             </button>
                                             <button 
                                                 onClick={() => generateQuiz(quizTopic)}
-                                                className="bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-600 transition-colors flex items-center gap-2"
+                                                className="bg-emerald-500 text-white px-8 py-4 rounded-2xl font-black hover:bg-emerald-600 transition-all shadow-[0_6px_0_#059669] active:shadow-none active:translate-y-[6px] flex items-center justify-center gap-3"
                                             >
-                                                <RotateCcw size={20} /> Try Another Quiz
+                                                <RotateCcw size={24} /> Try Another Quiz
                                             </button>
                                         </div>
                                     </div>
@@ -892,12 +1039,6 @@ const DiscoverIslam = () => {
                             <div className="text-center">
                                 <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 relative">
                                     <Heart size={40} className="text-emerald-600" />
-                                    <button 
-                                        onClick={playShahadaSequence}
-                                        className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-3 rounded-full shadow-lg hover:bg-emerald-600 transition-transform hover:scale-110"
-                                    >
-                                        {isShahadaPlaying ? <StopCircle size={20} /> : <Volume2 size={20} />}
-                                    </button>
                                 </div>
                                 <h2 className="text-3xl font-bold text-emerald-800 mb-2">The Shahada</h2>
                                 <p className="text-slate-500 mb-8">The Declaration of Faith</p>

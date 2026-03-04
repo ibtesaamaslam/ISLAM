@@ -8,24 +8,22 @@ const Navbar = () => {
     const location = useLocation();
     const { points } = useGamification();
 
-    const NavItem = ({ to, icon: Icon, label, color }: { to: string, icon: any, label: string, color: string }) => {
+    const NavItem = ({ to, icon: Icon, label, activeColor, inactiveColor }: { to: string, icon: any, label: string, activeColor: string, inactiveColor: string }) => {
         const isActive = location.pathname === to;
         return (
             <Link to={to} className="relative group">
                 <motion.div 
-                    whileHover={{ scale: 1.1 }}
+                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`flex flex-col items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300 ${isActive ? 'bg-white shadow-lg' : 'bg-white/50 hover:bg-white/80'}`}
+                    className={`flex flex-col items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl transition-all duration-300 border-b-4 active:border-b-0 active:translate-y-1 ${
+                        isActive 
+                            ? `bg-white shadow-lg ${activeColor} border-slate-200` 
+                            : `bg-white/80 hover:bg-white ${inactiveColor} border-transparent hover:border-slate-100`
+                    }`}
                 >
-                    <Icon size={24} className={`${isActive ? color : 'text-slate-400'} transition-colors`} />
-                    <span className={`text-[10px] font-bold mt-1 ${isActive ? color : 'text-slate-400'}`}>{label}</span>
+                    <Icon size={28} strokeWidth={2.5} className={`transition-colors ${isActive ? '' : 'opacity-70 group-hover:opacity-100'}`} />
+                    <span className={`text-[10px] sm:text-xs font-black mt-1 uppercase tracking-wide ${isActive ? '' : 'opacity-70 group-hover:opacity-100'}`}>{label}</span>
                 </motion.div>
-                {isActive && (
-                    <motion.div 
-                        layoutId="activeTab"
-                        className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${color.replace('text-', 'bg-')}`}
-                    />
-                )}
             </Link>
         );
     };
@@ -37,21 +35,22 @@ const Navbar = () => {
                 <Link to="/discover">
                     <motion.div 
                         whileHover={{ scale: 1.05 }}
-                        className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-amber-200 flex items-center gap-2"
+                        whileTap={{ scale: 0.95 }}
+                        className="bg-white px-4 py-2 rounded-full shadow-[0_4px_0_#fbbf24] border-2 border-amber-200 flex items-center gap-2 cursor-pointer active:shadow-none active:translate-y-[4px] transition-all"
                     >
-                        <Star className="text-amber-500 fill-amber-500" size={16} />
-                        <span className="font-black text-slate-800">{points}</span>
+                        <Star className="text-amber-400 fill-amber-400" size={24} strokeWidth={2.5} />
+                        <span className="font-black text-slate-700 text-lg">{points}</span>
                     </motion.div>
                 </Link>
             </div>
 
             {/* Bottom Nav */}
-            <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md p-2 rounded-3xl shadow-2xl border border-white/50 flex gap-2 sm:gap-4 z-50">
-                <NavItem to="/" icon={Home} label="Home" color="text-indigo-500" />
-                <NavItem to="/quran" icon={BookOpen} label="Quran" color="text-emerald-500" />
-                <NavItem to="/hadith" icon={Star} label="Hadith" color="text-amber-500" />
-                <NavItem to="/discover" icon={Heart} label="Discover" color="text-rose-500" />
-                <NavItem to="/chat" icon={MessageCircle} label="Ask AI" color="text-sky-500" />
+            <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-xl p-3 rounded-[2rem] shadow-2xl border-4 border-white/50 flex gap-2 sm:gap-4 z-50 max-w-[95vw] overflow-x-auto scrollbar-hide">
+                <NavItem to="/" icon={Home} label="Home" activeColor="text-indigo-500" inactiveColor="text-indigo-300" />
+                <NavItem to="/quran" icon={BookOpen} label="Quran" activeColor="text-emerald-500" inactiveColor="text-emerald-300" />
+                <NavItem to="/hadith" icon={Star} label="Hadith" activeColor="text-amber-500" inactiveColor="text-amber-300" />
+                <NavItem to="/discover" icon={Heart} label="Discover" activeColor="text-rose-500" inactiveColor="text-rose-300" />
+                <NavItem to="/chat" icon={MessageCircle} label="Ask AI" activeColor="text-sky-500" inactiveColor="text-sky-300" />
             </nav>
         </>
     );

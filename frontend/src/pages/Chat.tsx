@@ -45,59 +45,83 @@ const Chat = () => {
     };
 
     return (
-        <div className="min-h-screen bg-rose-50 pb-32 pt-4 px-4 flex flex-col">
-            <div className="container mx-auto max-w-2xl flex-1 flex flex-col">
-                <div className="text-center mb-6">
-                    <div className="w-16 h-16 bg-rose-200 rounded-full mx-auto flex items-center justify-center text-rose-600 mb-2 shadow-sm">
-                        <Bot size={32} />
+        <div className="min-h-screen bg-rose-50 pb-32 pt-6 px-4 flex flex-col font-sans selection:bg-rose-200 selection:text-rose-900">
+            <div className="container mx-auto max-w-2xl flex-1 flex flex-col h-full">
+                <motion.div 
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="text-center mb-8"
+                >
+                    <div className="w-24 h-24 bg-white rounded-full mx-auto flex items-center justify-center text-rose-500 mb-4 shadow-lg border-4 border-rose-200 relative">
+                        <div className="absolute top-0 right-0 w-6 h-6 bg-green-400 rounded-full border-2 border-white animate-pulse" />
+                        <Bot size={48} strokeWidth={2.5} />
                     </div>
-                    <h1 className="text-2xl font-black text-rose-600">Ask Noor</h1>
-                    <p className="text-rose-400 text-sm">Your AI Islamic Guide</p>
-                </div>
+                    <h1 className="text-4xl font-black text-rose-500 mb-1 drop-shadow-sm">Ask Noor 🤖</h1>
+                    <p className="text-rose-400 font-bold text-lg">Your Friendly AI Islamic Guide</p>
+                </motion.div>
 
-                <div className="flex-1 overflow-y-auto space-y-4 mb-4 p-4">
+                <div className="flex-1 overflow-y-auto space-y-6 mb-6 p-4 scrollbar-hide">
                     {messages.length === 0 && (
-                        <div className="text-center text-rose-300 mt-10">
-                            <Sparkles className="mx-auto mb-2 opacity-50" size={48} />
-                            <p>Salaam! I'm Noor. Ask me anything about Islam! 🕌</p>
-                        </div>
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="text-center text-rose-300 mt-10 flex flex-col items-center gap-4"
+                        >
+                            <div className="p-6 bg-white rounded-[2rem] shadow-sm border-2 border-rose-100 rotate-3">
+                                <Sparkles className="text-rose-400 animate-pulse" size={64} />
+                            </div>
+                            <p className="font-black text-xl max-w-xs">Salaam! I'm Noor. Ask me anything about Islam! 🕌✨</p>
+                        </motion.div>
                     )}
                     {messages.map((msg, idx) => (
                         <motion.div 
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
+                            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
                             key={idx} 
                             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
-                            <div className={`max-w-[80%] rounded-2xl p-4 shadow-sm ${msg.role === 'user' ? 'bg-rose-500 text-white rounded-br-none' : 'bg-white text-slate-700 rounded-bl-none border border-rose-100'}`}>
+                            <div className={`max-w-[85%] rounded-3xl p-5 shadow-sm font-medium text-lg leading-relaxed ${
+                                msg.role === 'user' 
+                                ? 'bg-rose-500 text-white rounded-br-none shadow-rose-200' 
+                                : 'bg-white text-slate-700 rounded-bl-none border-2 border-rose-100 shadow-sm'
+                            }`}>
                                 {msg.content}
                             </div>
                         </motion.div>
                     ))}
                     {loading && (
-                        <div className="flex justify-start">
-                            <div className="bg-white text-rose-400 rounded-2xl p-4 rounded-bl-none border border-rose-100 italic text-sm">
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex justify-start"
+                        >
+                            <div className="bg-white text-rose-400 rounded-3xl p-5 rounded-bl-none border-2 border-rose-100 italic font-bold text-sm flex items-center gap-2 shadow-sm">
+                                <div className="flex gap-1">
+                                    <div className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                    <div className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                    <div className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                </div>
                                 Noor is thinking... ✨
                             </div>
-                        </div>
+                        </motion.div>
                     )}
                 </div>
 
-                <div className="bg-white p-2 rounded-3xl shadow-lg border border-rose-100 flex gap-2">
+                <div className="bg-white p-3 rounded-[2rem] shadow-xl border-4 border-rose-100 flex gap-3 sticky bottom-4">
                     <input 
                         type="text" 
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                         placeholder="Type your question here..."
-                        className="flex-1 p-3 rounded-2xl focus:outline-none text-slate-700 placeholder:text-slate-300"
+                        className="flex-1 p-4 rounded-2xl focus:outline-none text-slate-700 placeholder:text-rose-300 font-bold text-lg bg-rose-50/50 focus:bg-rose-50 transition-colors"
                     />
                     <button 
                         onClick={handleSend}
                         disabled={loading || !query.trim()}
-                        className="bg-rose-500 text-white p-3 rounded-2xl hover:bg-rose-600 disabled:opacity-50 transition shadow-md"
+                        className="bg-rose-500 text-white p-4 rounded-2xl hover:bg-rose-600 disabled:opacity-50 disabled:hover:bg-rose-500 transition-all shadow-[0_4px_0_#be123c] active:shadow-none active:translate-y-[4px] active:bg-rose-600"
                     >
-                        <Send size={20} />
+                        <Send size={24} strokeWidth={3} />
                     </button>
                 </div>
             </div>

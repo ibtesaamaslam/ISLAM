@@ -28,6 +28,9 @@ interface TafseerData {
     explanation: string;
     englishExplanation: string;
     backgroundHistory: string;
+    backgroundHistoryUrdu: string;
+    historicalContext: string;
+    historicalContextUrdu: string;
     didYouKnow: string;
     quiz: {
         question: string;
@@ -86,6 +89,7 @@ const QuranReader = () => {
     // Offline State
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
     const [downloading, setDownloading] = useState(false);
+    const [downloadProgress, setDownloadProgress] = useState(0);
     const [isDownloaded, setIsDownloaded] = useState(false);
 
     const { addPoints, unlockAchievement } = useGamification();
@@ -189,12 +193,18 @@ const QuranReader = () => {
     // Check if Surah is downloaded
     useEffect(() => {
         const checkDownloadStatus = async () => {
-            if ('caches' in window) {
+            const localData = localStorage.getItem(`surah_${sura}_data`);
+            if (localData) {
+                setIsDownloaded(true);
+            } else if ('caches' in window) {
+                // Fallback check for audio only (legacy)
                 const cache = await caches.open('quran-audio');
                 if (ayas.length > 0) {
                     const match = await cache.match(ayas[0].audio);
-                    setIsDownloaded(!!match);
+                    if (match) setIsDownloaded(true);
                 }
+            } else {
+                setIsDownloaded(false);
             }
         };
         checkDownloadStatus();
@@ -206,6 +216,22 @@ const QuranReader = () => {
             setTafseerOpen(null);
             stopAudio();
             stopTafseerAudio();
+
+            // Check Local Storage First
+            const localData = localStorage.getItem(`surah_${sura}_data`);
+            if (localData) {
+                try {
+                    const parsed = JSON.parse(localData);
+                    setSurahInfo(parsed.surahInfo);
+                    setAyas(parsed.ayas);
+                    setLoading(false);
+                    return;
+                } catch (e) {
+                    console.error("Failed to parse local surah data", e);
+                    localStorage.removeItem(`surah_${sura}_data`);
+                }
+            }
+
             try {
                 // Fetch Arabic Text
                 const arabicRes = await axios.get(`https://api.alquran.cloud/v1/surah/${sura}`);
@@ -288,6 +314,9 @@ const QuranReader = () => {
                 addPoints(10);
             } catch (err) {
                 console.error(err);
+                if (isOffline) {
+                    alert("You are offline and this Surah hasn't been downloaded yet.");
+                }
             } finally {
                 setLoading(false);
             }
@@ -295,10 +324,20 @@ const QuranReader = () => {
         fetchSura();
     }, [sura]);
 
-    const downloadSurahAudio = async () => {
+    const downloadSurahContent = async () => {
         if (!('caches' in window)) return;
         setDownloading(true);
+        setDownloadProgress(0);
         try {
+            // 1. Save Text Content to LocalStorage
+            const surahData = {
+                surahInfo,
+                ayas,
+                timestamp: Date.now()
+            };
+            localStorage.setItem(`surah_${sura}_data`, JSON.stringify(surahData));
+
+            // 2. Download Audio Files
             const cache = await caches.open('quran-audio');
             
             // Collect all unique URLs
@@ -308,48 +347,53 @@ const QuranReader = () => {
                 aya.englishAudio
             ]).filter(Boolean)));
 
-            // Process in batches to avoid network congestion
-            const BATCH_SIZE = 5;
-            let successCount = 0;
+            let completed = 0;
+            const total = urls.length;
 
+            // Process in batches
+            const BATCH_SIZE = 5;
             for (let i = 0; i < urls.length; i += BATCH_SIZE) {
                 const batch = urls.slice(i, i + BATCH_SIZE);
                 await Promise.all(batch.map(async (url) => {
                     try {
                         const match = await cache.match(url);
                         if (!match) {
-                            await cache.add(url);
+                            const response = await fetch(url, { mode: 'cors' });
+                            if (response.ok) {
+                                await cache.put(url, response);
+                            } else {
+                                console.warn(`Skipping cache for ${url} - response not OK`);
+                            }
                         }
-                        successCount++;
                     } catch (e) {
                         console.warn(`Failed to cache ${url}`, e);
+                    } finally {
+                        completed++;
+                        setDownloadProgress(Math.round((completed / total) * 100));
                     }
                 }));
-                // Small delay to be nice to the network
-                await new Promise(resolve => setTimeout(resolve, 50));
             }
 
-            if (successCount > 0) {
-                setIsDownloaded(true);
-                addPoints(50);
-                alert(`Downloaded ${successCount} audio files for offline listening!`);
-            } else {
-                throw new Error("No files could be downloaded");
-            }
+            setIsDownloaded(true);
+            addPoints(50);
+            alert(`Surah downloaded successfully for offline use!`);
         } catch (err) {
             console.error("Download failed", err);
             alert("Failed to download. Please check your connection.");
         } finally {
             setDownloading(false);
+            setDownloadProgress(0);
         }
     };
 
-    const deleteSurahAudio = async () => {
+    const deleteSurahContent = async () => {
         if (!('caches' in window)) return;
         try {
+            // Remove text data
+            localStorage.removeItem(`surah_${sura}_data`);
+
+            // Remove audio data
             const cache = await caches.open('quran-audio');
-            
-            // Collect all unique URLs
             const urls = Array.from(new Set(ayas.flatMap(aya => [
                 aya.audio,
                 aya.urduAudio,
@@ -375,24 +419,43 @@ const QuranReader = () => {
         }
 
         let playUrl = queue[index];
+        let isBlobUrl = false;
+
         if ('caches' in window) {
-            const cache = await caches.open('quran-audio');
-            const response = await cache.match(playUrl);
-            if (response) {
-                const blob = await response.blob();
-                playUrl = URL.createObjectURL(blob);
+            try {
+                const cache = await caches.open('quran-audio');
+                const response = await cache.match(playUrl);
+                if (response) {
+                    const blob = await response.blob();
+                    if (blob.size > 0) {
+                        playUrl = URL.createObjectURL(blob);
+                        isBlobUrl = true;
+                    } else {
+                        console.warn("Cached audio blob is empty, using network URL");
+                    }
+                }
+            } catch (e) {
+                console.error("Error accessing cache for playback", e);
             }
         }
 
         const newAudio = new Audio(playUrl);
         
+        const cleanup = () => {
+            if (isBlobUrl) {
+                URL.revokeObjectURL(playUrl);
+            }
+        };
+
         newAudio.onended = () => {
+            cleanup();
             setCurrentQueueIndex(index + 1);
             playNextInQueue(queue, index + 1);
         };
 
         newAudio.onerror = (e) => {
             console.error("Audio playback failed for URL:", playUrl, e);
+            cleanup();
             // Skip to next track on error
             setCurrentQueueIndex(index + 1);
             playNextInQueue(queue, index + 1);
@@ -418,10 +481,15 @@ const QuranReader = () => {
         stopAudio();
         stopTafseerAudio();
         setPlayingAya(aya.number);
-        const queue = [aya.audio, aya.urduAudio, aya.englishAudio];
+        const queue = [aya.audio, aya.urduAudio, aya.englishAudio].filter(Boolean);
         setAudioQueue(queue);
         setCurrentQueueIndex(0);
-        playNextInQueue(queue, 0);
+        if (queue.length > 0) {
+            playNextInQueue(queue, 0);
+        } else {
+            console.warn("No audio sources available for this Ayah");
+            setPlayingAya(null);
+        }
     };
 
     const stopAudio = () => {
@@ -569,14 +637,32 @@ const QuranReader = () => {
 
         if (!isTafseerPlaying) return;
 
-        // 4. Did You Know
-        console.log("Step 4: Did You Know");
+        // 4. Background History Urdu
+        console.log("Step 4: Background History Urdu");
+        await speak(tafseerData.backgroundHistoryUrdu, 'ur');
+
+        if (!isTafseerPlaying) return;
+
+        // 5. Historical Context
+        console.log("Step 5: Historical Context");
+        await speak("Historical Context: " + tafseerData.historicalContext, 'en-US');
+
+        if (!isTafseerPlaying) return;
+
+        // 6. Historical Context Urdu
+        console.log("Step 6: Historical Context Urdu");
+        await speak(tafseerData.historicalContextUrdu, 'ur');
+
+        if (!isTafseerPlaying) return;
+
+        // 7. Did You Know
+        console.log("Step 7: Did You Know");
         await speak("Did you know? " + tafseerData.didYouKnow, 'en-US');
 
         if (!isTafseerPlaying) return;
 
-        // 5. Quiz Question
-        console.log("Step 5: Quiz");
+        // 8. Quiz Question
+        console.log("Step 8: Quiz");
         await speak("Quiz time! " + tafseerData.quiz.question, 'en-US');
 
         console.log("Tafseer sequence finished");
@@ -610,6 +696,20 @@ const QuranReader = () => {
         setIsCorrect(false);
         setTafseerLoading(true);
 
+        // Check Local Storage for Tafseer
+        const localTafseerKey = `tafseer_${sura}_${aya.number}`;
+        const localTafseer = localStorage.getItem(localTafseerKey);
+        if (localTafseer) {
+            try {
+                setTafseerData(JSON.parse(localTafseer));
+                setTafseerLoading(false);
+                return;
+            } catch (e) {
+                console.error("Failed to parse local tafseer", e);
+                localStorage.removeItem(localTafseerKey);
+            }
+        }
+
         try {
             const apiKey = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
             if (!apiKey) {
@@ -620,9 +720,12 @@ const QuranReader = () => {
             You are an Islamic scholar. Provide a JSON response with:
             1. "explanation": A clear, general Tafseer (explanation) in Urdu for the following Quran Ayah.
             2. "englishExplanation": A clear, general Tafseer (explanation) in English for the following Quran Ayah.
-            3. "backgroundHistory": A detailed "Asbab al-Nuzul" (Background History) explaining when this Ayah was revealed and the story behind it.
-            4. "didYouKnow": A fun fact related to this Ayah or Surah in English.
-            5. "quiz": A simple multiple choice question object with "question" (string), "options" (array of 3 strings), and "correctIndex" (number 0-2).
+            3. "backgroundHistory": A detailed "Asbab al-Nuzul" (Background History) explaining when this Ayah was revealed and the story behind it in English.
+            4. "backgroundHistoryUrdu": A detailed "Asbab al-Nuzul" (Background History) explaining when this Ayah was revealed and the story behind it in Urdu.
+            5. "historicalContext": A brief section providing historical context or related events mentioned in the Quran or authentic Hadith relevant to this Ayah in English.
+            6. "historicalContextUrdu": A brief section providing historical context or related events mentioned in the Quran or authentic Hadith relevant to this Ayah in Urdu.
+            7. "didYouKnow": A fun fact related to this Ayah or Surah in English.
+            8. "quiz": A simple multiple choice question object with "question" (string), "options" (array of 3 strings), and "correctIndex" (number 0-2).
 
             Surah: ${surahInfo?.englishName} (${sura}), Ayah: ${aya.number}
             Arabic: ${aya.text}
@@ -641,6 +744,9 @@ const QuranReader = () => {
             const data = JSON.parse(response.text);
             setTafseerData(data);
             
+            // Save to Local Storage
+            localStorage.setItem(localTafseerKey, JSON.stringify(data));
+            
             addPoints(20);
             unlockAchievement('scholar_junior');
         } catch (err) {
@@ -649,6 +755,9 @@ const QuranReader = () => {
                 explanation: "معاف کیجئے، ابھی تفسیر دستیاب نہیں ہے۔",
                 englishExplanation: "Sorry, I couldn't load the full interactive Tafseer right now. Please ensure your API key is configured correctly.",
                 backgroundHistory: "Background history is unavailable at the moment.",
+                backgroundHistoryUrdu: "پس منظر کی تاریخ فی الحال دستیاب نہیں ہے۔",
+                historicalContext: "Historical context is unavailable at the moment.",
+                historicalContextUrdu: "تاریخی سیاق و سباق فی الحال دستیاب نہیں ہے۔",
                 didYouKnow: "The Quran is full of wisdom!",
                 quiz: { question: "Who revealed the Quran?", options: ["Allah", "Angels", "Humans"], correctIndex: 0 }
             });
@@ -679,309 +788,344 @@ const QuranReader = () => {
     );
 
     return (
-        <div className="min-h-screen bg-emerald-50 pb-32 pt-10 px-4">
-            <div className="container mx-auto max-w-3xl">
+        <div className="min-h-screen bg-sky-50 pb-32 pt-24 px-4 font-sans selection:bg-yellow-200 selection:text-blue-900">
+            <div className="container mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
                 
-                {/* Search & Navigation Header */}
-                <div className="bg-white p-4 rounded-2xl shadow-lg border-b-4 border-emerald-200 sticky top-4 z-40 mb-8">
-                    <div className="flex flex-col gap-4">
-                        {/* Recently Read Banner */}
-                        {lastRead && (
-                            <motion.button
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                onClick={handleContinueReading}
-                                className="bg-emerald-50 text-emerald-800 p-3 rounded-xl flex items-center justify-between w-full border border-emerald-100 hover:bg-emerald-100 transition-colors"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <History size={18} className="text-emerald-600" />
-                                    <div className="text-left">
-                                        <p className="text-xs font-bold uppercase tracking-wider text-emerald-500">Continue Reading</p>
-                                        <p className="font-bold text-sm">{lastRead.surahName} - Ayah {lastRead.ayah}</p>
+                {/* Sidebar: Search & Navigation */}
+                <div className="lg:col-span-1 lg:sticky lg:top-4 z-40">
+                    <div className="bg-white p-6 rounded-3xl shadow-xl border-4 border-sky-200 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-sky-100 rounded-full -mr-10 -mt-10 opacity-50 pointer-events-none" />
+                        
+                        <div className="relative z-10 flex flex-col gap-4">
+                            {/* Recently Read Banner */}
+                            {lastRead && (
+                                <motion.button
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    onClick={handleContinueReading}
+                                    className="bg-orange-50 text-orange-800 p-3 rounded-2xl flex items-center justify-between w-full border-2 border-orange-100 hover:bg-orange-100 transition-colors group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="bg-orange-200 p-2 rounded-xl text-orange-600 group-hover:scale-110 transition-transform">
+                                            <History size={20} strokeWidth={2.5} />
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="text-xs font-black uppercase tracking-wider text-orange-400">Continue</p>
+                                            <p className="font-black text-sm text-slate-700 truncate max-w-[100px]">{lastRead.surahName}</p>
+                                        </div>
                                     </div>
-                                </div>
-                                <ChevronRight size={18} />
-                            </motion.button>
-                        )}
-
-                        {/* Search Bar */}
-                        <div className="relative">
-                            <Search className="absolute left-3 top-3 text-emerald-400" size={20} />
-                            <input 
-                                type="text" 
-                                placeholder="Search Surah (e.g. Yasin, 36)..." 
-                                value={searchQuery}
-                                onChange={(e) => {
-                                    setSearchQuery(e.target.value);
-                                    setIsSearchOpen(true);
-                                }}
-                                onFocus={() => setIsSearchOpen(true)}
-                                className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-emerald-100 focus:border-emerald-400 focus:outline-none text-slate-700 font-medium placeholder:text-emerald-300/70 bg-emerald-50/50"
-                            />
-                            {isSearchOpen && searchQuery && (
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-emerald-100 max-h-60 overflow-y-auto z-50">
-                                    {filteredSurahs.map(s => (
-                                        <div 
-                                            key={s.number}
-                                            onClick={() => {
-                                                setSura(s.number);
-                                                setIsSearchOpen(false);
-                                                setSearchQuery('');
-                                            }}
-                                            className="p-3 hover:bg-emerald-50 cursor-pointer flex justify-between items-center border-b border-slate-50 last:border-0"
-                                        >
-                                            <span className="font-bold text-slate-700">{s.number}. {s.englishName}</span>
-                                            <span className="font-serif text-emerald-600">{s.name}</span>
-                                        </div>
-                                    ))}
-                                    {filteredSurahs.length === 0 && (
-                                        <div className="p-4 text-center text-slate-400">No Surah found</div>
-                                    )}
-                                </div>
+                                    <ChevronRight size={20} className="text-orange-400" strokeWidth={3} />
+                                </motion.button>
                             )}
-                        </div>
 
-                        {/* Navigation & Controls */}
-                        <div className="flex justify-between items-center">
-                            <button 
-                                onClick={() => setSura(Math.max(1, sura - 1))}
-                                disabled={sura === 1}
-                                className="p-2 bg-emerald-100 text-emerald-700 rounded-xl hover:bg-emerald-200 disabled:opacity-50 transition"
-                            >
-                                <ChevronLeft />
-                            </button>
-                            
-                            <div className="text-center">
-                                <h1 className="text-xl sm:text-2xl font-bold text-emerald-800">
-                                    {surahInfo ? `${surahInfo.englishName}` : `Surah ${sura}`}
-                                </h1>
-                                {surahInfo && (
-                                    <div className="flex flex-col items-center">
-                                        <p className="text-sm text-emerald-600 font-serif mt-1">
-                                            {surahInfo.name}
-                                        </p>
-                                        <div className="flex items-center gap-2 mt-2">
-                                            {isDownloaded ? (
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                        <Check size={10} /> Offline Ready
-                                                    </span>
-                                                    <button 
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            if(confirm('Remove this Surah from offline storage?')) {
-                                                                deleteSurahAudio();
-                                                            }
-                                                        }}
-                                                        className="text-[10px] bg-rose-50 text-rose-500 px-2 py-0.5 rounded-full hover:bg-rose-100 transition-colors"
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <button 
-                                                    onClick={downloadSurahAudio}
-                                                    disabled={downloading || isOffline}
-                                                    className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full flex items-center gap-1 hover:bg-slate-200 disabled:opacity-50"
-                                                >
-                                                    {downloading ? 'Downloading...' : <><Download size={10} /> Download Audio</>}
-                                                </button>
-                                            )}
-                                        </div>
+                            {/* Search Bar */}
+                            <div className="relative group">
+                                <Search className="absolute left-4 top-3.5 text-sky-400 group-focus-within:text-sky-500 transition-colors" size={24} strokeWidth={3} />
+                                <input 
+                                    type="text" 
+                                    placeholder="Search Surah..." 
+                                    value={searchQuery}
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value);
+                                        setIsSearchOpen(true);
+                                    }}
+                                    onFocus={() => setIsSearchOpen(true)}
+                                    className="w-full pl-12 pr-4 py-3 rounded-2xl border-2 border-sky-100 focus:border-sky-400 focus:outline-none text-slate-700 font-bold placeholder:text-sky-300/70 bg-sky-50/50 transition-all shadow-inner focus:bg-white"
+                                />
+                                {isSearchOpen && searchQuery && (
+                                    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border-2 border-sky-100 max-h-60 overflow-y-auto z-50">
+                                        {filteredSurahs.map(s => (
+                                            <div 
+                                                key={s.number}
+                                                onClick={() => {
+                                                    setSura(s.number);
+                                                    setIsSearchOpen(false);
+                                                    setSearchQuery('');
+                                                }}
+                                                className="p-3 hover:bg-sky-50 cursor-pointer flex justify-between items-center border-b border-slate-50 last:border-0"
+                                            >
+                                                <span className="font-bold text-slate-700 text-sm">{s.number}. {s.englishName}</span>
+                                            </div>
+                                        ))}
+                                        {filteredSurahs.length === 0 && (
+                                            <div className="p-4 text-center text-slate-400 font-bold">No Surah found 😢</div>
+                                        )}
                                     </div>
                                 )}
                             </div>
 
-                            <button 
-                                onClick={() => setSura(Math.min(114, sura + 1))}
-                                disabled={sura === 114}
-                                className="p-2 bg-emerald-100 text-emerald-700 rounded-xl hover:bg-emerald-200 disabled:opacity-50 transition"
-                            >
-                                <ChevronRight />
-                            </button>
+                            {/* Navigation & Controls */}
+                            <div className="flex flex-col gap-4 mt-2">
+                                <div className="flex justify-between items-center">
+                                    <button 
+                                        onClick={() => setSura(Math.max(1, sura - 1))}
+                                        disabled={sura === 1}
+                                        className="p-3 bg-sky-100 text-sky-600 rounded-2xl hover:bg-sky-200 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm border-2 border-sky-200 active:scale-95"
+                                    >
+                                        <ChevronLeft size={24} strokeWidth={3} />
+                                    </button>
+                                    
+                                    <button 
+                                        onClick={() => setSura(Math.min(114, sura + 1))}
+                                        disabled={sura === 114}
+                                        className="p-3 bg-emerald-100 text-emerald-700 rounded-2xl hover:bg-emerald-200 disabled:opacity-50 transition shadow-sm border-2 border-emerald-200 active:scale-95"
+                                    >
+                                        <ChevronRight size={24} strokeWidth={3} />
+                                    </button>
+                                </div>
+
+                                <div className="text-center bg-sky-50 p-4 rounded-2xl border-2 border-sky-100">
+                                    <h1 className="text-2xl font-black text-slate-800 drop-shadow-sm">
+                                        {surahInfo ? `${surahInfo.englishName}` : `Surah ${sura}`}
+                                    </h1>
+                                    {surahInfo && (
+                                        <div className="flex flex-col items-center">
+                                            <p className="text-lg text-sky-500 font-black mt-1">
+                                                {surahInfo.name}
+                                            </p>
+                                            <div className="flex items-center gap-2 mt-2">
+                                                {isDownloaded ? (
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <div className="flex items-center gap-2 bg-emerald-100 px-3 py-1 rounded-full border-2 border-emerald-200">
+                                                            <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                                                                <Check size={12} strokeWidth={3} /> Offline Ready
+                                                            </span>
+                                                        </div>
+                                                        <button 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                if(confirm('Remove this Surah from offline storage?')) {
+                                                                    deleteSurahContent();
+                                                                }
+                                                            }}
+                                                            className="text-[10px] bg-white text-rose-500 px-2 py-0.5 rounded-full hover:bg-rose-50 transition-colors font-bold border border-rose-100"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button 
+                                                        onClick={downloadSurahContent}
+                                                        disabled={downloading || isOffline}
+                                                        className="text-xs bg-slate-100 text-slate-600 px-3 py-2 rounded-xl flex items-center gap-2 hover:bg-slate-200 disabled:opacity-50 font-bold w-full justify-center"
+                                                    >
+                                                        {downloading ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-3 h-3 border-2 border-slate-400 border-t-slate-600 rounded-full animate-spin" />
+                                                                <span>{downloadProgress}%</span>
+                                                            </div>
+                                                        ) : (
+                                                            <><Download size={14} /> Download Surah</>
+                                                        )}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Ayas List */}
-                {loading ? (
-                    <div className="text-center py-20 text-emerald-600 font-medium animate-pulse">Loading Surah...</div>
-                ) : (
-                    <div className="space-y-6">
-                        {ayas.map((aya) => {
-                            const isBookmarked = bookmarks.includes(`${sura}:${aya.number}`);
-                            return (
-                                <motion.div 
-                                    key={aya.number}
-                                    id={`ayah-${aya.number}`}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className={`rounded-3xl p-6 shadow-sm border-2 transition-all duration-300 ${
-                                        playingAya === aya.number 
-                                            ? 'bg-emerald-50 border-emerald-500 ring-4 ring-emerald-100 scale-[1.01]' 
-                                            : 'bg-white border-transparent'
-                                    }`}
-                                >
-                                    <div className="flex justify-between items-start mb-4">
-                                        <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">
-                                            {aya.number === 0 ? "Bismillah" : `Ayah ${aya.number}`}
-                                        </span>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => toggleBookmark(aya.number)}
-                                                className={`p-2 rounded-full transition-colors ${isBookmarked ? 'text-amber-500 bg-amber-50' : 'text-slate-400 hover:bg-slate-100'}`}
-                                                title={isBookmarked ? "Remove Bookmark" : "Bookmark Ayah"}
-                                            >
-                                                <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
-                                            </button>
-                                            <button 
-                                                onClick={() => {
-                                                    fetchTafseer(aya);
-                                                    updateLastRead(aya.number);
-                                                }}
-                                                className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 transition ${tafseerOpen === aya.number ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                                            >
-                                                <BookOpen size={14} /> Tafseer
-                                            </button>
-                                            <button 
-                                                onClick={() => {
-                                                    playAudioSequence(aya);
-                                                    updateLastRead(aya.number);
-                                                }}
-                                                className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center hover:bg-indigo-200 transition"
-                                            >
-                                                {playingAya === aya.number ? <Pause size={14} /> : <Play size={14} />}
-                                            </button>
+                {/* Main Content: Ayas List */}
+                <div className="lg:col-span-3">
+                    {loading ? (
+                        <div className="text-center py-20 text-sky-600 font-black animate-bounce text-xl">Loading Surah... 🚀</div>
+                    ) : (
+                        <div className="space-y-6">
+                            {ayas.map((aya) => {
+                                const isBookmarked = bookmarks.includes(`${sura}:${aya.number}`);
+                                return (
+                                    <motion.div 
+                                        key={aya.number}
+                                        id={`ayah-${aya.number}`}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className={`rounded-[2rem] p-6 shadow-sm border-4 transition-all duration-300 ${
+                                            playingAya === aya.number 
+                                                ? 'bg-sky-50 border-sky-400 ring-4 ring-sky-100 scale-[1.02] shadow-xl' 
+                                                : 'bg-white border-transparent hover:border-sky-100 hover:shadow-md'
+                                        }`}
+                                    >
+                                        <div className="flex justify-between items-start mb-6">
+                                            <span className="bg-sky-100 text-sky-700 text-xs font-black px-4 py-2 rounded-full uppercase tracking-wider shadow-sm border border-sky-200">
+                                                {aya.number === 0 ? "Bismillah" : `Ayah ${aya.number}`}
+                                            </span>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => toggleBookmark(aya.number)}
+                                                    className={`p-2 rounded-2xl transition-all border-2 ${isBookmarked ? 'text-yellow-500 bg-yellow-50 border-yellow-200' : 'text-slate-300 bg-slate-50 border-slate-100 hover:bg-slate-100 hover:text-slate-400'}`}
+                                                    title={isBookmarked ? "Remove Bookmark" : "Bookmark Ayah"}
+                                                >
+                                                    <Bookmark size={20} fill={isBookmarked ? "currentColor" : "none"} strokeWidth={2.5} />
+                                                </button>
+                                                <button 
+                                                    onClick={() => {
+                                                        fetchTafseer(aya);
+                                                        updateLastRead(aya.number);
+                                                    }}
+                                                    className={`px-4 py-2 rounded-2xl text-xs font-black flex items-center gap-2 transition border-2 shadow-[0_3px_0_rgba(0,0,0,0.1)] active:shadow-none active:translate-y-[3px] ${tafseerOpen === aya.number ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'}`}
+                                                >
+                                                    <BookOpen size={16} strokeWidth={3} /> Explain
+                                                </button>
+                                                <button 
+                                                    onClick={() => {
+                                                        playAudioSequence(aya);
+                                                        updateLastRead(aya.number);
+                                                    }}
+                                                    className="w-10 h-10 bg-indigo-500 text-white rounded-2xl flex items-center justify-center hover:bg-indigo-600 transition shadow-[0_3px_0_#4338ca] active:shadow-none active:translate-y-[3px] border-2 border-indigo-600"
+                                                >
+                                                    {playingAya === aya.number ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
+                                                </button>
+                                            </div>
                                         </div>
+                                        
+                                        {/* Arabic Text */}
+                                    <div className="text-right mb-8 px-2" dir="rtl">
+                                        <p className={`text-4xl font-serif leading-[2.2] transition-colors duration-300 ${playingAya === aya.number && currentQueueIndex === 0 ? 'text-sky-600 drop-shadow-sm' : 'text-slate-800'}`} style={{ fontFamily: 'Traditional Arabic, serif' }}>
+                                            {aya.text}
+                                        </p>
                                     </div>
                                     
-                                    {/* Arabic Text */}
-                                <div className="text-right mb-6" dir="rtl">
-                                    <p className={`text-3xl font-serif leading-[2.5] transition-colors duration-300 ${playingAya === aya.number && currentQueueIndex === 0 ? 'text-emerald-600' : 'text-slate-800'}`} style={{ fontFamily: 'Traditional Arabic, serif' }}>
-                                        {aya.text}
+                                    {/* Urdu Translation */}
+                                    <p className={`text-2xl text-right mb-6 leading-relaxed font-medium transition-colors duration-300 ${playingAya === aya.number && currentQueueIndex === 1 ? 'text-sky-600' : 'text-slate-600'}`} dir="rtl" style={{ fontFamily: 'Noto Nastaliq Urdu, serif' }}>
+                                        {aya.urduTranslation}
                                     </p>
-                                </div>
-                                
-                                {/* Urdu Translation */}
-                                <p className={`text-xl text-right mb-4 leading-relaxed font-medium transition-colors duration-300 ${playingAya === aya.number && currentQueueIndex === 1 ? 'text-emerald-600' : 'text-emerald-800'}`} dir="rtl" style={{ fontFamily: 'Noto Nastaliq Urdu, serif' }}>
-                                    {aya.urduTranslation}
-                                </p>
-
-                                {/* English Translation */}
-                                <p className={`text-sm leading-relaxed transition-colors duration-300 ${playingAya === aya.number && currentQueueIndex === 2 ? 'text-emerald-600 font-medium' : 'text-slate-500'}`}>
-                                    {aya.translation}
-                                </p>
-
-                                    {/* Tafseer & Quiz Section */}
-                                    <AnimatePresence>
-                                        {tafseerOpen === aya.number && (
-                                            <motion.div 
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: 'auto', opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                className="overflow-hidden"
-                                            >
-                                                <div className="mt-6 bg-amber-50 rounded-2xl p-4 border border-amber-100">
-                                                    <div className="flex justify-between items-center mb-4">
-                                                        <h4 className="text-amber-800 font-bold flex items-center gap-2">
-                                                            <Sparkles size={16} /> Tafseer (Explanation)
-                                                        </h4>
-                                                        {tafseerData && (
-                                                            <button 
-                                                                onClick={() => {
-                                                                    playTafseerSequence();
-                                                                    updateLastRead(aya.number);
-                                                                }}
-                                                                className={`p-2 rounded-full transition ${isTafseerPlaying ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}`}
-                                                                title={isTafseerPlaying ? "Stop Reading" : "Read Aloud"}
-                                                            >
-                                                                {isTafseerPlaying ? <StopCircle size={18} /> : <Volume2 size={18} />}
-                                                            </button>
+    
+                                    {/* English Translation */}
+                                    <p className={`text-lg leading-relaxed transition-colors duration-300 font-medium ${playingAya === aya.number && currentQueueIndex === 2 ? 'text-sky-600' : 'text-slate-500'}`}>
+                                        {aya.translation}
+                                    </p>
+    
+                                        {/* Tafseer & Quiz Section */}
+                                        <AnimatePresence>
+                                            {tafseerOpen === aya.number && (
+                                                <motion.div 
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    className="overflow-hidden"
+                                                >
+                                                    <div className="mt-8 bg-amber-50 rounded-[2rem] p-6 border-4 border-amber-100 relative">
+                                                        <div className="absolute top-0 left-0 w-20 h-20 bg-yellow-100 rounded-full -ml-6 -mt-6 opacity-50" />
+                                                        
+                                                        <div className="relative z-10">
+                                                            <div className="flex justify-between items-center mb-6">
+                                                                <h4 className="text-amber-800 font-black flex items-center gap-2 text-lg">
+                                                                    <Sparkles size={20} className="text-amber-500 fill-amber-500" /> Fun Explanation
+                                                                </h4>
+                                                            </div>
+                                                            
+                                                            {tafseerLoading ? (
+                                                            <div className="text-amber-600 font-bold animate-pulse flex items-center gap-2">
+                                                                <div className="w-4 h-4 bg-amber-400 rounded-full animate-bounce" /> Asking the scholar...
+                                                            </div>
+                                                        ) : tafseerData ? (
+                                                            <div className="space-y-6">
+                                                                {/* Urdu Explanation */}
+                                                                <div className="bg-white p-5 rounded-2xl shadow-sm border-2 border-amber-100">
+                                                                    <span className="text-[10px] bg-amber-100 text-amber-700 px-3 py-1 rounded-full mb-3 inline-block font-black uppercase tracking-wider">Urdu</span>
+                                                                    <p className="text-amber-900 text-right leading-relaxed whitespace-pre-wrap text-lg font-medium" dir="rtl">
+                                                                        {tafseerData.explanation}
+                                                                    </p>
+                                                                </div>
+    
+                                                                {/* English Explanation */}
+                                                                <div className="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
+                                                                    <span className="text-[10px] bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full mb-3 inline-block font-black uppercase tracking-wider">English</span>
+                                                                    <p className="text-slate-700 leading-relaxed whitespace-pre-wrap font-medium">
+                                                                        {tafseerData.englishExplanation}
+                                                                    </p>
+                                                                </div>
+    
+                                                                {/* Background History */}
+                                                                <div className="bg-white p-5 rounded-2xl shadow-sm border-l-8 border-indigo-300">
+                                                                    <h5 className="text-xs font-black text-indigo-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                                        <BookOpen size={16} /> Story Time (History)
+                                                                    </h5>
+                                                                    <p className="text-slate-700 leading-relaxed text-sm whitespace-pre-wrap mb-4 font-medium">
+                                                                        {tafseerData.backgroundHistory}
+                                                                    </p>
+                                                                    <div className="border-t-2 border-indigo-50 pt-3 mt-3">
+                                                                        <span className="text-[10px] bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full mb-3 inline-block font-black uppercase tracking-wider">Urdu Story</span>
+                                                                        <p className="text-slate-700 leading-relaxed text-sm whitespace-pre-wrap text-right font-medium" dir="rtl">
+                                                                            {tafseerData.backgroundHistoryUrdu}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+    
+                                                                {/* Historical Context */}
+                                                                <div className="bg-white p-5 rounded-2xl shadow-sm border-l-8 border-teal-300">
+                                                                    <h5 className="text-xs font-black text-teal-600 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                                        <History size={16} /> What Happened Then?
+                                                                    </h5>
+                                                                    <p className="text-slate-700 leading-relaxed text-sm whitespace-pre-wrap font-medium mb-4">
+                                                                        {tafseerData.historicalContext}
+                                                                    </p>
+                                                                    <div className="border-t-2 border-teal-50 pt-3 mt-3">
+                                                                        <span className="text-[10px] bg-teal-50 text-teal-600 px-3 py-1 rounded-full mb-3 inline-block font-black uppercase tracking-wider">Urdu Context</span>
+                                                                        <p className="text-slate-700 leading-relaxed text-sm whitespace-pre-wrap text-right font-medium" dir="rtl">
+                                                                            {tafseerData.historicalContextUrdu}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                {/* Did You Know */}
+                                                                <div className="bg-yellow-50 p-5 rounded-2xl border-2 border-yellow-200 border-dashed">
+                                                                    <h5 className="text-xs font-black text-yellow-600 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                                                        <HelpCircle size={16} /> Did You Know?
+                                                                    </h5>
+                                                                    <p className="text-sm text-yellow-900 font-bold">{tafseerData.didYouKnow}</p>
+                                                                </div>
+    
+                                                                {/* Quiz */}
+                                                                <div className="bg-white p-6 rounded-[2rem] border-4 border-indigo-100 shadow-lg relative overflow-hidden">
+                                                                    <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-8 -mt-8 opacity-50" />
+                                                                    <h5 className="font-black text-indigo-800 mb-4 text-lg relative z-10">Quick Quiz! 🧠</h5>
+                                                                    <p className="text-slate-700 mb-6 font-bold relative z-10">{tafseerData.quiz.question}</p>
+                                                                    <div className="space-y-3 relative z-10">
+                                                                        {tafseerData.quiz.options.map((option, idx) => (
+                                                                            <button
+                                                                                key={idx}
+                                                                                onClick={() => handleQuizAnswer(idx)}
+                                                                                disabled={quizAnswered}
+                                                                                className={`w-full text-left p-4 rounded-xl text-sm font-bold transition-all border-2 shadow-sm ${
+                                                                                    quizAnswered 
+                                                                                        ? idx === tafseerData.quiz.correctIndex 
+                                                                                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                                                                            : idx === selectedOption 
+                                                                                                ? 'bg-rose-100 text-rose-800 border-rose-300'
+                                                                                                : 'bg-slate-50 text-slate-400 border-slate-100'
+                                                                                        : 'bg-white hover:bg-indigo-50 text-slate-700 border-slate-100 hover:border-indigo-200'
+                                                                                }`}
+                                                                            >
+                                                                                {option}
+                                                                                {quizAnswered && idx === tafseerData.quiz.correctIndex && <Check size={18} className="inline ml-2 text-emerald-600" strokeWidth={3} />}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                    {quizAnswered && (
+                                                                        <div className={`mt-4 text-sm font-black text-center p-3 rounded-xl ${isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                                                            {isCorrect ? '🎉 Correct! +30 Points' : 'Try again next time!'}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-amber-900 font-bold">Failed to load content.</p>
                                                         )}
                                                     </div>
-                                                    
-                                                    {tafseerLoading ? (
-                                                    <div className="text-amber-600 text-sm animate-pulse">Asking the scholar...</div>
-                                                ) : tafseerData ? (
-                                                    <div className="space-y-4">
-                                                        {/* Urdu Explanation */}
-                                                        <div className="bg-white/60 p-3 rounded-xl">
-                                                            <span className="text-[10px] bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full mb-2 inline-block">Urdu</span>
-                                                            <p className="text-amber-900 text-right leading-relaxed whitespace-pre-wrap" dir="rtl">
-                                                                {tafseerData.explanation}
-                                                            </p>
-                                                        </div>
-
-                                                        {/* English Explanation */}
-                                                        <div className="bg-white/60 p-3 rounded-xl">
-                                                            <span className="text-[10px] bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full mb-2 inline-block">English</span>
-                                                            <p className="text-amber-900 leading-relaxed whitespace-pre-wrap">
-                                                                {tafseerData.englishExplanation}
-                                                            </p>
-                                                        </div>
-
-                                                        {/* Background History */}
-                                                        <div className="bg-white/60 p-3 rounded-xl border-l-4 border-indigo-300">
-                                                            <h5 className="text-xs font-bold text-indigo-800 uppercase tracking-wider mb-2 flex items-center gap-1">
-                                                                <BookOpen size={12} /> Background History (Asbab al-Nuzul)
-                                                            </h5>
-                                                            <p className="text-indigo-900 leading-relaxed text-sm whitespace-pre-wrap">
-                                                                {tafseerData.backgroundHistory}
-                                                            </p>
-                                                        </div>
-                                                        
-                                                        {/* Did You Know */}
-                                                        <div className="bg-white/50 p-3 rounded-xl border border-amber-200/50">
-                                                            <h5 className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-1 flex items-center gap-1">
-                                                                <HelpCircle size={12} /> Did You Know?
-                                                            </h5>
-                                                            <p className="text-sm text-amber-900">{tafseerData.didYouKnow}</p>
-                                                        </div>
-
-                                                        {/* Quiz */}
-                                                        <div className="bg-white p-4 rounded-xl border border-amber-200 shadow-sm">
-                                                            <h5 className="font-bold text-amber-800 mb-3">Quick Quiz!</h5>
-                                                            <p className="text-sm text-slate-700 mb-3 font-medium">{tafseerData.quiz.question}</p>
-                                                            <div className="space-y-2">
-                                                                {tafseerData.quiz.options.map((option, idx) => (
-                                                                    <button
-                                                                        key={idx}
-                                                                        onClick={() => handleQuizAnswer(idx)}
-                                                                        disabled={quizAnswered}
-                                                                        className={`w-full text-left p-2 rounded-lg text-sm transition ${
-                                                                            quizAnswered 
-                                                                                ? idx === tafseerData.quiz.correctIndex 
-                                                                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                                                                    : idx === selectedOption 
-                                                                                        ? 'bg-rose-100 text-rose-800 border border-rose-200'
-                                                                                        : 'bg-slate-50 text-slate-400'
-                                                                                : 'bg-slate-50 hover:bg-amber-100 text-slate-700'
-                                                                        }`}
-                                                                    >
-                                                                        {option}
-                                                                        {quizAnswered && idx === tafseerData.quiz.correctIndex && <Check size={14} className="inline ml-2" />}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                            {quizAnswered && (
-                                                                <div className={`mt-3 text-xs font-bold text-center ${isCorrect ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                                                    {isCorrect ? '🎉 Correct! +30 Points' : 'Try again next time!'}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-amber-900">Failed to load content.</p>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </motion.div>
-                        );
-                    })}
+                                                </div>
+                                            </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
-            )}
             </div>
         </div>
     );
