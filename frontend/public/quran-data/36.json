@@ -1,0 +1,838 @@
+{
+  "surahInfo": {
+    "number": 36,
+    "name": "سُورَةُ يسٓ",
+    "englishName": "Yaseen",
+    "englishNameTranslation": "Yaseen",
+    "numberOfAyahs": 83,
+    "revelationType": "Meccan"
+  },
+  "summary": {
+    "introduction": "Surah Yaseen, the 36th chapter of the Holy Qur'an, is a revered Meccan Surah known for its profound spiritual impact. The name 'Yaseen' consists of two Arabic letters, often considered among the 'Muqatta'at' (disjointed letters) whose full meaning is known only to Allah, though some interpretations suggest 'O Human' or 'O Master.' Revealed during the early to middle Meccan period, it addresses the fundamental themes of Divine unity (Tawhid), the truth of Prophet Muhammad's prophethood, the reality of Resurrection and Judgment, and the ultimate consequences of both belief and disbelief, seeking to awaken the human heart to reflection and submission.",
+    "background": "The 'Asbab al-Nuzul' (reasons for revelation) of Surah Yaseen primarily relate to the intense opposition faced by Prophet Muhammad (peace be upon him) from the Quraish idolaters in Mecca. The disbelievers vehemently rejected his message, mocked the concept of resurrection, and demanded miraculous signs. This Surah was revealed to strengthen the Prophet's resolve, confirm the truth of his mission despite rejection, and provide compelling arguments for Tawhid and the Hereafter. It presents the parable of the 'people of the town' (often identified with Antioch, featuring Habib al-Najjar), whose people rejected their messengers and subsequently faced divine retribution, serving as a powerful warning to the Quraish about the consequences of their disbelief and arrogance. The Surah also challenges their skepticism about resurrection by pointing to Allah's power to revive barren land and create all things.",
+    "keyThemes": [
+      "The Affirmation of Prophethood: Establishing Prophet Muhammad (PBUH) as a true messenger of Allah and the Qur'an as divine revelation.",
+      "Tawhid (Oneness of Allah) and His Signs in Creation: Highlighting Allah's absolute power and wisdom through the wonders of the universe (day, night, sun, moon, stars, earth).",
+      "Resurrection and Accountability: Emphasizing the inevitable return to Allah for judgment and the bodily resurrection of mankind.",
+      "Consequences of Belief and Disbelief: Illustrating the stark contrast between the rewards of the righteous in Paradise and the punishment of the disbelievers in Hell.",
+      "The Power of Allah's Command: Demonstrating Allah's supreme ability to create and bring things into existence with a mere command 'Kun Faya Kun' (Be, and it is)."
+    ],
+    "summary": "Surah Yaseen opens with a solemn oath by the Wise Qur'an, affirming Prophet Muhammad (PBUH) as a true messenger on a straight path, sent to warn a people oblivious to guidance. It then presents the poignant parable of 'the people of the town' who rejected multiple messengers, leading to their destruction, except for a righteous man who urged them to believe and was martyred. The Surah shifts to vivid descriptions of Allah's signs in the cosmos—the cycling of day and night, the sun and moon in their orbits, the revival of dead earth, and the sailing of ships—all testifying to His power and wisdom. It strongly asserts the reality of the Day of Judgment, the blowing of the Trumpet, the resurrection of bodies, and the subsequent separation of humanity into dwellers of Paradise and Hell. The Surah powerfully refutes the disbelievers' arguments against resurrection, reminding them of their own creation from a drop of fluid, and concludes by reiterating Allah's supreme power to create and resurrect all things, simply by His command 'Be, and it is' (Kun Faya Kun), and to Him all will return.",
+    "virtues": "Surah Yaseen holds immense spiritual significance in Islamic tradition, often referred to as 'the Heart of the Qur'an.' Among its documented virtues are:\n*   'The Heart of the Qur'an': Narrated by Anas ibn Malik (RA), the Prophet Muhammad (PBUH) said: 'Everything has a heart, and the heart of the Qur'an is Yaseen. Whoever recites Yaseen, Allah records for him a reward equal to that of reciting the entire Qur'an ten times.' (At-Tirmidhi, Hadith 2887 – though scholars debate the authenticity of the 'ten times' part, the 'heart of the Qur'an' part is widely accepted).\n*   Forgiveness of Sins: It is reported that the Prophet (PBUH) said: 'Whoever recites Surah Yaseen at night seeking the countenance of Allah, he will be forgiven.' (Ad-Darimi, Hadith 3421).\n*   Ease in Difficulty: Some scholars and pious predecessors have recommended its recitation for easing difficulties and seeking blessings, especially at times of adversity and for the deceased, although specific Hadith for this particular application might be less direct than for general virtues.",
+    "quiz": [
+      {
+        "question": "What is Surah Yaseen often referred to as in Islamic tradition?",
+        "options": [
+          "The Light of the Qur'an",
+          "The Shield of the Qur'an",
+          "The Heart of the Qur'an",
+          "The Soul of the Qur'an"
+        ],
+        "correctAnswer": "The Heart of the Qur'an"
+      },
+      {
+        "question": "In which period of the Prophet Muhammad's (PBUH) mission was Surah Yaseen primarily revealed?",
+        "options": [
+          "Medinan period",
+          "Early Meccan period",
+          "Late Meccan period",
+          "Post-Hijrah period"
+        ],
+        "correctAnswer": "Early Meccan period"
+      },
+      {
+        "question": "What key concept does Surah Yaseen strongly emphasize regarding Allah's power?",
+        "options": [
+          "His mercy towards disbelievers",
+          "His need for worship",
+          "His ability to create and resurrect with a command 'Kun Faya Kun'",
+          "His preference for certain nations"
+        ],
+        "correctAnswer": "His ability to create and resurrect with a command 'Kun Faya Kun'"
+      },
+      {
+        "question": "What is the primary warning given to the disbelievers in Surah Yaseen through the parable of the 'people of the town'?",
+        "options": [
+          "The importance of charity",
+          "The inevitability of divine retribution for rejecting messengers",
+          "The need for pilgrimage",
+          "The benefits of fasting"
+        ],
+        "correctAnswer": "The inevitability of divine retribution for rejecting messengers"
+      },
+      {
+        "question": "Which of the following is NOT a major theme discussed in Surah Yaseen?",
+        "options": [
+          "Prophethood of Muhammad (PBUH)",
+          "Resurrection and Accountability",
+          "Laws of inheritance",
+          "Signs of Allah in creation"
+        ],
+        "correctAnswer": "Laws of inheritance"
+      }
+    ]
+  },
+  "tafseer": {
+    "1": {
+      "explanation": "یہ حروفِ مقطعات میں سے ہیں جن کا اصل مفہوم اللہ ہی بہتر جانتا ہے۔ یہ اللہ تعالیٰ کے کلام کی معجزانہ نوعیت اور حکمت کی طرف اشارہ کرتے ہیں۔",
+      "englishExplanation": "These are among the disconnected letters (Huruf Muqatta'at), whose true meaning is best known to Allah. They point towards the miraculous nature and wisdom of Allah's speech.",
+      "backgroundHistory": "سورہ یٰس مکی سورتوں میں سے ہے، جس کا نزول ہجرت سے پہلے مکہ مکرمہ میں ہوا۔ اس کا آغاز ان حروفِ مقطعات سے ہوتا ہے جو قرآن کی متعدد سورتوں کے شروع میں آتے ہیں۔",
+      "backgroundHistoryUrdu": "سورہ یٰس مکی سورتوں میں سے ہے، جس کا نزول ہجرت سے پہلے مکہ مکرمہ میں ہوا۔ اس کا آغاز ان حروفِ مقطعات سے ہوتا ہے جو قرآن کی متعدد سورتوں کے شروع میں آتے ہیں۔",
+      "historicalContext": "ان حروف کا نزول اس دور میں ہوا جب قریش قرآن کو انسانی کلام قرار دے رہے تھے، تو یہ انہیں چیلنج تھا کہ ایسے حروف سے وہ کلام بنا کر دکھائیں۔",
+      "historicalContextUrdu": "ان حروف کا نزول اس دور میں ہوا جب قریش قرآن کو انسانی کلام قرار دے رہے تھے، تو یہ انہیں چیلنج تھا کہ ایسے حروف سے وہ کلام بنا کر دکھائیں۔",
+      "didYouKnow": "قرآن میں 29 سورتیں حروفِ مقطعات سے شروع ہوتی ہیں، جن میں سے 'یٰس' صرف ایک سورت کے آغاز میں آتا ہے اور اس سورت کا نام بھی اسی پر ہے۔",
+      "quiz": {
+        "question": "حروفِ مقطعات کا اصل مفہوم کون جانتا ہے؟",
+        "options": [
+          "صرف نبی اکرم ﷺ",
+          "صرف صحابہ کرام",
+          "اللہ تعالیٰ",
+          "مفسرین"
+        ],
+        "correctIndex": 2
+      }
+    },
+    "2": {
+      "explanation": "اللہ تعالیٰ حکمت والے قرآن کی قسم کھا کر اپنی صداقت اور اس کے پیغام کی اہمیت کو واضح فرما رہا ہے۔ یہ قرآن سراسر حکمت سے بھرپور اور ہدایت کا سرچشمہ ہے۔",
+      "englishExplanation": "Allah swears by the wise Qur'an, emphasizing its truthfulness and the significance of its message. This Qur'an is entirely filled with wisdom and is a source of guidance.",
+      "backgroundHistory": "یہ قسم نبی اکرم ﷺ کی نبوت اور قرآن کی حقانیت کے آغاز میں کھائی گئی ہے، تاکہ مخاطبین کو اس کی عظمت کا احساس دلایا جا سکے۔",
+      "backgroundHistoryUrdu": "یہ قسم نبی اکرم ﷺ کی نبوت اور قرآن کی حقانیت کے آغاز میں کھائی گئی ہے، تاکہ مخاطبین کو اس کی عظمت کا احساس دلایا جا سکے۔",
+      "historicalContext": "اس وقت جب قریش قرآن کو شاعری یا جادو قرار دے رہے تھے، اس قسم نے قرآن کی صداقت اور اس کے الہٰی کلام ہونے پر زور دیا۔",
+      "historicalContextUrdu": "اس وقت جب قریش قرآن کو شاعری یا جادو قرار دے رہے تھے، اس قسم نے قرآن کی صداقت اور اس کے الہٰی کلام ہونے پر زور دیا۔",
+      "didYouKnow": "قرآن کریم میں اللہ تعالیٰ اپنی مخلوقات یا اپنی صفات کی قسم کھاتے ہیں تاکہ جس بات پر قسم کھائی جا رہی ہے اس کی اہمیت اور سچائی کو اجاگر کیا جا سکے۔",
+      "quiz": {
+        "question": "اس آیت میں اللہ تعالیٰ نے کس چیز کی قسم کھائی ہے؟",
+        "options": [
+          "تینوں آسمانی کتب کی",
+          "حکمت والے قرآن کی",
+          "نبی اکرم ﷺ کی",
+          "قریش کی"
+        ],
+        "correctIndex": 1
+      }
+    },
+    "3": {
+      "explanation": "یہ آیت نبی اکرم ﷺ کی نبوت کی واضح تصدیق ہے، جو اُن مشرکین کے انکار اور تکذیب کے جواب میں نازل ہوئی جو آپ کی رسالت پر شک کرتے تھے۔",
+      "englishExplanation": "This verse is a clear affirmation of Prophet Muhammad's prophethood, revealed in response to the denial and rejection by the polytheists who doubted his messenger-ship.",
+      "backgroundHistory": "مکہ میں نبی اکرم ﷺ کو اپنے پیغام کی وجہ سے شدید مخالفت کا سامنا تھا، اس آیت نے آپ کو تسلی دی اور آپ کی حیثیت کو واضح کیا۔",
+      "backgroundHistoryUrdu": "مکہ میں نبی اکرم ﷺ کو اپنے پیغام کی وجہ سے شدید مخالفت کا سامنا تھا، اس آیت نے آپ کو تسلی دی اور آپ کی حیثیت کو واضح کیا۔",
+      "historicalContext": "قریش مکہ آپ ﷺ کو محض ایک شاعر، جادوگر یا مجنوں قرار دیتے تھے، اس آیت نے ان کے تمام الزامات کا ردّ کر دیا۔",
+      "historicalContextUrdu": "قریش مکہ آپ ﷺ کو محض ایک شاعر، جادوگر یا مجنوں قرار دیتے تھے، اس آیت نے ان کے تمام الزامات کا ردّ کر دیا۔",
+      "didYouKnow": "قرآن میں کئی مقامات پر اللہ تعالیٰ نے براہ راست نبی اکرم ﷺ کو 'اے پیغمبر' یا 'اے رسول' کہہ کر مخاطب فرمایا ہے تاکہ ان کی رسالت کی تصدیق ہو۔",
+      "quiz": {
+        "question": "یہ آیت کس کے نبی ہونے کی تصدیق کرتی ہے؟",
+        "options": [
+          "حضرت عیسیٰ علیہ السلام",
+          "حضرت موسیٰ علیہ السلام",
+          "حضرت محمد ﷺ",
+          "حضرت ابراہیم علیہ السلام"
+        ],
+        "correctIndex": 2
+      }
+    },
+    "4": {
+      "explanation": "یہ آیت واضح کرتی ہے کہ نبی اکرم ﷺ ہدایت، حق اور توحید کے سیدھے راستے پر ہیں، جو اللہ تعالیٰ کا مقرر کردہ راستہ ہے۔ یہ راستہ تمام انبیاء کا راستہ رہا ہے۔",
+      "englishExplanation": "This verse clarifies that Prophet Muhammad (PBUH) is upon a straight path of guidance, truth, and monotheism, which is the path ordained by Allah. This path has been the path of all prophets.",
+      "backgroundHistory": "نبی اکرم ﷺ کو جس راستے پر چلنے کا حکم دیا گیا تھا وہ دینِ حق کا راستہ تھا، جو گمراہی اور شرک کے راستوں سے بالکل جدا تھا۔",
+      "backgroundHistoryUrdu": "نبی اکرم ﷺ کو جس راستے پر چلنے کا حکم دیا گیا تھا وہ دینِ حق کا راستہ تھا، جو گمراہی اور شرک کے راستوں سے بالکل جدا تھا۔",
+      "historicalContext": "قریش اسلام کو آبائی دین سے انحراف سمجھتے تھے، اس آیت نے واضح کیا کہ اسلام ہی اصل سیدھا راستہ ہے جس پر تمام انبیاء آئے۔",
+      "historicalContextUrdu": "قریش اسلام کو آبائی دین سے انحراف سمجھتے تھے، اس آیت نے واضح کیا کہ اسلام ہی اصل سیدھا راستہ ہے جس پر تمام انبیاء آئے۔",
+      "didYouKnow": "قرآن مجید میں 'صراط مستقیم' کا ذکر 30 سے زائد بار آیا ہے، جو اسلام کے مرکزی تصورات میں سے ایک ہے اور ہر مسلمان اپنی نماز میں اس کی دعا کرتا ہے۔",
+      "quiz": {
+        "question": "نبی اکرم ﷺ کس راستے پر ہیں؟",
+        "options": [
+          "تجارتی راستے پر",
+          "سیدھے راستے پر",
+          "موسیقی کے راستے پر",
+          "کوئی راستہ نہیں"
+        ],
+        "correctIndex": 1
+      }
+    },
+    "5": {
+      "explanation": "یہ آیت قرآن کے مصدر اور اللہ تعالیٰ کی صفات کو بیان کرتی ہے: جو بڑی عزت والا (عزت اور قوت والا) اور نہایت مہربان ہے۔ اس میں کلام اللہ کی عظمت اور اس کی رحمت دونوں جھلکتی ہیں۔",
+      "englishExplanation": "This verse describes the source of the Qur'an and the attributes of Allah: the Exalted in Might (possessor of honor and power) and the Most Merciful. It reflects both the grandeur of Allah's speech and His mercy.",
+      "backgroundHistory": "مکہ کے مشرکین قرآن کو انسانی کلام یا نبی اکرم ﷺ کی اپنی گھڑی ہوئی بات سمجھتے تھے۔ یہ آیت ان کے اس دعوے کو ردّ کرتی ہے۔",
+      "backgroundHistoryUrdu": "مکہ کے مشرکین قرآن کو انسانی کلام یا نبی اکرم ﷺ کی اپنی گھڑی ہوئی بات سمجھتے تھے۔ یہ آیت ان کے اس دعوے کو ردّ کرتی ہے۔",
+      "historicalContext": "اس دور میں جب قرآن کی الہامی حیثیت پر سوال اٹھائے جا رہے تھے، یہ آیت واضح کرتی ہے کہ یہ اس ذات کی طرف سے ہے جو قوت اور رحمت دونوں کا مالک ہے۔",
+      "historicalContextUrdu": "اس دور میں جب قرآن کی الہامی حیثیت پر سوال اٹھائے جا رہے تھے، یہ آیت واضح کرتی ہے کہ یہ اس ذات کی طرف سے ہے جو قوت اور رحمت دونوں کا مالک ہے۔",
+      "didYouKnow": "اللہ تعالیٰ کے دو صفاتی نام 'عزیز' اور 'رحیم' قرآن میں اکثر ساتھ آتے ہیں، جو اللہ کی مکمل قدرت اور بے پناہ رحمت کے توازن کو ظاہر کرتے ہیں۔",
+      "quiz": {
+        "question": "قرآن کس کی نازل کردہ کتاب ہے؟",
+        "options": [
+          "ایک حکیم کی",
+          "طاقتور اور مہربان ہستی (اللہ) کی",
+          "ایک نبی کی",
+          "ایک صحابی کی"
+        ],
+        "correctIndex": 1
+      }
+    },
+    "6": {
+      "explanation": "اس آیت میں نبی اکرم ﷺ کی بعثت کا مقصد بیان کیا گیا ہے کہ آپ ﷺ ایسی قوم کو ڈرائیں جن کے آبا و اجداد کو پہلے کوئی ڈرانے والا نہیں آیا، اس لیے وہ غفلت میں پڑے ہیں۔",
+      "englishExplanation": "This verse states the purpose of Prophet Muhammad's mission: to warn a people whose forefathers had not been warned before, and who were thus heedless. This refers to the people of Mecca (Quraish).",
+      "backgroundHistory": "عرب میں حضرت اسماعیل علیہ السلام کے بعد طویل عرصے تک کوئی نبی نہیں آیا تھا، اس لیے قریش بت پرستی اور شرک میں ڈوب چکے تھے۔",
+      "backgroundHistoryUrdu": "عرب میں حضرت اسماعیل علیہ السلام کے بعد طویل عرصے تک کوئی نبی نہیں آیا تھا، اس لیے قریش بت پرستی اور شرک میں ڈوب چکے تھے۔",
+      "historicalContext": "نبی اکرم ﷺ کی بعثت قریش کے لیے ایک انتباہ تھی جو اپنی آبائی گمراہی پر قائم تھے اور توحید سے غافل تھے۔",
+      "historicalContextUrdu": "نبی اکرم ﷺ کی بعثت قریش کے لیے ایک انتباہ تھی جو اپنی آبائی گمراہی پر قائم تھے اور توحید سے غافل تھے۔",
+      "didYouKnow": "نبی اکرم ﷺ کا دعوتی حلقہ سب سے پہلے مکہ کے لوگ تھے، جو حضرت اسماعیل علیہ السلام کی نسل سے تھے مگر طویل عرصے سے توحید سے بھٹک گئے تھے۔",
+      "quiz": {
+        "question": "نبی اکرم ﷺ کو کس قوم کو ڈرانے کے لیے بھیجا گیا تھا؟",
+        "options": [
+          "یہود کو",
+          "نصاریٰ کو",
+          "وہ قوم جن کے آباؤ اجداد کو پہلے نہیں ڈرایا گیا تھا",
+          "بنی اسرائیل کو"
+        ],
+        "correctIndex": 2
+      }
+    },
+    "7": {
+      "explanation": "یہ آیت ان لوگوں کے بارے میں ہے جنہوں نے اپنے انکار اور سرکشی پر اصرار کیا، یہاں تک کہ ان پر اللہ کا فیصلہ نافذ ہو گیا کہ وہ ایمان نہیں لائیں گے۔",
+      "englishExplanation": "This verse refers to those who persisted in their denial and rebellion, to the extent that Allah's decree took effect upon them that they would not believe.",
+      "backgroundHistory": "مکہ کے کچھ سردار اور بااثر لوگ ایسے تھے جنہوں نے حق کو جاننے کے باوجود اسے قبول کرنے سے انکار کر دیا تھا، جیسے ابو جہل۔",
+      "backgroundHistoryUrdu": "مکہ کے کچھ سردار اور بااثر لوگ ایسے تھے جنہوں نے حق کو جاننے کے باوجود اسے قبول کرنے سے انکار کر دیا تھا، جیسے ابو جہل۔",
+      "historicalContext": "اس آیت کا نزول اس وقت ہوا جب نبی اکرم ﷺ نے سالوں تک انہیں دعوت دی، مگر ان کی اکثریت نے ضد اور ہٹ دھرمی کا مظاہرہ کیا۔",
+      "historicalContextUrdu": "اس آیت کا نزول اس وقت ہوا جب نبی اکرم ﷺ نے سالوں تک انہیں دعوت دی، مگر ان کی اکثریت نے ضد اور ہٹ دھرمی کا مظاہرہ کیا۔",
+      "didYouKnow": "قرآن کریم میں کچھ ایسے افراد کا تذکرہ ہے جن کے بارے میں واضح کر دیا گیا کہ وہ کبھی ایمان نہیں لائیں گے، کیونکہ انہوں نے خود ہی حق کو قبول کرنے کی تمام راہیں بند کر دی تھیں۔",
+      "quiz": {
+        "question": "اس آیت کے مطابق، اکثر لوگوں پر کیا چیز اثر انداز ہوئی ہے؟",
+        "options": [
+          "مال و دولت",
+          "اللہ کا فرمان (کہ وہ ایمان نہیں لائیں گے)",
+          "نرم کلام",
+          "سزا کا خوف"
+        ],
+        "correctIndex": 1
+      }
+    },
+    "8": {
+      "explanation": "یہ ان کی روحانی حالت کی ایک تمثیل ہے، جس میں بتایا گیا ہے کہ ان کے دل حق کو قبول کرنے کے لیے اتنے سخت ہو چکے ہیں گویا ان کی گردنوں میں طوق ڈال دیے گئے ہیں اور سر اکڑے ہوئے ہیں۔",
+      "englishExplanation": "This is a parable illustrating their spiritual state, indicating that their hearts have become so hardened to accepting the truth, as if shackles are around their necks, keeping their heads stiffly aloft.",
+      "backgroundHistory": "یہ ان متکبر اور سرکش لوگوں کی حالت بیان کر رہی ہے جو حق کو جانتے بوجھتے بھی اپنے غرور اور ہٹ دھرمی کی وجہ سے اس سے منہ موڑتے ہیں۔",
+      "backgroundHistoryUrdu": "یہ ان متکبر اور سرکش لوگوں کی حالت بیان کر رہی ہے جو حق کو جانتے بوجھتے بھی اپنے غرور اور ہٹ دھرمی کی وجہ سے اس سے منہ موڑتے ہیں۔",
+      "historicalContext": "اس زمانے میں جب اہل مکہ اپنے جاہلانہ رسوم و رواج اور آبائی دین پر سختی سے جمے ہوئے تھے، یہ آیت ان کی نفسیاتی کیفیت کی عکاسی کرتی ہے۔",
+      "historicalContextUrdu": "اس زمانے میں جب اہل مکہ اپنے جاہلانہ رسوم و رواج اور آبائی دین پر سختی سے جمے ہوئے تھے، یہ آیت ان کی نفسیاتی کیفیت کی عکاسی کرتی ہے۔",
+      "didYouKnow": "قرآن کریم میں اللہ تعالیٰ اکثر مثالیں اور تمثیلیں بیان فرماتے ہیں تاکہ پیچیدہ روحانی حقائق کو انسانی ذہن کے لیے قابل فہم بنایا جا سکے۔",
+      "quiz": {
+        "question": "گردنوں میں طوق ڈالنے کی مثال کس چیز کی نشاندہی کرتی ہے؟",
+        "options": [
+          "قید خانے کی سختی",
+          "روحانی ہٹ دھرمی اور حق کو قبول کرنے سے انکار",
+          "جسمانی بیماری",
+          "سزا کا طریقہ"
+        ],
+        "correctIndex": 1
+      }
+    },
+    "9": {
+      "explanation": "یہ مزید تمثیل ہے کہ ان کی آنکھوں پر پردہ ڈال دیا گیا ہے اور ان کے سامنے اور پیچھے رکاوٹیں کھڑی کر دی گئی ہیں، جس سے وہ حق کا راستہ نہیں دیکھ سکتے۔ یہ ان کی مکمل روحانی نابینائی کو ظاہر کرتی ہے۔",
+      "englishExplanation": "This is a further parable stating that a veil has been placed over their eyes, and barriers have been erected before and behind them, preventing them from seeing the path of truth. It signifies their complete spiritual blindness.",
+      "backgroundHistory": "یہ ان لوگوں کے لیے بیان ہوا ہے جو حق کو مکمل طور پر مسترد کر چکے ہیں اور ان کے دلوں پر اللہ کی مہر لگ چکی ہے، جس کے بعد ہدایت ان تک نہیں پہنچ سکتی۔",
+      "backgroundHistoryUrdu": "یہ ان لوگوں کے لیے بیان ہوا ہے جو حق کو مکمل طور پر مسترد کر چکے ہیں اور ان کے دلوں پر اللہ کی مہر لگ چکی ہے، جس کے بعد ہدایت ان تک نہیں پہنچ سکتی۔",
+      "historicalContext": "مکہ کے مشرکین نے نہ صرف حق کا انکار کیا بلکہ نبی اکرم ﷺ اور مسلمانوں کے راستے میں رکاوٹیں بھی کھڑی کیں، جس پر یہ آیت ان کی روحانی حالت کی تصویر کشی کرتی ہے۔",
+      "historicalContextUrdu": "مکہ کے مشرکین نے نہ صرف حق کا انکار کیا بلکہ نبی اکرم ﷺ اور مسلمانوں کے راستے میں رکاوٹیں بھی کھڑی کیں، جس پر یہ آیت ان کی روحانی حالت کی تصویر کشی کرتی ہے۔",
+      "didYouKnow": "قرآن میں 'اندھے پن' کی اصطلاح اکثر روحانی بصیرت کی کمی یا حق کو نہ دیکھ پانے کی حالت کے لیے استعمال کی گئی ہے، نہ کہ جسمانی بصارت سے محرومی کے لیے۔",
+      "quiz": {
+        "question": "اس آیت میں 'آگے اور پیچھے رکاوٹیں ڈالنے' سے کیا مراد ہے؟",
+        "options": [
+          "فزیکل رکاوٹیں",
+          "روحانی رکاوٹیں جو حق دیکھنے سے روکتی ہیں",
+          "سفر میں مشکل",
+          "کھانے پینے میں مشکل"
+        ],
+        "correctIndex": 1
+      }
+    },
+    "10": {
+      "explanation": "یہ آیت نبی اکرم ﷺ کو تسلی دیتی ہے کہ ایسے لوگوں کے لیے آپ کا ڈرانا یا نہ ڈرانا برابر ہے، کیونکہ وہ اپنی سرکشی اور ہٹ دھرمی کی وجہ سے کبھی ایمان نہیں لائیں گے۔",
+      "englishExplanation": "This verse reassures Prophet Muhammad (PBUH) that it is the same for such people whether he warns them or not, because due to their rebellion and obstinacy, they will never believe.",
+      "backgroundHistory": "یہ آیت ان انتہا درجے کے متکبر اور ضدی مشرکین کے بارے میں ہے جن کا مقدر اللہ کے علم میں مقرر ہو چکا تھا کہ وہ کبھی ہدایت قبول نہیں کریں گے۔",
+      "backgroundHistoryUrdu": "یہ آیت ان انتہا درجے کے متکبر اور ضدی مشرکین کے بارے میں ہے جن کا مقدر اللہ کے علم میں مقرر ہو چکا تھا کہ وہ کبھی ہدایت قبول نہیں کریں گے۔",
+      "historicalContext": "نبی اکرم ﷺ کو مکہ میں اپنے لوگوں کے ایمان نہ لانے پر شدید دکھ اور غم ہوتا تھا، یہ آیت انہیں اطمینان دلاتی ہے کہ ان کا انکار آپ کی دعوت کی ناکامی نہیں ہے۔",
+      "historicalContextUrdu": "نبی اکرم ﷺ کو مکہ میں اپنے لوگوں کے ایمان نہ لانے پر شدید دکھ اور غم ہوتا تھا، یہ آیت انہیں اطمینان دلاتی ہے کہ ان کا انکار آپ کی دعوت کی ناکامی نہیں ہے۔",
+      "didYouKnow": "یہ آیت نبی اکرم ﷺ کے لیے ایک سبق تھا کہ ہر فرد ہدایت قبول نہیں کرے گا، اور ان کی ذمہ داری صرف پیغام پہنچانا ہے، ہدایت دینا اللہ کے اختیار میں ہے۔",
+      "quiz": {
+        "question": "نبی اکرم ﷺ کے ڈرانے سے کون سے لوگ فائدہ نہیں اٹھاتے؟",
+        "options": [
+          "وہ لوگ جو پہلے سے ایمان لا چکے ہیں",
+          "وہ لوگ جن کے دلوں پر مہر لگا دی گئی ہے اور وہ حق قبول نہیں کریں گے",
+          "وہ لوگ جو بہت امیر ہیں",
+          "وہ لوگ جو آپ سے محبت کرتے ہیں"
+        ],
+        "correctIndex": 1
+      }
+    },
+    "11": {
+      "explanation": "آپ صرف اس شخص کو خبردار کر سکتے ہیں جو قرآن کے پیغام کی پیروی کرتا ہے اور غیب میں رحمن سے ڈرتا ہے۔ ایسے شخص کو مغفرت اور شاندار اجر کی خوشخبری دیجیے۔",
+      "englishExplanation": "You can only warn one who follows the message of the Quran and fears the Most Merciful unseen. Give such a person good tidings of forgiveness and a noble reward.",
+      "backgroundHistory": "یہ آیت بتاتی ہے کہ نبی اکرم صلی اللہ علیہ وسلم کی وعظ و نصیحت صرف ان لوگوں کو فائدہ پہنچاتی ہے جو ہدایت قبول کرنے اور اللہ سے ڈرنے کا ارادہ رکھتے ہوں۔",
+      "backgroundHistoryUrdu": "یہ آیت بتاتی ہے کہ نبی اکرم صلی اللہ علیہ وسلم کی وعظ و نصیحت صرف ان لوگوں کو فائدہ پہنچاتی ہے جو ہدایت قبول کرنے اور اللہ سے ڈرنے کا ارادہ رکھتے ہوں۔",
+      "historicalContext": "یہ آیت مدینہ کے دور میں نازل ہوئی، جب نبی اکرم صلی اللہ علیہ وسلم کو ہدایت دی جا رہی تھی کہ کون ان کے پیغام سے حقیقی معنوں میں مستفید ہو گا۔",
+      "historicalContextUrdu": "یہ آیت مکہ کے ابتدائی دور میں نازل ہوئی، جب نبی اکرم صلی اللہ علیہ وسلم کو ہدایت دی جا رہی تھی کہ کون ان کے پیغام سے حقیقی معنوں میں مستفید ہو گا۔",
+      "didYouKnow": "قرآن میں 'خشیت الرحمن بالغیب' (غیب میں رحمان سے ڈرنا) ایک اہم معیار ہے جو ایمان کی صداقت اور قبولیت کو ظاہر کرتا ہے۔",
+      "quiz": {
+        "question": "قرآن کے مطابق، کون نبی کی تنبیہ سے فائدہ اٹھا سکتا ہے؟",
+        "options": [
+          "وہ جو رحمان سے غیب میں ڈرتا ہے",
+          "وہ جو دولت مند ہے",
+          "وہ جو طاقتور ہے",
+          "وہ جو صرف دلائل سنتا ہے"
+        ],
+        "correctIndex": 0
+      }
+    },
+    "12": {
+      "explanation": "بے شک، ہم ہی مردوں کو زندہ کرتے ہیں اور وہ سب کچھ لکھتے ہیں جو انہوں نے آگے بھیجا اور جو پیچھے چھوڑا، اور ہر چیز کو ہم نے ایک واضح کتاب (لوح محفوظ) میں شمار کر رکھا ہے۔",
+      "englishExplanation": "Indeed, it is We who bring the dead to life and record all that they have sent forth and what they have left behind. All things We have enumerated in a clear register (Al-Lawh Al-Mahfuz).",
+      "backgroundHistory": "یہ آیت قیامت کے دن کی حقیقت اور اعمال کے حساب کتاب کو واضح کرتی ہے، جو منکرینِ آخرت کے لیے ایک تنبیہ ہے۔",
+      "backgroundHistoryUrdu": "یہ آیت قیامت کے دن کی حقیقت اور اعمال کے حساب کتاب کو واضح کرتی ہے، جو منکرینِ آخرت کے لیے ایک تنبیہ ہے۔",
+      "historicalContext": "مکہ کے مشرکین آخرت اور دوبارہ زندہ کیے جانے پر یقین نہیں رکھتے تھے، اس لیے یہ آیت انہیں اللہ کی قدرت اور حساب کتاب کے نظام کی یاد دہانی کراتی ہے۔",
+      "historicalContextUrdu": "مکہ کے مشرکین آخرت اور دوبارہ زندہ کیے جانے پر یقین نہیں رکھتے تھے، اس لیے یہ آیت انہیں اللہ کی قدرت اور حساب کتاب کے نظام کی یاد دہانی کراتی ہے۔",
+      "didYouKnow": "'آثار' (جو انہوں نے پیچھے چھوڑا) میں نیک اور بد اثرات شامل ہیں، جیسے صدقہ جاریہ، علم، اولاد صالح، یا گناہوں کے اثرات۔",
+      "quiz": {
+        "question": "اللہ تعالیٰ کس چیز کو 'واضح کتاب' میں شمار کرتا ہے؟",
+        "options": [
+          "صرف لوگوں کی دولت",
+          "صرف لوگوں کے گناہ",
+          "جو کچھ انہوں نے آگے بھیجا اور جو پیچھے چھوڑا",
+          "صرف نیکیاں"
+        ],
+        "correctIndex": 2
+      }
+    },
+    "13": {
+      "explanation": "اور انہیں ایک مثال پیش کرو: اس شہر والوں کا واقعہ، جب اس کے پاس رسول آئے -",
+      "englishExplanation": "And present to them an example: the people of the city, when the messengers came to it -",
+      "backgroundHistory": "یہ آیت ایک تمثیل کی شروعات ہے جو قریش مکہ کے رویے کو آئینہ دکھاتی ہے، انہیں سابقہ قوموں کے انجام سے خبردار کرتی ہے۔ یہ شہر 'انطاکیہ' (Antioch) کے نام سے معروف ہے، اگرچہ قرآن اس کا نام نہیں بتاتا۔",
+      "backgroundHistoryUrdu": "یہ آیت ایک تمثیل کی شروعات ہے جو قریش مکہ کے رویے کو آئینہ دکھاتی ہے، انہیں سابقہ قوموں کے انجام سے خبردار کرتی ہے۔ یہ شہر 'انطاکیہ' (Antioch) کے نام سے معروف ہے، اگرچہ قرآن اس کا نام نہیں بتاتا۔",
+      "historicalContext": "اس وقت نبی اکرم صلی اللہ علیہ وسلم کو مکہ کے سرداروں کی طرف سے شدید مخالفت کا سامنا تھا، لہٰذا اس مثال کے ذریعے ان کی سرکشی کے نتائج سے آگاہ کیا گیا۔",
+      "historicalContextUrdu": "اس وقت نبی اکرم صلی اللہ علیہ وسلم کو مکہ کے سرداروں کی طرف سے شدید مخالفت کا سامنا تھا، لہٰذا اس مثال کے ذریعے ان کی سرکشی کے نتائج سے آگاہ کیا گیا۔",
+      "didYouKnow": "اس شہر کے لوگوں کی کہانی کا ذکر قرآن کے علاوہ بائبل میں نہیں ملتا، یہ قرآن کا ایک منفرد قصہ ہے۔",
+      "quiz": {
+        "question": "یہ آیت کس چیز کا آغاز ہے؟",
+        "options": [
+          "ایک نئے حکم کا",
+          "ایک تمثیلی کہانی کا",
+          "ایک نبوت کی پیشین گوئی کا",
+          "ایک دعا کا"
+        ],
+        "correctIndex": 1
+      }
+    },
+    "14": {
+      "explanation": "جب ہم نے ان کی طرف دو رسول بھیجے لیکن انہوں نے انہیں جھٹلا دیا، تو ہم نے انہیں ایک تیسرے سے مضبوط کیا، اور انہوں نے کہا، \"بے شک، ہم تمہاری طرف رسول ہیں۔\"",
+      "englishExplanation": "When We sent to them two messengers but they denied them, so We strengthened them with a third, and they said, \"Indeed, we are messengers to you.\"",
+      "backgroundHistory": "یہ قصہ جاری ہے، جس میں اللہ تعالیٰ کی طرف سے اپنی رحمت کے طور پر ہدایت کو مسلسل بھیجنے کی کوشش کی عکاسی کی گئی ہے۔ شہر والوں کی سرکشی کے باوجود اللہ نے تیسرے رسول کو بھیجا۔",
+      "backgroundHistoryUrdu": "یہ قصہ جاری ہے، جس میں اللہ تعالیٰ کی طرف سے اپنی رحمت کے طور پر ہدایت کو مسلسل بھیجنے کی کوشش کی عکاسی کی گئی ہے۔ شہر والوں کی سرکشی کے باوجود اللہ نے تیسرے رسول کو بھیجا۔",
+      "historicalContext": "یہ مثال مکہ کے مشرکین کو سمجھانے کے لیے ہے کہ اللہ تعالیٰ نے ان پر حجاب تمام کی، بالکل جیسے اس شہر والوں پر کی تھی۔",
+      "historicalContextUrdu": "یہ مثال مکہ کے مشرکین کو سمجھانے کے لیے ہے کہ اللہ تعالیٰ نے ان پر حجاب تمام کی، بالکل جیسے اس شہر والوں پر کی تھی۔",
+      "didYouKnow": "بعض مفسرین کے مطابق پہلے دو رسول 'صادق' اور 'مصدوق' تھے، اور تیسرے 'شمعون'۔ تاہم، یہ اسماء روایات سے اخذ کیے گئے ہیں نہ کہ قرآن سے۔",
+      "quiz": {
+        "question": "شہر والوں نے ابتدا میں کتنے رسولوں کو جھٹلایا تھا؟",
+        "options": [
+          "ایک",
+          "دو",
+          "تین",
+          "چار"
+        ],
+        "correctIndex": 1
+      }
+    },
+    "15": {
+      "explanation": "انہوں نے کہا، \"تم تو بس ہمارے جیسے انسان ہو، اور رحمان نے کوئی چیز نازل نہیں کی۔ تم صرف جھوٹ بول رہے ہو۔\"",
+      "englishExplanation": "They said, \"You are not but human beings like us, and the Most Merciful has not revealed a thing. You are only telling lies.\"",
+      "backgroundHistory": "یہ منکرین کا عام اعتراض تھا کہ رسول بشر کیسے ہو سکتے ہیں، جبکہ ان کا خیال تھا کہ اللہ کو فرشتوں کو رسول بنا کر بھیجنا چاہیے۔",
+      "backgroundHistoryUrdu": "یہ منکرین کا عام اعتراض تھا کہ رسول بشر کیسے ہو سکتے ہیں، جبکہ ان کا خیال تھا کہ اللہ کو فرشتوں کو رسول بنا کر بھیجنا چاہیے۔",
+      "historicalContext": "یہ اعتراض نبی اکرم صلی اللہ علیہ وسلم پر بھی کیا گیا تھا، کہ ایک انسان نبی کیسے ہو سکتا ہے، خاص طور پر ایک ایسا شخص جو ان کے اپنے قبیلے سے تعلق رکھتا ہو۔",
+      "historicalContextUrdu": "یہ اعتراض نبی اکرم صلی اللہ علیہ وسلم پر بھی کیا گیا تھا، کہ ایک انسان نبی کیسے ہو سکتا ہے، خاص طور پر ایک ایسا شخص جو ان کے اپنے قبیلے سے تعلق رکھتا ہو۔",
+      "didYouKnow": "اس آیت میں بیان کردہ اعتراض، یعنی رسول کا انسان ہونا، تمام انبیاء کے مخالفین کا ایک مشترکہ اعتراض رہا ہے۔",
+      "quiz": {
+        "question": "شہر کے لوگوں نے رسولوں کے انسانی ہونے پر کیا اعتراض کیا؟",
+        "options": [
+          "کہ وہ ان سے زیادہ خوبصورت نہیں تھے",
+          "کہ رحمان نے کچھ نازل نہیں کیا اور وہ جھوٹ بول رہے تھے",
+          "کہ وہ ان کی زبان نہیں سمجھتے تھے",
+          "کہ وہ ان کے شہر کے نہیں تھے"
+        ],
+        "correctIndex": 1
+      }
+    },
+    "16": {
+      "explanation": "انہوں نے کہا، \"ہمارا رب جانتا ہے کہ بے شک ہم تمہاری طرف رسول ہیں۔\"",
+      "englishExplanation": "They said, \"Our Lord knows that we are messengers to you.\"",
+      "backgroundHistory": "رسولوں نے اپنے دعوے کی تصدیق کے لیے اللہ کو گواہ بنایا، یہ ان کے ایمان اور یقین کی مضبوطی کو ظاہر کرتا ہے۔",
+      "backgroundHistoryUrdu": "رسولوں نے اپنے دعوے کی تصدیق کے لیے اللہ کو گواہ بنایا، یہ ان کے ایمان اور یقین کی مضبوطی کو ظاہر کرتا ہے۔",
+      "historicalContext": "نبی اکرم صلی اللہ علیہ وسلم بھی اپنی رسالت کی سچائی کے لیے بارہا اللہ تعالیٰ کو گواہ بناتے تھے، کیونکہ حق کی گواہی اللہ ہی دے سکتا ہے۔",
+      "historicalContextUrdu": "نبی اکرم صلی اللہ علیہ وسلم بھی اپنی رسالت کی سچائی کے لیے بارہا اللہ تعالیٰ کو گواہ بناتے تھے، کیونکہ حق کی گواہی اللہ ہی دے سکتا ہے۔",
+      "didYouKnow": "نبیوں کا یہ جواب ان کی بے باکی اور اللہ تعالیٰ پر توکل کو ظاہر کرتا ہے، کیونکہ انہیں یقین تھا کہ ان کا رب ان کی سچائی کا بہترین گواہ ہے۔",
+      "quiz": {
+        "question": "رسولوں نے اپنے دعوے کی سچائی کی دلیل کے طور پر کس کو پیش کیا؟",
+        "options": [
+          "شہر کے سرداروں کو",
+          "اپنے خاندان کو",
+          "اللہ کو",
+          "اپنے معجزات کو"
+        ],
+        "correctIndex": 2
+      }
+    },
+    "17": {
+      "explanation": "اور ہم پر صرف واضح طور پر پیغام پہنچانے کی ذمہ داری ہے۔",
+      "englishExplanation": "And we are not responsible except for clear notification.",
+      "backgroundHistory": "یہ آیت انبیاء کی ذمہ داری کی حدود کو واضح کرتی ہے: ان کا کام صرف پیغام کو واضح طور پر پہنچا دینا ہے، ہدایت دینا اللہ کے اختیار میں ہے۔",
+      "backgroundHistoryUrdu": "یہ آیت انبیاء کی ذمہ داری کی حدود کو واضح کرتی ہے: ان کا کام صرف پیغام کو واضح طور پر پہنچا دینا ہے، ہدایت دینا اللہ کے اختیار میں ہے۔",
+      "historicalContext": "نبی اکرم صلی اللہ علیہ وسلم کو بھی تسلی دی گئی کہ ان کا کام صرف پیغام پہنچانا ہے، لوگوں کو ہدایت پر لانا ان کی ذمہ داری نہیں۔",
+      "historicalContextUrdu": "نبی اکرم صلی اللہ علیہ وسلم کو بھی تسلی دی گئی کہ ان کا کام صرف پیغام پہنچانا ہے، لوگوں کو ہدایت پر لانا ان کی ذمہ داری نہیں۔",
+      "didYouKnow": "یہ اصول 'لا اکراہ فی الدین' (دین میں کوئی جبر نہیں) کی بنیادی تعلیم کو تقویت دیتا ہے، جہاں لوگوں کو اپنی مرضی سے ایمان لانے کی آزادی دی گئی ہے۔",
+      "quiz": {
+        "question": "رسولوں کی بنیادی ذمہ داری کیا تھی؟",
+        "options": [
+          "لوگوں کو معجزات دکھانا",
+          "لوگوں کو زبردستی ایمان لانا",
+          "واضح طور پر پیغام پہنچانا",
+          "شہر میں حکومت کرنا"
+        ],
+        "correctIndex": 2
+      }
+    },
+    "18": {
+      "explanation": "انہوں نے کہا، \"بے شک، ہم تمہیں بدشگونی سمجھتے ہیں۔ اگر تم باز نہ آئے تو ہم تمہیں ضرور سنگسار کر دیں گے، اور ہم سے تمہیں یقیناً ایک دردناک عذاب پہنچے گا۔\"",
+      "englishExplanation": "They said, \"Indeed, we consider you a bad omen. If you do not desist, we will surely stone you, and there will surely touch you, from us, a painful punishment.\"",
+      "backgroundHistory": "یہ آیت شہر والوں کی شدت پسندی اور دھمکیوں کو ظاہر کرتی ہے، جو اکثر انبیاء کے منکرین کا رویہ رہا ہے۔",
+      "backgroundHistoryUrdu": "یہ آیت شہر والوں کی شدت پسندی اور دھمکیوں کو ظاہر کرتی ہے، جو اکثر انبیاء کے منکرین کا رویہ رہا ہے۔",
+      "historicalContext": "نبی اکرم صلی اللہ علیہ وسلم کو بھی مکہ میں سنگسار کرنے کی دھمکیاں دی گئیں اور شدید ایذائیں پہنچائی گئیں۔",
+      "historicalContextUrdu": "نبی اکرم صلی اللہ علیہ وسلم کو بھی مکہ میں سنگسار کرنے کی دھمکیاں دی گئیں اور شدید ایذائیں پہنچائی گئیں۔",
+      "didYouKnow": "قدیم معاشروں میں بدشگونی کا تصور عام تھا، لوگ اپنی مشکلات کو خدا کے پیغمبروں سے منسوب کر دیتے تھے۔",
+      "quiz": {
+        "question": "شہر کے لوگوں نے رسولوں کو کیا دھمکی دی؟",
+        "options": [
+          "انہیں شہر سے نکالنے کی",
+          "انہیں مال و دولت دینے کی",
+          "انہیں سنگسار کرنے اور دردناک عذاب دینے کی",
+          "انہیں قید کرنے کی"
+        ],
+        "correctIndex": 2
+      }
+    },
+    "19": {
+      "explanation": "انہوں نے کہا، \"تمہاری بدشگونی تمہارے ساتھ ہے۔ کیا اس لیے کہ تمہیں نصیحت کی گئی؟ بلکہ تم تو حد سے گزر جانے والے لوگ ہو۔\"",
+      "englishExplanation": "They said, \"Your omen is with yourselves. Is it because you were reminded? Rather, you are a transgressing people.\"",
+      "backgroundHistory": "رسولوں نے شہر والوں کے بدشگونی کے دعوے کو رد کیا اور ان کی بدبختی کی وجہ ان کا اپنا کفر اور سرکشی کو قرار دیا۔",
+      "backgroundHistoryUrdu": "رسولوں نے شہر والوں کے بدشگونی کے دعوے کو رد کیا اور ان کی بدبختی کی وجہ ان کا اپنا کفر اور سرکشی کو قرار دیا۔",
+      "historicalContext": "یہ جواب قریش کو بھی دیا گیا، جب وہ اپنی مشکلات کو نبی اکرم صلی اللہ علیہ وسلم کی رسالت سے جوڑتے تھے۔",
+      "historicalContextUrdu": "یہ جواب قریش کو بھی دیا گیا، جب وہ اپنی مشکلات کو نبی اکرم صلی اللہ علیہ وسلم کی رسالت سے جوڑتے تھے۔",
+      "didYouKnow": "اسلام بدشگونی اور توہم پرستی کو سختی سے رد کرتا ہے، اور سچے مسلمان اللہ پر توکل کرتے ہوئے اپنے اعمال پر توجہ دیتے ہیں۔",
+      "quiz": {
+        "question": "رسولوں نے شہر والوں کی بدشگونی کا کیا جواب دیا؟",
+        "options": [
+          "انہوں نے اسے قبول کر لیا",
+          "انہوں نے اسے اپنے ساتھ جوڑا",
+          "کہ بدشگونی ان کے اپنے کفر اور سرکشی کی وجہ سے ہے",
+          "انہوں نے اسے جھٹلا دیا اور خاموش ہو گئے"
+        ],
+        "correctIndex": 2
+      }
+    },
+    "20": {
+      "explanation": "اور شہر کے دور دراز حصے سے ایک آدمی دوڑتا ہوا آیا۔ اس نے کہا، \"اے میری قوم، رسولوں کی پیروی کرو۔\"",
+      "englishExplanation": "And there came from the farthest end of the city a man, running. He said, \"O my people, follow the messengers.\"",
+      "backgroundHistory": "یہ آدمی (جسے حبیب نجار کے نام سے جانا جاتا ہے) واحد شخص تھا جس نے رسولوں کی حمایت کی اور اپنی قوم کو ہدایت کی طرف بلایا۔",
+      "backgroundHistoryUrdu": "یہ آدمی (جسے حبیب نجار کے نام سے جانا جاتا ہے) واحد شخص تھا جس نے رسولوں کی حمایت کی اور اپنی قوم کو ہدایت کی طرف بلایا۔",
+      "historicalContext": "اس شخص کی کہانی سچے مؤمنین کے لیے ایک حوصلہ افزائی ہے، کہ حق کا ساتھ دینے کے لیے اکیلا کھڑا ہونا بھی بڑے اجر کا باعث ہے۔",
+      "historicalContextUrdu": "اس شخص کی کہانی سچے مؤمنین کے لیے ایک حوصلہ افزائی ہے، کہ حق کا ساتھ دینے کے لیے اکیلا کھڑا ہونا بھی بڑے اجر کا باعث ہے۔",
+      "didYouKnow": "حبیب نجار ایک بڑھئی تھے اور انہیں اپنے ایمان کی وجہ سے شہید کر دیا گیا، اور اللہ نے انہیں جنت میں داخل کر دیا۔",
+      "quiz": {
+        "question": "شہر کے دور دراز حصے سے دوڑتا ہوا کون آیا؟",
+        "options": [
+          "ایک بادشاہ",
+          "ایک عالم",
+          "ایک آدمی جو رسولوں کی حمایت کرتا تھا",
+          "ایک سپاہی"
+        ],
+        "correctIndex": 2
+      }
+    },
+    "21": {
+      "explanation": "یہ آیت اس نیک شخص (حبیب النجار) کا قول ہے جو اپنے شہر کے لوگوں کو رسولوں کی پیروی کرنے کی ترغیب دے رہا تھا۔ وہ دلیل دیتا ہے کہ سچے رسول دنیاوی معاوضہ طلب نہیں کرتے، جو ان کی اخلاص اور ہدایت پر ہونے کی دلیل ہے۔",
+      "englishExplanation": "This Ayah is the statement of the righteous man (Habib al-Najjar) urging his people to follow the messengers. He argues that true messengers do not seek worldly recompense, which is a sign of their sincerity and that they are on the right path.",
+      "backgroundHistory": "This is part of the argument presented by the righteous man from the outskirts of the city to his people, encouraging them to accept the message of the three messengers sent to them. His argument focuses on the messengers' selfless nature.",
+      "backgroundHistoryUrdu": "یہ اس نیک شخص کی دلیل کا حصہ ہے جو شہر کے کنارے سے آیا تھا، اور اپنے لوگوں کو تین رسولوں کے پیغام کو قبول کرنے کی ترغیب دے رہا تھا۔ اس کی دلیل رسولوں کی بے لوث فطرت پر مرکوز تھی۔",
+      "historicalContext": "The principle of prophets not asking for payment for their message is a recurring theme in the Quran, affirming their divine mission and sincerity across various prophets like Nuh, Hud, Salih, and Shu'ayb.",
+      "historicalContextUrdu": "نبیوں کا اپنے پیغام کے بدلے کوئی اجرت نہ طلب کرنا قرآن میں ایک متواتر اصول ہے، جو نوح، ہود، صالح اور شعیب جیسے مختلف انبیاء کے الہٰی مشن اور اخلاص کی تصدیق کرتا ہے۔",
+      "didYouKnow": "The absence of a demand for payment serves as a strong indicator of a prophet's truthfulness and that their message is solely for the benefit of humanity, not personal gain.",
+      "quiz": {
+        "question": "The man in Ayah 21 advised his people to follow messengers who did not ask for what?",
+        "options": [
+          "Respect",
+          "Payment",
+          "Fame",
+          "Gratitude"
+        ],
+        "correctIndex": 1
+      }
+    },
+    "22": {
+      "explanation": "نیک شخص مزید اپنی قوم سے پوچھتا ہے کہ وہ اس ذات کی عبادت کیوں نہ کرے جس نے اسے پیدا کیا اور جس کی طرف سب کو لوٹایا جائے گا۔ یہ تخلیق اور آخرت کی حقیقت پر مبنی عبادت کی عقلی دلیل ہے۔",
+      "englishExplanation": "The righteous man further asks his people why he should not worship the One who created him and to whom all will be returned. This is a rational argument for worship based on the reality of creation and the ultimate return.",
+      "backgroundHistory": "This verse continues the righteous man's logical appeal to his people, presenting fundamental reasons for monotheistic worship in contrast to their polytheistic beliefs.",
+      "backgroundHistoryUrdu": "یہ آیت نیک شخص کی اپنے لوگوں سے منطقی اپیل کو جاری رکھتی ہے، ان کے مشرکانہ عقائد کے برعکس توحید پر مبنی عبادت کی بنیادی وجوہات پیش کرتی ہے۔",
+      "historicalContext": "The call to worship the Creator is the foundational message of all prophets, emphasizing Allah's exclusive right to worship based on His absolute sovereignty and power over creation and destiny.",
+      "historicalContextUrdu": "خالق کی عبادت کی دعوت تمام انبیاء کا بنیادی پیغام تھا، جو اللہ کی مطلق حاکمیت اور تخلیق اور تقدیر پر اس کی قدرت کی بنا پر عبادت کے اس کے خصوصی حق پر زور دیتا ہے۔",
+      "didYouKnow": "The argument for worshipping the Creator is one of the most compelling and universal arguments for faith, appealing to human reason and innate understanding of cause and effect.",
+      "quiz": {
+        "question": "According to Ayah 22, what two reasons are given for worshipping Allah?",
+        "options": [
+          "He protects us and grants us wishes.",
+          "He created us and to Him we will return.",
+          "He gives us food and makes us rich.",
+          "He answers our prayers and forgives sins."
+        ],
+        "correctIndex": 1
+      }
+    },
+    "23": {
+      "explanation": "وہ اپنے لوگوں کے بتوں کی بے بسی کو واضح کرتے ہوئے کہتا ہے کہ اگر اللہ اسے کوئی تکلیف دینا چاہے تو یہ معبودانِ باطل نہ تو اس کی شفاعت کر سکتے ہیں اور نہ ہی اسے بچا سکتے ہیں۔ یہ بتوں کی بے قدری اور اللہ کی واحدانیت پر زور دیتا ہے۔",
+      "englishExplanation": "He highlights the helplessness of his people's idols, stating that if Allah intends harm for him, these false deities can neither intercede nor save him. This emphasizes the worthlessness of idols and Allah's sole sovereignty.",
+      "backgroundHistory": "This argument directly challenges the core belief of polytheists who ascribe power and intercession to idols and false gods, demonstrating their logical fallacy in times of true adversity.",
+      "backgroundHistoryUrdu": "یہ دلیل براہ راست مشرکین کے اس بنیادی عقیدے کو چیلنج کرتی ہے جو بتوں اور جھوٹے معبودوں کو طاقت اور شفاعت کا حامل سمجھتے ہیں، حقیقی مصیبت کے وقت ان کی منطقی خامی کو ظاہر کرتی ہے۔",
+      "historicalContext": "Throughout history, prophets have consistently exposed the impotence of idols and false deities, proving that only the Creator possesses true power to benefit or harm, and therefore, only He is worthy of worship.",
+      "historicalContextUrdu": "تاریخ بھر میں، انبیاء نے بتوں اور جھوٹے معبودوں کی بے اثری کو مسلسل بے نقاب کیا ہے، یہ ثابت کرتے ہوئے کہ صرف خالق ہی فائدہ پہنچانے یا نقصان پہنچانے کی حقیقی قدرت رکھتا ہے، اور اسی لیے صرف وہی عبادت کے لائق ہے۔",
+      "didYouKnow": "The Quran repeatedly debunks the concept of false intercessors, stating that intercession is solely by Allah's permission and for those He chooses.",
+      "quiz": {
+        "question": "If Allah intends adversity, what is the role of false deities according to Ayah 23?",
+        "options": [
+          "They can protect you fully.",
+          "They can intercede partially.",
+          "They cannot intercede or save at all.",
+          "They might help if you pray enough."
+        ],
+        "correctIndex": 2
+      }
+    },
+    "24": {
+      "explanation": "یہ نیک شخص کے دلائل کا نتیجہ ہے، جس میں وہ اعلان کرتا ہے کہ اگر وہ اللہ کے علاوہ کسی اور کو معبود بنائے تو وہ کھلی گمراہی میں ہو گا۔ یہ اس کے ایمان کی پختگی اور شرک کی مذمت کو ظاہر کرتا ہے۔",
+      "englishExplanation": "This is the conclusion of the righteous man's arguments, declaring that if he were to take gods other than Allah, he would indeed be in manifest error. This shows his firm conviction in faith and condemnation of polytheism.",
+      "backgroundHistory": "This statement serves as a powerful personal testimony from the righteous man, contrasting his clear understanding of truth with the obvious error of his people's idol worship.",
+      "backgroundHistoryUrdu": "یہ بیان اس نیک شخص کی طرف سے ایک طاقتور ذاتی گواہی کے طور پر کام کرتا ہے، جو سچائی کی اس کی واضح سمجھ کو اس کے لوگوں کی بت پرستی کی واضح غلطی کے برعکس پیش کرتا ہے۔",
+      "historicalContext": "The declaration of being in 'manifest error' by rejecting the truth is a consistent warning in the Quran for those who persist in disbelief after receiving clear guidance.",
+      "historicalContextUrdu": "سچائی کو رد کرنے پر 'کھلی گمراہی' میں ہونے کا اعلان ان لوگوں کے لیے قرآن میں ایک مستقل تنبیہ ہے جو واضح ہدایت ملنے کے بعد بھی کفر پر قائم رہتے ہیں۔",
+      "didYouKnow": "The term 'manifest error' (ضلال مبین) is used in the Quran to describe a clear, undeniable deviation from the truth that leaves no room for doubt.",
+      "quiz": {
+        "question": "What would the righteous man consider himself to be in if he took false deities?",
+        "options": [
+          "Slight mistake",
+          "Minor sin",
+          "Manifest error",
+          "Uncertainty"
+        ],
+        "correctIndex": 2
+      }
+    },
+    "25": {
+      "explanation": "اپنے دلائل پیش کرنے کے بعد، نیک شخص صراحتاً اپنے ایمان کا اظہار کرتا ہے کہ وہ رسولوں کے رب پر ایمان لایا ہے۔ وہ اپنی قوم کو متنبہ کرتا ہے کہ وہ اس کی بات سنیں، کیونکہ اس کا ایمان واضح دلائل پر مبنی ہے۔",
+      "englishExplanation": "After presenting his arguments, the righteous man explicitly declares his faith, stating that he has believed in the Lord of the messengers. He urges his people to listen to him, implying his belief is based on clear proofs.",
+      "backgroundHistory": "This is the climax of his plea, where he openly embraces the messengers' message, knowing well the potential consequences from his hostile people, which eventually led to his martyrdom.",
+      "backgroundHistoryUrdu": "یہ اس کی التجا کا نقطہ عروج ہے، جہاں وہ رسولوں کے پیغام کو کھلے عام قبول کرتا ہے، اپنی دشمن قوم سے ممکنہ نتائج سے بخوبی واقف ہونے کے باوجود، جو بالآخر اس کی شہادت کا باعث بنا۔",
+      "historicalContext": "Many prophets and their early followers faced severe persecution and martyrdom for openly declaring their faith in the face of widespread rejection and hostility, serving as examples of steadfastness.",
+      "historicalContextUrdu": "بہت سے انبیاء اور ان کے ابتدائی پیروکاروں کو وسیع پیمانے پر رد اور دشمنی کے باوجود اپنے ایمان کا کھلے عام اعلان کرنے پر شدید ایذا رسانی اور شہادت کا سامنا کرنا پڑا، جو استقامت کی مثالیں ہیں۔",
+      "didYouKnow": "This man's declaration of faith despite facing overwhelming opposition is a testament to the power of conviction and courage in upholding the truth.",
+      "quiz": {
+        "question": "What does the righteous man declare in Ayah 25?",
+        "options": [
+          "His intention to leave the city.",
+          "His belief in his Lord.",
+          "His doubt about the messengers.",
+          "His anger towards his people."
+        ],
+        "correctIndex": 1
+      }
+    },
+    "26": {
+      "explanation": "جب اس نیک شخص کو اس کی قوم نے شہید کر دیا تو اسے فوری طور پر جنت میں داخلے کی بشارت دی گئی۔ جنت میں داخل ہونے کے باوجود، اس کی پہلی خواہش یہ تھی کہ کاش اس کی قوم جان لے (یعنی اس کے انجام سے عبرت حاصل کرے)۔",
+      "englishExplanation": "Upon his martyrdom by his people, this righteous man was immediately told, \"Enter Paradise.\" Despite entering Paradise, his first wish was, \"I wish my people could know\" (i.e., learn from his fate).",
+      "backgroundHistory": "This verse describes the immediate reward for the steadfast faith and ultimate sacrifice of Habib al-Najjar, who became a martyr for advocating the truth. His selfless concern for his people is highlighted even in Paradise.",
+      "backgroundHistoryUrdu": "یہ آیت حبیب النجار کے پختہ ایمان اور عظیم قربانی کا فوری انعام بیان کرتی ہے، جو سچائی کی وکالت میں شہید ہو گیا۔ جنت میں ہونے کے باوجود اس کی بے لوث فکر اس کی قوم کے لیے نمایاں کی گئی ہے۔",
+      "historicalContext": "The concept of immediate reward for martyrs (shahada) is a significant aspect of Islamic belief, symbolizing Allah's swift recognition and honor for those who sacrifice their lives for His cause.",
+      "historicalContextUrdu": "شہداء کے لیے فوری انعام (شہادت) کا تصور اسلامی عقیدے کا ایک اہم پہلو ہے، جو اللہ کی طرف سے ان لوگوں کے لیے فوری پہچان اور عزت کی علامت ہے جو اس کے دین کی خاطر اپنی جانیں قربان کرتے ہیں۔",
+      "didYouKnow": "The story of this man is often cited as an example of a true believer's selfless love and concern for humanity, even those who persecuted him.",
+      "quiz": {
+        "question": "What was the first wish of the man when he was told to 'Enter Paradise'?",
+        "options": [
+          "That his family could know.",
+          "That his wealth could be distributed.",
+          "That his people could know.",
+          "That he could rest forever."
+        ],
+        "correctIndex": 2
+      }
+    },
+    "27": {
+      "explanation": "وہ چاہتا تھا کہ اس کی قوم کو معلوم ہو کہ اس کے رب نے اسے کس طرح معاف کیا اور اسے عزت والوں میں شامل کیا۔ اس کا مقصد یہ تھا کہ شاید اس کے شاندار انجام سے اس کی قوم عبرت پکڑے اور ایمان لے آئے۔",
+      "englishExplanation": "He wished his people knew how his Lord had forgiven him and placed him among the honored. His intention was that perhaps his splendid end would serve as a lesson for his people, leading them to belief.",
+      "backgroundHistory": "This wish underscores the man's profound compassion and desire for his people's salvation, even after they had killed him. It reflects the selfless nature of a true believer.",
+      "backgroundHistoryUrdu": "یہ خواہش اس شخص کی گہری ہمدردی اور اپنی قوم کی نجات کی خواہش کو اجاگر کرتی ہے، یہاں تک کہ اس کے قتل کے بعد بھی۔ یہ ایک سچے مومن کی بے لوث فطرت کی عکاسی کرتی ہے۔",
+      "historicalContext": "Prophets and righteous individuals often displayed immense mercy and concern for their people, praying for their guidance even when facing rejection and persecution, exemplifying Allah's attribute of mercy.",
+      "historicalContextUrdu": "انبیاء اور نیک افراد اکثر اپنی قوم کے لیے بے پناہ رحم اور فکر کا مظاہرہ کرتے تھے، رد اور ایذا رسانی کا سامنا کرتے ہوئے بھی ان کی ہدایت کے لیے دعا کرتے تھے، جو اللہ کی رحمت کی صفت کی مثال ہے۔",
+      "didYouKnow": "This Ayah teaches us that even in the highest states of bliss, a believer's concern for the guidance of others remains, hoping for their repentance and ultimate salvation.",
+      "quiz": {
+        "question": "What did the man wish his people to know about his Lord?",
+        "options": [
+          "How his Lord punished him.",
+          "How his Lord blessed his wealth.",
+          "How his Lord forgave him and honored him.",
+          "How his Lord protected his family."
+        ],
+        "correctIndex": 2
+      }
+    },
+    "28": {
+      "explanation": "اس کے بعد اللہ تعالیٰ نے اس نیک شخص کی قوم پر کوئی لشکر یا افواج آسمان سے نہیں اتاریں۔ یہ اس بات کی نشاندہی کرتا ہے کہ اللہ کو اپنی قدرت کے اظہار کے لیے کسی بڑے لشکر کی ضرورت نہیں ہوتی۔",
+      "englishExplanation": "After him, Allah did not send down any soldiers or armies from the heavens upon his people. This indicates that Allah does not need a large army to manifest His power and execute His will.",
+      "backgroundHistory": "This verse precedes the description of the swift divine punishment meted out to the people who rejected the messengers and killed the righteous man, emphasizing the ease of Allah's retribution.",
+      "backgroundHistoryUrdu": "یہ آیت نیک شخص کے قتل اور رسولوں کو جھٹلانے والی قوم پر نازل ہونے والی تیز الہٰی سزا کی تفصیل سے پہلے آتی ہے، جو اللہ کی سزا کی آسانی پر زور دیتی ہے۔",
+      "historicalContext": "The Quran often describes divine punishments being executed with minimal visible means, such as a single sound or a wind, to highlight Allah's absolute power and control over all creation.",
+      "historicalContextUrdu": "قرآن میں اکثر الہٰی سزاؤں کو کم سے کم ظاہری ذرائع، جیسے ایک آواز یا ہوا، کے ذریعے نافذ کیا جانا بیان کیا گیا ہے، تاکہ اللہ کی مطلق قدرت اور تمام مخلوق پر اس کے کنٹرول کو اجاگر کیا جا سکے۔",
+      "didYouKnow": "The phrase 'nor would We have done so' implies that such elaborate means were entirely unnecessary for Allah's power, reinforcing His absolute might.",
+      "quiz": {
+        "question": "What did Allah NOT send down upon the people after the man's martyrdom?",
+        "options": [
+          "A flood",
+          "Any soldiers from the heaven",
+          "An earthquake",
+          "A plague"
+        ],
+        "correctIndex": 1
+      }
+    },
+    "29": {
+      "explanation": "اللہ کا عذاب صرف ایک سخت چیخ کی صورت میں آیا، اور وہ سب فوراً ہلاک ہو گئے۔ یہ اللہ کی قدرت کی تیزی اور حتمی نوعیت کو ظاہر کرتا ہے، کہ ایک لمحے میں پوری قوم کو نیست و نابود کر دیا گیا۔",
+      "englishExplanation": "Allah's punishment came in the form of just one severe shout, and they were all immediately extinguished. This demonstrates the swift and definitive nature of Allah's power, annihilating an entire nation in an instant.",
+      "backgroundHistory": "This describes the actual punishment inflicted upon the people of the city for their disbelief and for killing the righteous man and rejecting the messengers. It was a single, devastating event.",
+      "backgroundHistoryUrdu": "یہ اس شہر کے لوگوں پر ان کے کفر اور نیک شخص کو قتل کرنے اور رسولوں کو جھٹلانے پر نازل ہونے والی اصل سزا کو بیان کرتی ہے۔ یہ ایک واحد، تباہ کن واقعہ تھا۔",
+      "historicalContext": "The 'shout' (saihah) is a recurring motif of divine punishment in the Quran for communities that rejected their prophets, such as the people of Thamud and Madyan, indicating a powerful, overwhelming force.",
+      "historicalContextUrdu": "قرآن میں 'چیخ' (صيحة) ان قوموں کے لیے الہٰی سزا کا ایک متواتر موضوع ہے جنہوں نے اپنے انبیاء کو جھٹلایا، جیسے قوم ثمود اور مدین، جو ایک طاقتور، غالب قوت کی نشاندہی کرتی ہے۔",
+      "didYouKnow": "The term 'extinguished' (خامدون) vividly portrays their sudden and complete cessation of life, like a fire being put out instantly.",
+      "quiz": {
+        "question": "What caused the people to be immediately 'extinguished'?",
+        "options": [
+          "A long drought",
+          "One mighty shout",
+          "A slow disease",
+          "An invading army"
+        ],
+        "correctIndex": 1
+      }
+    },
+    "30": {
+      "explanation": "افسوس ہے بندوں پر! ان کے پاس کوئی رسول نہیں آیا مگر یہ کہ وہ اس کا مذاق اڑاتے تھے۔ یہ آیت بنی نوع انسان کی سرکشی اور انبیاء کے ساتھ مسلسل بدسلوکی پر افسوس کا اظہار کرتی ہے، جو بالآخر ان کی تباہی کا باعث بنتا ہے۔",
+      "englishExplanation": "How regretful for the servants! There did not come to them any messenger except that they used to ridicule him. This Ayah expresses sorrow over mankind's persistent rebellion and continuous mistreatment of prophets, which ultimately leads to their destruction.",
+      "backgroundHistory": "This serves as a general lament and a profound lesson following the destruction of the people of the city, reflecting on a recurring pattern of human behavior throughout history in rejecting divine guidance.",
+      "backgroundHistoryUrdu": "یہ شہر کے لوگوں کی تباہی کے بعد ایک عمومی افسوس اور گہرا سبق ہے، جو الہٰی ہدایت کو رد کرنے میں تاریخ بھر میں انسانی رویے کے ایک متواتر پیٹرن پر غور کرتا ہے۔",
+      "historicalContext": "This verse encapsulates the historical pattern of nations rejecting and ridiculing prophets, from Nuh to Muhammad (peace be upon them all), and the subsequent divine consequences, serving as a warning for future generations.",
+      "historicalContextUrdu": "یہ آیت نوح سے محمد (علیہم السلام) تک نبیوں کو جھٹلانے اور ان کا مذاق اڑانے والی قوموں کے تاریخی نمونے اور اس کے بعد کے الہٰی نتائج کو سمیٹتی ہے، جو آنے والی نسلوں کے لیے ایک تنبیہ کے طور پر کام کرتی ہے۔",
+      "didYouKnow": "The Arabic word 'hasrah' (حسرة) conveys deep regret and sorrow, emphasizing the tragic irony of humans rejecting their own salvation.",
+      "quiz": {
+        "question": "What was the consistent reaction of the 'servants' to every messenger who came to them?",
+        "options": [
+          "They welcomed him.",
+          "They believed him immediately.",
+          "They ridiculed him.",
+          "They ignored him."
+        ],
+        "correctIndex": 2
+      }
+    },
+    "31": {
+      "explanation": "یہ آیت ایک تنبیہ ہے، جس میں کفر کرنے والوں کو یاد دلایا گیا ہے کہ ان سے پہلے کتنی قومیں انبیائے کرام کی تکذیب کے سبب ہلاک ہو چکی ہیں۔ یہ واضح کرتی ہے کہ ایک بار ہلاک ہونے والی قومیں اس دنیا میں واپس نہیں آتیں، جو اللہ کے عذاب کی حتمیت کو ظاہر کرتا ہے۔",
+      "englishExplanation": "This ayah warns disbelievers by reminding them of past nations destroyed due to their rejection of divine messages. It emphasizes that once destroyed, those people do not return to this world, highlighting the finality of divine punishment and the importance of heeding warnings.",
+      "backgroundHistory": "This ayah serves as a general warning and reflection on the consequences faced by previous civilizations that denied God's messengers and guidance.",
+      "backgroundHistoryUrdu": "یہ آیت ایک عمومی تنبیہ اور ان گزشتہ تہذیبوں کے انجام پر غور کرنے کی دعوت ہے جنہوں نے اللہ کے رسولوں اور ہدایت کو جھٹلایا۔",
+      "historicalContext": "The Makkans were aware of the ruins of ancient civilizations in the Arabian Peninsula and beyond, which serves as a historical reminder.",
+      "historicalContextUrdu": "مکہ کے لوگ جزیرہ نما عرب اور اس سے باہر کی قدیم تہذیبوں کے کھنڈرات سے واقف تھے، جو ایک تاریخی یاد دہانی کا کام کرتا ہے۔",
+      "didYouKnow": "Many ancient civilizations mentioned in the Quran, like 'Ad and Thamud, were known for their power and prosperity, yet their arrogance led to their downfall.",
+      "quiz": {
+        "question": "What is the main message of Ayah 31 regarding past destroyed generations?",
+        "options": [
+          "They will not return to this world.",
+          "They will be resurrected immediately.",
+          "They can come back if they repent.",
+          "Their destruction was coincidental."
+        ],
+        "correctIndex": 0
+      }
+    },
+    "32": {
+      "explanation": "یہ آیت قیامت اور حساب و کتاب کی قطعی حقیقت کو بیان کرتی ہے۔ اس دنیا میں ہلاک ہونے کے باوجود، تمام پچھلی نسلیں، اور تمام انسانیت، یومِ حساب پر اللہ کے سامنے جمع کی جائیں گی تاکہ ان کا فیصلہ کیا جا سکے۔",
+      "englishExplanation": "This ayah confirms the absolute certainty of resurrection and accountability. Despite their destruction in this world, all past generations, along with all humanity, will be gathered and presented before Allah on the Day of Judgment for reckoning.",
+      "backgroundHistory": "Following the warning about worldly destruction, this ayah emphasizes that worldly end is not the ultimate end; a greater judgment awaits everyone.",
+      "backgroundHistoryUrdu": "دنیاوی تباہی کی تنبیہ کے بعد، یہ آیت اس بات پر زور دیتی ہے کہ دنیاوی انجام حتمی انجام نہیں ہے؛ ہر ایک کا ایک بڑا حساب منتظر ہے۔",
+      "historicalContext": "This addresses the skepticism of the Makkans about resurrection and life after death, providing a direct affirmation of Allah's power to gather all creation.",
+      "historicalContextUrdu": "یہ مکہ والوں کے قیامت اور موت کے بعد زندگی کے بارے میں شکوک و شبہات کا جواب دیتی ہے، اللہ کی تمام مخلوق کو جمع کرنے کی قدرت کی براہ راست تصدیق فراہم کرتی ہے۔",
+      "didYouKnow": "The concept of 'gathering' (Hashr) is a fundamental tenet of Islamic belief, signifying the collective resurrection of all beings.",
+      "quiz": {
+        "question": "According to Ayah 32, what will happen to all generations, including those destroyed?",
+        "options": [
+          "They will be brought present before Allah.",
+          "They will be forgotten forever.",
+          "They will return to live on Earth.",
+          "They will be reincarnated."
+        ],
+        "correctIndex": 0
+      }
+    },
+    "33": {
+      "explanation": "اللہ تعالیٰ بے جان زمین کو اپنی قدرتِ احیاء کی ایک عظیم نشانی کے طور پر پیش کرتے ہیں۔ جس طرح خشک زمین کو بارش سے دوبارہ سرسبز کر کے اس سے غلہ اگایا جاتا ہے، اسی طرح اللہ مردوں کو بھی زندہ کرنے پر قادر ہے۔",
+      "englishExplanation": "Allah presents the lifeless earth as a profound sign of His power to resurrect. Just as barren land is revived with rain to produce vegetation and grain, so too can Allah bring the dead back to life, offering tangible proof of resurrection.",
+      "backgroundHistory": "This marks a shift from historical warnings to natural signs (Ayat al-Afāq), inviting reflection on creation as proof of God's power and ability to resurrect.",
+      "backgroundHistoryUrdu": "یہ تاریخی انتباہات سے قدرتی نشانیوں (آیات الآفاق) کی طرف ایک تبدیلی کو ظاہر کرتا ہے، جو اللہ کی قدرت اور مردوں کو زندہ کرنے کی صلاحیت کے ثبوت کے طور پر تخلیق پر غور کرنے کی دعوت دیتا ہے۔",
+      "historicalContext": "The Bedouins and city dwellers alike observed the transformation of barren land into fertile grounds after rainfall, a common and powerful metaphor for resurrection.",
+      "historicalContextUrdu": "بدو اور شہری دونوں خشک زمین کو بارش کے بعد زرخیز زمین میں تبدیل ہوتے دیکھتے تھے، جو قیامت کے لیے ایک عام اور قوی استعارہ تھا۔",
+      "didYouKnow": "The cycle of rain bringing life to dead earth is mentioned numerous times in the Quran as a metaphor for resurrection.",
+      "quiz": {
+        "question": "What is the 'dead earth' presented as a sign of in Ayah 33?",
+        "options": [
+          "Allah's power to resurrect the dead.",
+          "The importance of agriculture.",
+          "The changing seasons.",
+          "The scarcity of water."
+        ],
+        "correctIndex": 0
+      }
+    },
+    "34": {
+      "explanation": "اللہ کی نعمتوں اور قدرت کے موضوع کو جاری رکھتے ہوئے، یہ آیت کھجوروں اور انگوروں کے گھنے باغات کی تخلیق کو اجاگر کرتی ہے۔ یہ باغات، پھوٹتے ہوئے چشموں سے سیراب ہوتے ہوئے، اللہ کی بے آب و گیاہ زمین کو زرخیز بنانے کی قدرت کا ثبوت ہیں۔",
+      "englishExplanation": "Continuing the theme of divine blessings and power, this ayah highlights the creation of lush gardens filled with palm trees and grapevines. These gardens, sustained by gushing springs, are a testament to Allah's ability to transform barren land into vibrant sources of sustenance and beauty.",
+      "backgroundHistory": "This ayah continues the presentation of natural signs (Ayat al-Afāq), emphasizing the abundance of provisions Allah provides from the earth.",
+      "backgroundHistoryUrdu": "یہ آیت قدرتی نشانیوں (آیات الآفاق) کی پیشکش کو جاری رکھتی ہے، زمین سے اللہ کی فراہم کردہ کثرت پر زور دیتی ہے۔",
+      "historicalContext": "In the arid Arabian environment, the existence of lush gardens and flowing springs was a remarkable sight, clearly indicative of divine intervention and blessings.",
+      "historicalContextUrdu": "خشک عربی ماحول میں، سرسبز باغات اور بہتے چشموں کا وجود ایک قابل ذکر منظر تھا، جو الٰہی مداخلت اور نعمتوں کی واضح نشاندہی کرتا تھا۔",
+      "didYouKnow": "Palm trees and grapevines were historically vital crops in the Arabian Peninsula, providing essential food, drink, and economic stability.",
+      "quiz": {
+        "question": "Besides gardens of palm trees and grapevines, what else did Allah cause to burst forth from the earth in Ayah 34?",
+        "options": [
+          "Some springs.",
+          "Tall mountains.",
+          "Vast deserts.",
+          "Underground rivers."
+        ],
+        "correctIndex": 0
+      }
+    },
+    "35": {
+      "explanation": "یہ آیت اس بات پر زور دیتی ہے کہ ان باغات کے تمام پھل اور نعمتیں اللہ کی طرف سے ہیں، نہ کہ صرف انسانی محنت کا نتیجہ۔ یہ انسانی ناشکری کے لیے ایک براہ راست چیلنج ہے، جو لوگوں کو اپنے رزق کے ماخذ کو پہچاننے اور اللہ کا شکر ادا کرنے کی ترغیب دیتی ہے۔",
+      "englishExplanation": "This ayah emphasizes that all the fruits and bounties from these gardens are provided by Allah, not solely by human effort. It serves as a direct challenge to human ingratitude, urging people to recognize the source of their sustenance and express gratitude to the Creator for His immense provisions.",
+      "backgroundHistory": "This highlights the argument against idol worship and disbelief by pointing to undeniable divine provisions that humans receive without their direct creation.",
+      "backgroundHistoryUrdu": "یہ بت پرستی اور کفر کے خلاف دلیل کو اجاگر کرتی ہے، ان ناقابل تردید الٰہی نعمتوں کی طرف اشارہ کرتی ہے جو انسان اپنی براہ راست تخلیق کے بغیر حاصل کرتا ہے۔",
+      "historicalContext": "The Makkans often attributed prosperity to their idols or their own efforts, so this ayah reminds them of the true source of sustenance.",
+      "historicalContextUrdu": "مکہ کے لوگ اکثر خوشحالی کو اپنے بتوں یا اپنی کوششوں سے منسوب کرتے تھے، لہذا یہ آیت انہیں رزق کے حقیقی ماخذ کی یاد دلاتی ہے۔",
+      "didYouKnow": "The phrase 'their hands have not produced it' underscores the effortlessness of receiving these gifts, which only deepens the call for gratitude.",
+      "quiz": {
+        "question": "What is the primary message of 'And their hands have not produced it, so will they not be grateful?' in Ayah 35?",
+        "options": [
+          "A call for gratitude towards Allah for His provisions.",
+          "A suggestion for better agricultural techniques.",
+          "An indication of human laziness.",
+          "A question about the origin of fruits."
+        ],
+        "correctIndex": 0
+      }
+    },
+    "36": {
+      "explanation": "یہ آیت اللہ کی لامحدود عظمت کا اعلان کرتی ہے، جس نے ہر چیز کو جوڑوں کی صورت میں پیدا کیا۔ یہ جوڑے نباتات، انسانوں، اور انسانیت کے معلوم و نامعلوم دیگر مخلوقات تک پھیلے ہوئے ہیں۔ یہ تخلیق کے پیچیدہ ڈیزائن کو اجاگر کرتی ہے۔",
+      "englishExplanation": "This ayah proclaims the boundless glory of Allah, who created everything in pairs. This pairing extends to vegetation, humans, and countless other creations both known and unknown to humanity, highlighting the intricate design and balance of creation.",
+      "backgroundHistory": "This ayah presents a universal sign of Allah's power and wisdom, observable in all aspects of creation, from the smallest organisms to the largest celestial bodies.",
+      "backgroundHistoryUrdu": "یہ آیت اللہ کی قدرت اور حکمت کی ایک عالمگیر نشانی پیش کرتی ہے، جو تخلیق کے تمام پہلوؤں میں مشاہدہ کی جا سکتی ہے، چھوٹے سے چھوٹے جانداروں سے لے کر بڑے سے بڑے آسمانی اجسام تک۔",
+      "historicalContext": "This challenges polytheistic beliefs by demonstrating a singular, overarching design and order in the universe, which can only come from one Creator.",
+      "historicalContextUrdu": "یہ کائنات میں ایک واحد، جامع ڈیزائن اور نظم کو ظاہر کرکے شرک پر مبنی عقائد کو چیلنج کرتی ہے، جو صرف ایک خالق سے ہی آ سکتا ہے۔",
+      "didYouKnow": "The concept of 'pairs' (zawj) in the Quran is broad, encompassing not just gender but also complementary opposites, different species, and interdependent elements in the cosmos.",
+      "quiz": {
+        "question": "What has Allah created in 'all pairs' according to Ayah 36?",
+        "options": [
+          "Everything from what the earth grows, themselves, and that which they do not know.",
+          "Only humans and animals.",
+          "Only plants and trees.",
+          "Only things visible to the eye."
+        ],
+        "correctIndex": 0
+      }
+    },
+    "37": {
+      "explanation": "دن سے رات میں تبدیلی کو اللہ کی قدرت اور کائنات پر اس کے درست کنٹرول کی ایک اور گہری نشانی کے طور پر پیش کیا گیا ہے۔ روشنی سے اچانک تاریکی میں منتقل ہونا اللہ کی حالات بدلنے کی صلاحیت کو ظاہر کرتا ہے اور اس کی خودمختاری کو اجاگر کرتا ہے۔",
+      "englishExplanation": "The transition from day to night is presented as another profound sign of Allah's power and precise control over the cosmos. The sudden shift from light to darkness demonstrates Allah's ability to alter circumstances and underscores His sovereignty, reminding of the order and purpose in creation.",
+      "backgroundHistory": "This continues the presentation of 'Ayat al-Afāq' (signs in the horizons), shifting from earth-based signs to celestial phenomena that demonstrate divine power.",
+      "backgroundHistoryUrdu": "یہ 'آیات الآفاق' (افق میں نشانیاں) کی پیشکش کو جاری رکھتی ہے، زمین پر مبنی نشانیوں سے آسمانی مظاہر کی طرف منتقل ہوتی ہے جو الٰہی قدرت کا مظاہرہ کرتی ہیں۔",
+      "historicalContext": "The regular and undeniable alternation of day and night was a fundamental experience for all people, serving as a constant reminder of a controlling power.",
+      "historicalContextUrdu": "دن اور رات کی باقاعدہ اور ناقابل تردید تبدیلی تمام لوگوں کے لیے ایک بنیادی تجربہ تھا، جو ایک کنٹرول کرنے والی طاقت کی مسلسل یاد دہانی کا کام کرتا تھا۔",
+      "didYouKnow": "The alternation of day and night is crucial for life on Earth, regulating sleep cycles, temperature, and many biological processes.",
+      "quiz": {
+        "question": "What does Allah 'remove from it [the light of] day' in Ayah 37?",
+        "options": [
+          "The darkness.",
+          "The light of day.",
+          "The moon.",
+          "The stars."
+        ],
+        "correctIndex": 1
+      }
+    },
+    "38": {
+      "explanation": "یہ آیت سورج کی اپنے مقررہ 'ٹھکانے' یا طے شدہ راستے کی طرف درست اور مسلسل حرکت کو بیان کرتی ہے۔ یہ اس کے مخصوص مدار اور ایک حتمی انجام دونوں کا مفہوم دیتی ہے، جو اللہ، غالب اور جاننے والے کی طرف سے پہلے سے طے شدہ ہیں۔",
+      "englishExplanation": "This ayah describes the sun's precise and continuous movement towards a destined 'stopping point' or fixed course. This implies both its specific orbit and an ultimate end, both predetermined by Allah, the Almighty and All-Knowing, highlighting cosmic order and divine planning.",
+      "backgroundHistory": "This is part of the celestial signs, emphasizing the meticulous arrangement of the universe as proof of Allah's power and wisdom, contrasting with any notion of chaos or chance.",
+      "backgroundHistoryUrdu": "یہ آسمانی نشانیوں کا حصہ ہے، کائنات کے محتاط انتظام کو اللہ کی قدرت اور حکمت کے ثبوت کے طور پر زور دیتی ہے، جو انتشار یا اتفاق کے کسی بھی تصور کے برعکس ہے۔",
+      "historicalContext": "In ancient times, the sun's movement was observed to be regular and predictable, but its precise course and ultimate end were beyond human comprehension, pointing to a higher intelligence.",
+      "historicalContextUrdu": "قدیم زمانے میں، سورج کی حرکت کو باقاعدہ اور قابل پیشن گوئی سمجھا جاتا تھا، لیکن اس کا صحیح راستہ اور حتمی انجام انسانی فہم سے باہر تھا، جو ایک اعلیٰ ذہانت کی طرف اشارہ کرتا ہے۔",
+      "didYouKnow": "Modern astronomy confirms that the sun, along with our solar system, is orbiting the center of the Milky Way galaxy at immense speeds.",
+      "quiz": {
+        "question": "Who determines the sun's course toward its stopping point?",
+        "options": [
+          "The Exalted in Might, the Knowing.",
+          "The gravitational pull of planets.",
+          "Random cosmic events.",
+          "Human calculations."
+        ],
+        "correctIndex": 0
+      }
+    },
+    "39": {
+      "explanation": "یہ آیت چاند کے باقاعدہ مراحل کو الٰہی نظم کی ایک اور نشانی کے طور پر پیش کرتی ہے۔ نئے ہلال سے لے کر پرانی، خشک کھجور کی شاخ جیسی پتلی شکل تک، اس کا مستقل چکر ایک آسمانی کیلنڈر اور کائنات پر اللہ کے دقیق ڈیزائن کا ثبوت ہے۔",
+      "englishExplanation": "This ayah points to the moon's regular phases as another sign of divine order. From a new crescent to a full moon and back to a thin, curved sliver resembling an old, dried date stalk, its consistent cycle serves as a celestial calendar and proof of Allah's precise design and control.",
+      "backgroundHistory": "This continues the theme of celestial signs, showcasing the moon's predictable cycle as a testament to divine wisdom, which was historically important for timekeeping.",
+      "backgroundHistoryUrdu": "یہ آسمانی نشانیوں کے موضوع کو جاری رکھتی ہے، چاند کے قابل پیشن گوئی چکر کو الٰہی حکمت کے ثبوت کے طور پر پیش کرتی ہے، جو تاریخی طور پر وقت کی پیمائش کے لیے اہم تھا۔",
+      "historicalContext": "The lunar calendar was essential for Arabs for religious observances, agriculture, and travel, making the moon's phases a highly significant and observed phenomenon.",
+      "historicalContextUrdu": "قمری کیلنڈر عربوں کے لیے مذہبی عبادات، زراعت اور سفر کے لیے ضروری تھا، جس نے چاند کے مراحل کو ایک انتہائی اہم اور مشاہدہ شدہ مظہر بنا دیا۔",
+      "didYouKnow": "The term 'old date stalk' refers to the dry, curved, and thin appearance of the moon just before it vanishes to reappear as a new crescent, likened to the appearance of a withered date branch.",
+      "quiz": {
+        "question": "What does the moon eventually resemble after going through its phases, as described in Ayah 39?",
+        "options": [
+          "An old date stalk.",
+          "A full, bright disk.",
+          "A new, sharp crescent.",
+          "A distant star."
+        ],
+        "correctIndex": 0
+      }
+    },
+    "40": {
+      "explanation": "یہ آیت کائنات میں موجود کامل، ہم آہنگ اور ناقابلِ تغیر نظم کو اجاگر کرتی ہے۔ سورج اور چاند دونوں کے اپنے الگ راستے ہیں اور وہ کبھی ٹکراتے نہیں۔ دن اور رات ایک دوسرے کے بعد آتے ہیں بغیر ایک دوسرے پر تجاوز کیے۔ ہر آسمانی جسم اپنے مدار میں تیرتا ہے۔",
+      "englishExplanation": "This ayah highlights the perfect, harmonious, and immutable order in the cosmos. The sun and moon each have their distinct paths and never collide. Day and night follow each other without one encroaching upon the other's time. Each celestial body moves gracefully in its own 'orbit,' or sphere, swimming through space, all under divine command.",
+      "backgroundHistory": "This ayah summarizes the celestial signs by emphasizing the perfect balance and precise laws governing the universe, countering any notion of randomness or multiple gods.",
+      "backgroundHistoryUrdu": "یہ آیت کائنات کو کنٹرول کرنے والے کامل توازن اور درست قوانین پر زور دے کر آسمانی نشانیوں کا خلاصہ کرتی ہے، جو تصادفی پن یا متعدد خداؤں کے کسی بھی تصور کی تردید کرتی ہے۔",
+      "historicalContext": "In a world where natural phenomena were often attributed to various deities, this ayah firmly establishes the singular and absolute control of Allah over all cosmic order.",
+      "historicalContextUrdu": "ایک ایسی دنیا میں جہاں قدرتی مظاہر کو اکثر مختلف دیوتاؤں سے منسوب کیا جاتا تھا، یہ آیت اللہ کے تمام کائناتی نظام پر واحد اور مطلق کنٹرول کو مضبوطی سے قائم کرتی ہے۔",
+      "didYouKnow": "The word 'swimming' (yasbahūn) implies a smooth, effortless motion, reflecting the grace and precision of celestial mechanics, a concept remarkably described centuries before modern astronomy.",
+      "quiz": {
+        "question": "What prevents the sun from reaching the moon, and night from overtaking day?",
+        "options": [
+          "Their individual, distinct orbits.",
+          "Their different sizes.",
+          "The force of human will.",
+          "Magnetic fields only."
+        ],
+        "correctIndex": 0
+      }
+    }
+  },
+  "timestamp": 1772761135556
+}

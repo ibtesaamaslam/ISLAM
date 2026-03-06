@@ -83,6 +83,7 @@ const QuranReader = () => {
     const pdfRef = useRef<HTMLDivElement>(null);
     const [ayahSearchQuery, setAyahSearchQuery] = useState('');
     const [downloadProgressText, setDownloadProgressText] = useState('');
+    const [staticSurahData, setStaticSurahData] = useState<any>(null);
 
     // Highlight helper
     const HighlightText = ({ text, highlight }: { text: string, highlight: string }) => {
@@ -433,6 +434,20 @@ const QuranReader = () => {
 
                 setAyas(processedAyahs);
                 addPoints(10);
+
+                // Try to fetch static data
+                try {
+                    const staticRes = await fetch(`/quran-data/${sura}.json`);
+                    if (staticRes.ok) {
+                        const staticData = await staticRes.json();
+                        setStaticSurahData(staticData);
+                    } else {
+                        setStaticSurahData(null);
+                    }
+                } catch (e) {
+                    console.warn("No static data found for Surah", sura);
+                    setStaticSurahData(null);
+                }
             } catch (err) {
                 console.error(err);
                 if (isOffline) {
@@ -816,6 +831,14 @@ const QuranReader = () => {
         setSelectedOption(null);
         setIsCorrect(false);
         setTafseerLoading(true);
+
+        // Check Static Data First
+        if (staticSurahData && staticSurahData.tafseer && staticSurahData.tafseer[aya.number]) {
+            const data = staticSurahData.tafseer[aya.number];
+            setTafseerData(data);
+            setTafseerLoading(false);
+            return;
+        }
 
         // Check Local Storage for Tafseer
         const localTafseerKey = `tafseer_${sura}_${aya.number}`;
