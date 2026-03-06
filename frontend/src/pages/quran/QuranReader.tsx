@@ -1055,59 +1055,7 @@ const QuranReader = () => {
                                                 {surahInfo.name}
                                             </p>
                                             <div className="flex items-center gap-2 mt-2">
-                                                {isDownloaded ? (
-                                                    <div className="flex flex-col items-center gap-2">
-                                                        <div className="flex items-center gap-2 bg-emerald-100 px-3 py-1 rounded-full border-2 border-emerald-200">
-                                                            <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
-                                                                <Check size={12} strokeWidth={3} /> Offline Ready
-                                                            </span>
-                                                        </div>
-                                                        <button 
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                if(confirm('Remove this Surah from offline storage?')) {
-                                                                    deleteSurahContent();
-                                                                }
-                                                            }}
-                                                            className="text-[10px] bg-white text-rose-500 px-2 py-0.5 rounded-full hover:bg-rose-50 transition-colors font-bold border border-rose-100"
-                                                        >
-                                                            Remove
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <button 
-                                                        onClick={downloadSurahContent}
-                                                        disabled={downloading || isOffline}
-                                                        className="text-xs bg-slate-100 text-slate-600 px-3 py-2 rounded-xl flex items-center gap-2 hover:bg-slate-200 disabled:opacity-50 font-bold w-full justify-center"
-                                                    >
-                                                        {downloading ? (
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-3 h-3 border-2 border-slate-400 border-t-slate-600 rounded-full animate-spin" />
-                                                                <span>{downloadProgress}%</span>
-                                                            </div>
-                                                        ) : (
-                                                            <><Download size={14} /> Download Surah</>
-                                                        )}
-                                                    </button>
-                                                )}
-                                                
-                                                <button
-                                                    onClick={handleDownloadOffline}
-                                                    disabled={isDownloading}
-                                                    className="mt-2 w-full bg-indigo-500 text-white px-3 py-2 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-600 transition shadow-sm active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                                                >
-                                                    {isDownloading ? (
-                                                        <span className="animate-pulse flex items-center gap-2">
-                                                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                            {downloadProgressText || 'Downloading...'}
-                                                        </span>
-                                                    ) : (
-                                                        <>
-                                                            <Download size={14} strokeWidth={3} />
-                                                            Download Full Offline Data
-                                                        </>
-                                                    )}
-                                                </button>
+                                                {/* Offline controls removed */}
                                             </div>
                                         </div>
                                     )}
