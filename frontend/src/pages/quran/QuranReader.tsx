@@ -304,8 +304,7 @@ const QuranReader = () => {
         const fetchAllSurahs = async () => {
             try {
                 const res = await axios.get('https://api.alquran.cloud/v1/surah');
-                // User requested to show only the first 2 Surahs
-                setAllSurahs(res.data.data.slice(0, 2));
+                setAllSurahs(res.data.data);
             } catch (err) {
                 console.error("Failed to fetch surah list", err);
             }
@@ -345,10 +344,16 @@ const QuranReader = () => {
             if (localData) {
                 try {
                     const parsed = JSON.parse(localData);
-                    setSurahInfo(parsed.surahInfo);
-                    setAyas(parsed.ayas);
-                    setLoading(false);
-                    return;
+                    // Validate that we have the necessary info
+                    if (parsed.surahInfo && parsed.surahInfo.englishName && parsed.ayas && parsed.ayas.length > 0) {
+                        setSurahInfo(parsed.surahInfo);
+                        setAyas(parsed.ayas);
+                        setLoading(false);
+                        return;
+                    } else {
+                        console.warn("Cached data incomplete, refetching...");
+                        localStorage.removeItem(`surah_${sura}_data`);
+                    }
                 } catch (e) {
                     console.error("Failed to parse local surah data", e);
                     localStorage.removeItem(`surah_${sura}_data`);
