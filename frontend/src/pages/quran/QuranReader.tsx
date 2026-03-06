@@ -304,7 +304,8 @@ const QuranReader = () => {
         const fetchAllSurahs = async () => {
             try {
                 const res = await axios.get('https://api.alquran.cloud/v1/surah');
-                setAllSurahs(res.data.data);
+                // User requested to show only the first 2 Surahs
+                setAllSurahs(res.data.data.slice(0, 2));
             } catch (err) {
                 console.error("Failed to fetch surah list", err);
             }
