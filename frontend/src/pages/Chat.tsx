@@ -37,10 +37,18 @@ const Chat = () => {
             if (apiKey) {
                 try {
                     const ai = new GoogleGenAI({ apiKey });
-                    const prompt = `You are a friendly, wise, and gentle Islamic teacher for kids. 
-                    Your name is "Noor". 
-                    Answer the following question about Islam, Quran, or Hadith in a simple, encouraging, and kid-friendly way. 
-                    Use emojis. Keep it short (under 100 words). 
+                    const prompt = `You are a friendly, wise, and welcoming Islamic guide named "Noor".
+                    Your task is to answer the user's question using the "Explain Like I'm 10" (ELI10) approach.
+                    
+                    Guidelines for your response:
+                    - Use simple, everyday language that a 10-year-old can easily understand.
+                    - Avoid complex theological jargon. If you must use an Islamic term, explain it simply.
+                    - Use fun, relatable analogies (like school, games, nature, or family) to explain deep concepts.
+                    - Keep your tone gentle, loving, and encouraging.
+                    - Keep paragraphs short (1-3 sentences).
+                    - IMPORTANT: Do NOT use any Markdown formatting (no ** for bold, no * for italics). Just use plain text and emojis.
+                    - Use newlines to separate different points or steps.
+                    
                     Question: ${userMsg.content}`;
 
                     const response = await ai.models.generateContent({
@@ -104,7 +112,7 @@ const Chat = () => {
                             key={idx} 
                             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
-                            <div className={`max-w-[85%] rounded-3xl p-5 shadow-sm font-medium text-lg leading-relaxed ${
+                            <div className={`max-w-[85%] rounded-3xl p-5 shadow-sm font-medium text-lg leading-relaxed whitespace-pre-wrap ${
                                 msg.role === 'user' 
                                 ? 'bg-rose-500 text-white rounded-br-none shadow-rose-200' 
                                 : 'bg-white text-slate-700 rounded-bl-none border-2 border-rose-100 shadow-sm'
