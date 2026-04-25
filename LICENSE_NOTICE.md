@@ -1,6 +1,6 @@
 # Content Licensing & Requirements
 
-NoorLocal is a platform for displaying religious texts. The application code is open source, but the **content** (Qur’an text, translations, tafsīr, hadiths) must be supplied by the user or explicitly licensed.
+Reclaim your Heart is a platform for displaying religious texts. The application code is open source, but the **content** (Qur’an text, translations, tafsīr, hadiths) must be supplied by the user or explicitly licensed.
 
 **Do NOT commit copyrighted content to this repository.**
 
