@@ -583,10 +583,10 @@ const DiscoverIslam = () => {
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 mt-12 max-w-6xl">
-                <div className="grid md:grid-cols-4 gap-8">
+            <div className="w-full px-4 sm:px-8 lg:px-12 xl:px-16 mt-12">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
                     {/* Sidebar Navigation */}
-                    <div className="md:col-span-1 space-y-3">
+                    <div className="lg:col-span-3 space-y-3 lg:sticky lg:top-4 z-20">
                         {navItems.map((item) => (
                             <button
                                 key={item.id}
@@ -615,7 +615,7 @@ const DiscoverIslam = () => {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.3 }}
-                        className="md:col-span-3 bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl border-4 border-emerald-100 relative overflow-hidden"
+                        className="lg:col-span-9 bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl border-4 border-emerald-100 relative overflow-hidden w-full"
                     >
                         {/* Decorative background blob */}
                         <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-50 rounded-full opacity-50 blur-3xl pointer-events-none" />
@@ -808,7 +808,7 @@ const DiscoverIslam = () => {
                         )}
 
                         {activeSection === 'achievements' && (
-                            <div className="max-w-5xl mx-auto relative z-10">
+                            <div className="w-full relative z-10">
                                 <div className="text-center mb-10">
                                     <h2 className="text-4xl font-black text-emerald-800 mb-4 flex items-center justify-center gap-3">
                                         <Trophy className="text-yellow-500 fill-yellow-500" size={40} />
@@ -817,7 +817,7 @@ const DiscoverIslam = () => {
                                     <p className="text-slate-600 text-lg font-bold">Collect badges as you learn! Can you get them all? 🏆</p>
                                 </div>
                                 
-                                <div className="grid grid-cols-1 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                                     {achievements.map((achievement) => {
                                         const isUnlocked = unlockedAchievements.includes(achievement.id);
                                         return (

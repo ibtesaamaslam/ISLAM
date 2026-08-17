@@ -14,7 +14,7 @@ const Home = () => {
                 <div className="absolute top-[40%] left-[20%] w-[20%] h-[20%] bg-lime-300/30 rounded-full blur-[50px]" />
             </div>
 
-            <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
+            <div className="relative z-10 w-full px-4 sm:px-8 lg:px-12 xl:px-16 py-8">
                 
                 {/* Header / Nav */}
                 <motion.header 
@@ -38,32 +38,32 @@ const Home = () => {
                     </div>
                 </motion.header>
 
-                <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
+                <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center mb-20 w-full">
                     
                     {/* Hero Text */}
                     <motion.div 
                         initial={{ x: -50, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.2 }}
-                        className="text-center lg:text-left"
+                        className="text-center lg:text-left lg:col-span-7"
                     >
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-yellow-400 text-orange-500 font-black uppercase tracking-wide mb-6 shadow-sm">
                             <Sparkles size={16} className="text-yellow-500 fill-yellow-500" /> Fun Learning Adventure!
                         </div>
                         
-                        <h1 className="text-5xl md:text-7xl font-black leading-tight mb-6 text-white drop-shadow-[0_4px_0_rgba(0,0,0,0.1)]">
+                        <h1 className="text-5xl md:text-7xl xl:text-8xl font-black leading-tight mb-6 text-white drop-shadow-[0_4px_0_rgba(0,0,0,0.1)]">
                             Learn Islam the <br />
                             <span className="text-yellow-300 inline-block cursor-default">Fun Way!</span> 🚀
                         </h1>
                         
-                        <p className="text-xl text-blue-900/80 font-bold mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0 bg-white/30 p-4 rounded-2xl backdrop-blur-sm border-2 border-white/50">
+                        <p className="text-xl md:text-2xl text-blue-900/80 font-bold mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0 bg-white/30 p-5 rounded-3xl backdrop-blur-sm border-2 border-white/50">
                             Join the magical journey! Read the Quran, collect Hadith stars, and make new friends with our AI guide.
                         </p>
 
                         <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
-                            <Link to="/quran" className="group relative px-8 py-4 bg-gradient-to-b from-orange-400 to-orange-500 rounded-2xl font-black text-white shadow-[0_6px_0_#c2410c] active:shadow-none active:translate-y-[6px] transition-all border-2 border-orange-300">
-                                <span className="relative flex items-center gap-2 text-lg">
-                                    Start Adventure <ChevronRight size={24} strokeWidth={3} />
+                            <Link to="/quran" className="group relative px-10 py-5 bg-gradient-to-b from-orange-400 to-orange-500 rounded-3xl font-black text-white shadow-[0_6px_0_#c2410c] active:shadow-none active:translate-y-[6px] transition-all border-2 border-orange-300">
+                                <span className="relative flex items-center gap-3 text-xl">
+                                    Start Adventure <ChevronRight size={26} strokeWidth={3} />
                                 </span>
                             </Link>
                         </div>
@@ -74,7 +74,7 @@ const Home = () => {
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.4 }}
-                        className="relative h-[400px] flex items-center justify-center"
+                        className="relative h-[420px] flex items-center justify-center lg:col-span-5 w-full"
                     >
                         {/* Central Glowing Orb */}
                         <motion.div 

@@ -965,11 +965,11 @@ const QuranReader = () => {
     );
 
     return (
-        <div className="min-h-screen bg-sky-50 pb-32 pt-24 px-4 font-sans selection:bg-yellow-200 selection:text-blue-900">
-            <div className="container mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+        <div className="min-h-screen bg-sky-50 pb-32 pt-24 px-4 sm:px-8 lg:px-12 xl:px-16 font-sans selection:bg-yellow-200 selection:text-blue-900 w-full">
+            <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 
                 {/* Sidebar: Search & Navigation */}
-                <div className="lg:col-span-1 lg:sticky lg:top-4 z-40">
+                <div className="lg:col-span-3 lg:sticky lg:top-4 z-40">
                     <div className="bg-white p-6 rounded-3xl shadow-xl border-4 border-sky-200 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-sky-100 rounded-full -mr-10 -mt-10 opacity-50 pointer-events-none" />
                         
@@ -1072,7 +1072,7 @@ const QuranReader = () => {
                 </div>
 
                 {/* Main Content: Ayas List */}
-                <div className="lg:col-span-3">
+                <div className="lg:col-span-9 w-full">
                     {/* Ayah Search Bar */}
                     <div className="mb-6 bg-white p-4 rounded-2xl shadow-sm border-2 border-sky-100 flex items-center gap-3 sticky top-4 z-30">
                         <Search className="text-sky-400" size={20} />

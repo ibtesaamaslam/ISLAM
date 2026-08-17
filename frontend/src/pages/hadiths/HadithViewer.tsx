@@ -74,8 +74,8 @@ const HadithViewer = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-amber-50 pb-32 pt-10 px-4 flex flex-col items-center font-sans selection:bg-yellow-200 selection:text-amber-900">
-            <div className="max-w-3xl w-full">
+        <div className="min-h-screen bg-amber-50 pb-32 pt-10 px-4 sm:px-8 lg:px-12 xl:px-16 flex flex-col items-center font-sans selection:bg-yellow-200 selection:text-amber-900 w-full">
+            <div className="w-full max-w-[1600px]">
                 <motion.div 
                     initial={{ y: -50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
@@ -84,17 +84,17 @@ const HadithViewer = () => {
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-amber-200 text-amber-500 font-black uppercase tracking-wide mb-4 shadow-sm">
                         <Sparkles size={16} className="fill-amber-500" /> Wisdom of the Prophet (ﷺ)
                     </div>
-                    <h1 className="text-5xl md:text-6xl font-black text-amber-500 mb-4 drop-shadow-[0_2px_0_rgba(0,0,0,0.1)]">
+                    <h1 className="text-5xl md:text-7xl font-black text-amber-500 mb-4 drop-shadow-[0_2px_0_rgba(0,0,0,0.1)]">
                         Hadith <span className="text-amber-400">Heroes</span>
                     </h1>
-                    <p className="text-amber-800/70 font-bold text-lg max-w-lg mx-auto">
+                    <p className="text-amber-800/70 font-bold text-lg md:text-xl max-w-2xl mx-auto">
                         Collect shiny stars of wisdom! Pick a topic to learn what our beloved Prophet (ﷺ) taught us.
                     </p>
                 </motion.div>
 
                 {/* Search / Topic Input */}
-                <div className="relative mb-12">
-                    <div className="flex flex-wrap justify-center gap-3 mb-8">
+                <div className="relative mb-12 w-full">
+                    <div className="flex flex-wrap justify-center gap-3 mb-8 max-w-5xl mx-auto">
                         {topics.map((t, i) => (
                             <motion.button
                                 key={t}
@@ -102,7 +102,7 @@ const HadithViewer = () => {
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ delay: i * 0.05 }}
                                 onClick={() => fetchHadithByTopic(t)}
-                                className={`px-5 py-2.5 rounded-2xl text-sm font-black transition-all border-2 shadow-[0_4px_0_rgba(0,0,0,0.1)] active:shadow-none active:translate-y-[4px] ${
+                                className={`px-6 py-3 rounded-2xl text-sm md:text-base font-black transition-all border-2 shadow-[0_4px_0_rgba(0,0,0,0.1)] active:shadow-none active:translate-y-[4px] ${
                                     topic === t 
                                     ? 'bg-amber-400 text-white border-amber-500 shadow-amber-600' 
                                     : 'bg-white text-amber-600 border-amber-100 hover:bg-amber-50 hover:border-amber-200'
@@ -113,7 +113,7 @@ const HadithViewer = () => {
                         ))}
                     </div>
 
-                    <div className="relative max-w-xl mx-auto">
+                    <div className="relative max-w-3xl mx-auto">
                         <Search className="absolute left-5 top-5 text-amber-300" size={24} strokeWidth={3} />
                         <input 
                             type="text" 
@@ -129,7 +129,7 @@ const HadithViewer = () => {
                         />
                         <button 
                             onClick={() => searchQuery.trim() && fetchHadithByTopic(searchQuery)}
-                            className="absolute right-3 top-3 bottom-3 bg-amber-500 text-white px-6 rounded-2xl font-black hover:bg-amber-600 transition shadow-md active:scale-95"
+                            className="absolute right-3 top-3 bottom-3 bg-amber-500 text-white px-7 rounded-2xl font-black hover:bg-amber-600 transition shadow-md active:scale-95 text-lg"
                         >
                             Go! 🚀
                         </button>
@@ -140,7 +140,7 @@ const HadithViewer = () => {
                     key={hadith?.hadithEnglish || 'loading'}
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="bg-white rounded-[3rem] p-8 md:p-12 shadow-2xl border-8 border-amber-100 relative overflow-hidden min-h-[400px] flex flex-col justify-center"
+                    className="w-full bg-white rounded-[3rem] p-8 md:p-16 shadow-2xl border-8 border-amber-100 relative overflow-hidden min-h-[420px] flex flex-col justify-center"
                 >
                     {/* Decorative Blobs */}
                     <div className="absolute top-0 right-0 w-48 h-48 bg-amber-50 rounded-full -mr-16 -mt-16 opacity-50" />

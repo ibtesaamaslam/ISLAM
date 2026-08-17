@@ -1,5 +1,6 @@
 {
   "name": "RECLAIM YOUR HEART",
   "description": "Verily, in the remembrance of Allah do hearts find rest.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
