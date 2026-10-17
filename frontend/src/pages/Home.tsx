@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { BookOpen, MessageCircle, Star, Sparkles, ChevronRight, CloudSun, Heart, Globe, Atom, Orbit } from 'lucide-react';
+import DailyDhikrWidget from '../components/DailyDhikrWidget';
 
 const Home = () => {
     return (
@@ -128,6 +129,9 @@ const Home = () => {
                         </div>
                     </motion.div>
                 </div>
+
+                {/* Daily Dhikr & Digital Tasbeeh Feature */}
+                <DailyDhikrWidget />
 
                 {/* Features Grid */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -1,11 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, ChevronRight, Play, Pause, BookOpen, Sparkles, Search, Download, Check, WifiOff, HelpCircle, Volume2, StopCircle, Bookmark, History } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Pause, BookOpen, Sparkles, Search, Download, Check, WifiOff, HelpCircle, Volume2, StopCircle, Bookmark, History, Headphones, Radio, SkipForward, SkipBack, Repeat } from 'lucide-react';
 import { useGamification } from '../../contexts/GamificationContext';
 import { GoogleGenAI } from "@google/genai";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+
+export type AudioMode = 'arabic_only' | 'urdu_only' | 'arabic_urdu' | 'full';
+
+interface AudioTrack {
+    type: 'arabic' | 'urdu' | 'english';
+    label: string;
+    url: string;
+}
 
 interface Aya {
     number: number;
@@ -104,6 +112,28 @@ const QuranReader = () => {
     const [audioQueue, setAudioQueue] = useState<string[]>([]);
     const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
     const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+    
+    // Audio Mode & Settings: Quran Only or Urdu Only (Auto-play next is always ON by default)
+    const [audioMode, setAudioMode] = useState<AudioMode>(() => {
+        try {
+            const saved = localStorage.getItem('quran_audio_mode');
+            if (saved === 'urdu_only' || saved === 'arabic_only') return saved as AudioMode;
+            return 'arabic_only';
+        } catch {
+            return 'arabic_only';
+        }
+    });
+    // Auto-play next is always ON by default as requested (no separate toggle button needed)
+    const autoPlayNext = true;
+    const [currentTrackType, setCurrentTrackType] = useState<'arabic' | 'urdu' | 'english' | null>(null);
+    const playbackSessionIdRef = useRef<number>(0);
+    const activeBlobUrlRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('quran_audio_mode', audioMode);
+        } catch {}
+    }, [audioMode]);
     
     // Tafseer State
     const [tafseerOpen, setTafseerOpen] = useState<number | null>(null);
@@ -613,30 +643,119 @@ const QuranReader = () => {
         }
     };
 
-    const playNextInQueue = async (queue: string[], index: number) => {
-        if (index >= queue.length) {
-            setPlayingAya(null);
-            setAudioQueue([]);
-            setCurrentQueueIndex(0);
+    // Build audio track sequence based on user preference or explicit mode
+    const buildQueueForAyah = (aya: Aya, mode: AudioMode): AudioTrack[] => {
+        const tracks: AudioTrack[] = [];
+        if (mode === 'arabic_only') {
+            if (aya.audio) tracks.push({ type: 'arabic', label: 'Arabic Recitation', url: aya.audio });
+        } else if (mode === 'urdu_only') {
+            if (aya.urduAudio) tracks.push({ type: 'urdu', label: 'Urdu Translation', url: aya.urduAudio });
+        } else if (mode === 'arabic_urdu') {
+            if (aya.audio) tracks.push({ type: 'arabic', label: 'Arabic Recitation', url: aya.audio });
+            if (aya.urduAudio) tracks.push({ type: 'urdu', label: 'Urdu Translation', url: aya.urduAudio });
+        } else {
+            // 'full'
+            if (aya.audio) tracks.push({ type: 'arabic', label: 'Arabic Recitation', url: aya.audio });
+            if (aya.urduAudio) tracks.push({ type: 'urdu', label: 'Urdu Translation', url: aya.urduAudio });
+            if (aya.englishAudio) tracks.push({ type: 'english', label: 'English Translation', url: aya.englishAudio });
+        }
+        return tracks;
+    };
+
+    // Immediate and complete audio halt: cancels any pending async steps and stops active element immediately
+    const stopAudio = () => {
+        // 1. Invalidate any in-flight playback sessions so async callbacks abort immediately
+        playbackSessionIdRef.current += 1;
+
+        // 2. Halt and clear current audio element
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.onended = null;
+            audioRef.current.onerror = null;
+            audioRef.current.src = '';
+            audioRef.current = null;
+        }
+
+        // 3. Clean up blob URLs
+        if (activeBlobUrlRef.current) {
+            try {
+                URL.revokeObjectURL(activeBlobUrlRef.current);
+            } catch {}
+            activeBlobUrlRef.current = null;
+        }
+
+        // 4. Cancel any speech synthesis / tafseer speech
+        try {
+            if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+        } catch {}
+
+        if (tafseerAudioRef.current) {
+            tafseerAudioRef.current.pause();
+            tafseerAudioRef.current.onended = null;
+            tafseerAudioRef.current.onerror = null;
+            tafseerAudioRef.current.src = '';
+            tafseerAudioRef.current = null;
+        }
+
+        setAudio(null);
+        setPlayingAya(null);
+        setAudioQueue([]);
+        setCurrentQueueIndex(0);
+        setCurrentTrackType(null);
+    };
+
+    // Play next track in sequence with rock-solid session check
+    const playTrackAt = async (
+        tracks: AudioTrack[],
+        index: number,
+        ayahNumber: number,
+        sessionId: number,
+        activeMode: AudioMode
+    ) => {
+        // If user switched or stopped audio, immediately abort!
+        if (sessionId !== playbackSessionIdRef.current) return;
+
+        if (index >= tracks.length) {
             addPoints(5);
             unlockAchievement('first_step');
+
+            // If auto-advance is enabled, automatically start next ayah!
+            if (autoPlayNext) {
+                const currentIdx = ayas.findIndex(a => a.number === ayahNumber);
+                if (currentIdx !== -1 && currentIdx + 1 < ayas.length) {
+                    const nextAyah = ayas[currentIdx + 1];
+                    // Immediate seamless transition to next ayah
+                    playAudioSequence(nextAyah, activeMode);
+                    return;
+                }
+            }
+
+            stopAudio();
             return;
         }
 
-        let playUrl = queue[index];
+        const track = tracks[index];
+        setCurrentQueueIndex(index);
+        setCurrentTrackType(track.type);
+
+        let playUrl = track.url;
         let isBlobUrl = false;
 
         try {
             const cache = await getAudioCache();
+            if (sessionId !== playbackSessionIdRef.current) return;
             if (cache) {
                 const response = await cache.match(playUrl);
+                if (sessionId !== playbackSessionIdRef.current) return;
                 if (response) {
                     const blob = await response.blob();
+                    if (sessionId !== playbackSessionIdRef.current) return;
                     if (blob.size > 0) {
                         playUrl = URL.createObjectURL(blob);
                         isBlobUrl = true;
-                    } else {
-                        console.warn("Cached audio blob is empty, using network URL");
+                        activeBlobUrlRef.current = playUrl;
                     }
                 }
             }
@@ -644,69 +763,110 @@ const QuranReader = () => {
             console.warn("Error accessing cache for playback", e);
         }
 
+        if (sessionId !== playbackSessionIdRef.current) {
+            if (isBlobUrl) {
+                try { URL.revokeObjectURL(playUrl); } catch {}
+            }
+            return;
+        }
+
+        // Ensure previous audio is completely dead
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.onended = null;
+            audioRef.current.onerror = null;
+            audioRef.current.src = '';
+            audioRef.current = null;
+        }
+
         const newAudio = new Audio(playUrl);
-        
+        audioRef.current = newAudio;
+        setAudio(newAudio);
+
         const cleanup = () => {
             if (isBlobUrl) {
-                URL.revokeObjectURL(playUrl);
+                try {
+                    URL.revokeObjectURL(playUrl);
+                } catch {}
+                if (activeBlobUrlRef.current === playUrl) {
+                    activeBlobUrlRef.current = null;
+                }
             }
         };
 
         newAudio.onended = () => {
             cleanup();
-            setCurrentQueueIndex(index + 1);
-            playNextInQueue(queue, index + 1);
+            if (sessionId !== playbackSessionIdRef.current) return;
+            playTrackAt(tracks, index + 1, ayahNumber, sessionId, activeMode);
         };
 
         newAudio.onerror = (e) => {
-            console.error("Audio playback failed for URL:", playUrl, e);
+            console.warn("Audio playback failed for URL:", playUrl, e);
             cleanup();
-            // Skip to next track on error
-            setCurrentQueueIndex(index + 1);
-            playNextInQueue(queue, index + 1);
+            if (sessionId !== playbackSessionIdRef.current) return;
+            // Advance to next track
+            playTrackAt(tracks, index + 1, ayahNumber, sessionId, activeMode);
         };
 
-        newAudio.play().catch(e => {
-            console.error("Play failed:", e);
-            // Skip to next track on play error
-            setCurrentQueueIndex(index + 1);
-            playNextInQueue(queue, index + 1);
-        });
-
-        setAudio(newAudio);
-        audioRef.current = newAudio;
+        try {
+            await newAudio.play();
+        } catch (e) {
+            if (sessionId !== playbackSessionIdRef.current) return;
+            console.warn("Play() rejected:", e);
+            cleanup();
+            playTrackAt(tracks, index + 1, ayahNumber, sessionId, activeMode);
+        }
     };
 
-    const playAudioSequence = (aya: Aya) => {
-        if (playingAya === aya.number) {
+    // Primary audio playback launcher - immediately halts any prior playback
+    const playAudioSequence = (aya: Aya, explicitMode?: AudioMode) => {
+        const targetMode = explicitMode || audioMode;
+
+        // If clicking the same ayah with same active track while it's playing, toggle pause/stop
+        if (playingAya === aya.number && (explicitMode === undefined || explicitMode === audioMode)) {
             stopAudio();
             return;
         }
 
+        // CRITICAL: Stop previous audio IMMEDIATELY before starting the new one
         stopAudio();
         stopTafseerAudio();
-        setPlayingAya(aya.number);
-        const queue = [aya.audio, aya.urduAudio, aya.englishAudio].filter(Boolean);
-        setAudioQueue(queue);
-        setCurrentQueueIndex(0);
-        if (queue.length > 0) {
-            playNextInQueue(queue, 0);
-        } else {
-            console.warn("No audio sources available for this Ayah");
+
+        setAudioMode(targetMode);
+        try { localStorage.setItem('quran_audio_mode', targetMode); } catch {}
+
+        const tracks = buildQueueForAyah(aya, targetMode);
+        if (tracks.length === 0) {
+            showToast(targetMode === 'urdu_only' ? "Urdu audio not available for this Ayah." : "Quran audio not available for this Ayah.");
             setPlayingAya(null);
+            return;
+        }
+
+        const sessionId = ++playbackSessionIdRef.current;
+        setPlayingAya(aya.number);
+        setAudioQueue(tracks.map(t => t.url));
+        setCurrentQueueIndex(0);
+        setCurrentTrackType(tracks[0].type);
+
+        playTrackAt(tracks, 0, aya.number, sessionId, targetMode);
+    };
+
+    const playNextAyah = () => {
+        if (playingAya === null || ayas.length === 0) return;
+        const currentIdx = ayas.findIndex(a => a.number === playingAya);
+        if (currentIdx !== -1 && currentIdx + 1 < ayas.length) {
+            playAudioSequence(ayas[currentIdx + 1], audioMode);
         }
     };
 
-    const stopAudio = () => {
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current = null;
+    const playPrevAyah = () => {
+        if (playingAya === null || ayas.length === 0) return;
+        const currentIdx = ayas.findIndex(a => a.number === playingAya);
+        if (currentIdx > 0) {
+            playAudioSequence(ayas[currentIdx - 1], audioMode);
         }
-        setAudio(null);
-        setPlayingAya(null);
-        setAudioQueue([]);
-        setCurrentQueueIndex(0);
     };
+
 
     // Tafseer Audio Logic
     const speak = async (text: string, lang: string): Promise<void> => {
@@ -1154,6 +1314,97 @@ const QuranReader = () => {
                         )}
                     </div>
 
+                    {/* Clean & Normal Audio Toolbar: 2 buttons (Quran Only & Urdu Only) with default continuous playback */}
+                    <div className="mb-6 bg-white/95 backdrop-blur-md p-4 rounded-3xl border-2 border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <span className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                                <Headphones size={16} className="text-sky-500" /> Audio:
+                            </span>
+                            <button
+                                onClick={() => {
+                                    const targetAyah = playingAya !== null ? (ayas.find(a => a.number === playingAya) || ayas[0]) : ayas[0];
+                                    if (targetAyah) playAudioSequence(targetAyah, 'arabic_only');
+                                }}
+                                className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all border-2 shadow-[0_3px_0_rgba(0,0,0,0.08)] active:shadow-none active:translate-y-[3px] ${
+                                    audioMode === 'arabic_only' && playingAya !== null
+                                        ? 'bg-sky-500 text-white border-sky-600 shadow-[0_3px_0_#0284c7]'
+                                        : 'bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100'
+                                }`}
+                                title="Listen to Arabic Quran Recitation (Continuous)"
+                            >
+                                {audioMode === 'arabic_only' && playingAya !== null ? (
+                                    <>
+                                        <Pause size={16} fill="currentColor" />
+                                        <span>Pause Quran</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Play size={16} fill="currentColor" />
+                                        <span>Quran Only</span>
+                                    </>
+                                )}
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    const targetAyah = playingAya !== null ? (ayas.find(a => a.number === playingAya) || ayas[0]) : ayas[0];
+                                    if (targetAyah) playAudioSequence(targetAyah, 'urdu_only');
+                                }}
+                                className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all border-2 shadow-[0_3px_0_rgba(0,0,0,0.08)] active:shadow-none active:translate-y-[3px] ${
+                                    audioMode === 'urdu_only' && playingAya !== null
+                                        ? 'bg-emerald-500 text-white border-emerald-600 shadow-[0_3px_0_#059669]'
+                                        : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                }`}
+                                title="Listen to Urdu Translation (Continuous)"
+                            >
+                                {audioMode === 'urdu_only' && playingAya !== null ? (
+                                    <>
+                                        <Pause size={16} fill="currentColor" />
+                                        <span>Pause Urdu</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Radio size={16} />
+                                        <span>Urdu Only</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+
+                        {/* Active Playback controls */}
+                        {playingAya !== null && (
+                            <div className="flex items-center gap-2.5 bg-slate-50 px-3.5 py-1.5 rounded-2xl border border-slate-200">
+                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                                <span className="text-xs font-black text-slate-700">
+                                    Ayah {playingAya}: <span className={audioMode === 'urdu_only' ? 'text-emerald-600' : 'text-sky-600'}>{audioMode === 'urdu_only' ? 'Urdu Only' : 'Quran Only'}</span>
+                                </span>
+                                <div className="flex items-center gap-1 ml-1">
+                                    <button
+                                        onClick={playPrevAyah}
+                                        className="p-1.5 rounded-xl bg-white hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 shadow-sm"
+                                        title="Previous Ayah"
+                                    >
+                                        <SkipBack size={15} />
+                                    </button>
+                                    <button
+                                        onClick={stopAudio}
+                                        className="px-2.5 py-1.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-black text-xs flex items-center gap-1 shadow-sm transition-colors"
+                                        title="Stop Audio"
+                                    >
+                                        <StopCircle size={14} /> Stop
+                                    </button>
+                                    <button
+                                        onClick={playNextAyah}
+                                        className="p-1.5 rounded-xl bg-white hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 shadow-sm"
+                                        title="Next Ayah"
+                                    >
+                                        <SkipForward size={15} />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     {loading ? (
                         <div className="text-center py-20 text-sky-600 font-black animate-bounce text-xl">Loading Surah... 🚀</div>
                     ) : (
@@ -1182,62 +1433,131 @@ const QuranReader = () => {
                                         animate={{ opacity: 1, y: 0 }}
                                         className={`rounded-[2rem] p-6 shadow-sm border-4 transition-all duration-300 ${
                                             playingAya === aya.number 
-                                                ? 'bg-sky-50 border-sky-400 ring-4 ring-sky-100 scale-[1.02] shadow-xl' 
+                                                ? 'bg-sky-50 border-sky-400 ring-4 ring-sky-100 scale-[1.01] shadow-xl' 
                                                 : isMatch 
                                                     ? 'bg-yellow-50 border-yellow-200 shadow-md'
                                                     : 'bg-white border-transparent hover:border-sky-100 hover:shadow-md'
                                         }`}
                                     >
-                                        <div className="flex justify-between items-start mb-6">
+                                        <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
                                             <span className="bg-sky-100 text-sky-700 text-xs font-black px-4 py-2 rounded-full uppercase tracking-wider shadow-sm border border-sky-200">
                                                 {aya.number === 0 ? "Bismillah" : `Ayah ${aya.number}`}
                                             </span>
-                                            <div className="flex gap-2">
+                                            
+                                            <div className="flex flex-wrap items-center gap-2">
                                                 <button
                                                     onClick={() => toggleBookmark(aya.number)}
                                                     className={`p-2 rounded-2xl transition-all border-2 ${isBookmarked ? 'text-yellow-500 bg-yellow-50 border-yellow-200' : 'text-slate-300 bg-slate-50 border-slate-100 hover:bg-slate-100 hover:text-slate-400'}`}
                                                     title={isBookmarked ? "Remove Bookmark" : "Bookmark Ayah"}
                                                 >
-                                                    <Bookmark size={20} fill={isBookmarked ? "currentColor" : "none"} strokeWidth={2.5} />
+                                                    <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} strokeWidth={2.5} />
                                                 </button>
+                                                
                                                 <button 
                                                     onClick={() => {
                                                         fetchTafseer(aya);
                                                         updateLastRead(aya.number);
                                                     }}
-                                                    className={`px-4 py-2 rounded-2xl text-xs font-black flex items-center gap-2 transition border-2 shadow-[0_3px_0_rgba(0,0,0,0.1)] active:shadow-none active:translate-y-[3px] ${tafseerOpen === aya.number ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'}`}
+                                                    className={`px-3 py-2 rounded-2xl text-xs font-black flex items-center gap-1.5 transition border-2 shadow-[0_3px_0_rgba(0,0,0,0.1)] active:shadow-none active:translate-y-[3px] ${tafseerOpen === aya.number ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'}`}
                                                 >
-                                                    <BookOpen size={16} strokeWidth={3} /> Explain
+                                                    <BookOpen size={15} strokeWidth={3} /> Explain
                                                 </button>
-                                                <button 
+
+                                                {/* Quran Only Button */}
+                                                <button
                                                     onClick={() => {
-                                                        playAudioSequence(aya);
+                                                        playAudioSequence(aya, 'arabic_only');
                                                         updateLastRead(aya.number);
                                                     }}
-                                                    className="w-10 h-10 bg-indigo-500 text-white rounded-2xl flex items-center justify-center hover:bg-indigo-600 transition shadow-[0_3px_0_#4338ca] active:shadow-none active:translate-y-[3px] border-2 border-indigo-600"
+                                                    className={`px-3 py-2 rounded-2xl text-xs font-black flex items-center gap-1.5 transition border-2 shadow-[0_3px_0_rgba(0,0,0,0.08)] active:shadow-none active:translate-y-[3px] ${
+                                                        playingAya === aya.number && audioMode === 'arabic_only'
+                                                            ? 'bg-sky-500 text-white border-sky-600 shadow-[0_3px_0_#0284c7]'
+                                                            : 'bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100'
+                                                    }`}
+                                                    title="Listen to Arabic Quran Recitation (Auto-plays continuously)"
                                                 >
-                                                    {playingAya === aya.number ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
+                                                    {playingAya === aya.number && audioMode === 'arabic_only' ? (
+                                                        <>
+                                                            <Pause size={15} fill="currentColor" />
+                                                            <span>Pause</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Play size={15} fill="currentColor" />
+                                                            <span>Quran Only</span>
+                                                        </>
+                                                    )}
+                                                </button>
+
+                                                {/* Urdu Only Button */}
+                                                <button
+                                                    onClick={() => {
+                                                        playAudioSequence(aya, 'urdu_only');
+                                                        updateLastRead(aya.number);
+                                                    }}
+                                                    className={`px-3 py-2 rounded-2xl text-xs font-black flex items-center gap-1.5 transition border-2 shadow-[0_3px_0_rgba(0,0,0,0.08)] active:shadow-none active:translate-y-[3px] ${
+                                                        playingAya === aya.number && audioMode === 'urdu_only'
+                                                            ? 'bg-emerald-500 text-white border-emerald-600 shadow-[0_3px_0_#059669]'
+                                                            : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                                    }`}
+                                                    title="Listen to Urdu Translation (Auto-plays continuously)"
+                                                >
+                                                    {playingAya === aya.number && audioMode === 'urdu_only' ? (
+                                                        <>
+                                                            <Pause size={15} fill="currentColor" />
+                                                            <span>Pause</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Radio size={15} />
+                                                            <span>Urdu Only</span>
+                                                        </>
+                                                    )}
                                                 </button>
                                             </div>
                                         </div>
                                         
                                         {/* Arabic Text */}
-                                    <div className="text-right mb-8 px-2" dir="rtl">
-                                        <p className={`text-4xl font-serif leading-[2.2] transition-colors duration-300 ${playingAya === aya.number && currentQueueIndex === 0 ? 'text-sky-600 drop-shadow-sm' : 'text-slate-800'}`} style={{ fontFamily: 'Traditional Arabic, serif' }}>
-                                            <HighlightText text={aya.text} highlight={ayahSearchQuery} />
-                                        </p>
-
-                                    </div>
-                                    
-                                    {/* Urdu Translation */}
-                                    <p className={`text-2xl text-right mb-6 leading-relaxed font-medium transition-colors duration-300 ${playingAya === aya.number && currentQueueIndex === 1 ? 'text-sky-600' : 'text-slate-600'}`} dir="rtl" style={{ fontFamily: 'Noto Nastaliq Urdu, serif' }}>
-                                        <HighlightText text={aya.urduTranslation} highlight={ayahSearchQuery} />
-                                    </p>
-    
-                                    {/* English Translation */}
-                                    <p className={`text-lg leading-relaxed transition-colors duration-300 font-medium ${playingAya === aya.number && currentQueueIndex === 2 ? 'text-sky-600' : 'text-slate-500'}`}>
-                                        <HighlightText text={aya.translation} highlight={ayahSearchQuery} />
-                                    </p>
+                                        <div className="text-right mb-6 px-2" dir="rtl">
+                                            {playingAya === aya.number && currentTrackType === 'arabic' && (
+                                                <div className="flex items-center justify-end gap-1.5 mb-2">
+                                                    <span className="inline-flex items-center gap-1 text-[11px] font-black uppercase text-sky-700 bg-sky-100 px-3 py-1 rounded-full animate-pulse border border-sky-300">
+                                                        <Volume2 size={13} /> Reciting Arabic Quran
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <p className={`text-4xl font-serif leading-[2.2] transition-all duration-300 ${playingAya === aya.number && currentTrackType === 'arabic' ? 'text-sky-600 drop-shadow-sm font-bold' : 'text-slate-800'}`} style={{ fontFamily: 'Traditional Arabic, serif' }}>
+                                                <HighlightText text={aya.text} highlight={ayahSearchQuery} />
+                                            </p>
+                                        </div>
+                                        
+                                        {/* Urdu Translation */}
+                                        <div className="text-right mb-6 px-2" dir="rtl">
+                                            {playingAya === aya.number && currentTrackType === 'urdu' && (
+                                                <div className="flex items-center justify-end gap-1.5 mb-2">
+                                                    <span className="inline-flex items-center gap-1 text-[11px] font-black uppercase text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full animate-pulse border border-emerald-300">
+                                                        <Radio size={13} /> اردو آواز ترجمہ جاری ہے
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <p className={`text-2xl leading-relaxed font-medium transition-all duration-300 ${playingAya === aya.number && currentTrackType === 'urdu' ? 'text-emerald-700 font-bold bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200' : 'text-slate-600'}`} style={{ fontFamily: 'Noto Nastaliq Urdu, serif' }}>
+                                                <HighlightText text={aya.urduTranslation} highlight={ayahSearchQuery} />
+                                            </p>
+                                        </div>
+        
+                                        {/* English Translation */}
+                                        <div className="mb-2">
+                                            {playingAya === aya.number && currentTrackType === 'english' && (
+                                                <div className="flex items-center gap-1.5 mb-2">
+                                                    <span className="inline-flex items-center gap-1 text-[11px] font-black uppercase text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full animate-pulse border border-indigo-300">
+                                                        <Volume2 size={13} /> English Translation Audio
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <p className={`text-lg leading-relaxed transition-colors duration-300 font-medium ${playingAya === aya.number && currentTrackType === 'english' ? 'text-indigo-700 font-semibold bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100' : 'text-slate-500'}`}>
+                                                <HighlightText text={aya.translation} highlight={ayahSearchQuery} />
+                                            </p>
+                                        </div>
     
                                         {/* Tafseer & Quiz Section */}
                                         <AnimatePresence>
