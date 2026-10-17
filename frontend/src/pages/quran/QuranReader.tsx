@@ -113,11 +113,11 @@ const QuranReader = () => {
     const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
     const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
     
-    // Audio Mode & Settings: Quran Only or Urdu Only (Auto-play next is always ON by default)
+    // Audio Mode & Settings: Quran Only, Urdu Only, Arabic + Urdu, or Arabic + Urdu + English (Auto-play next is always ON by default)
     const [audioMode, setAudioMode] = useState<AudioMode>(() => {
         try {
             const saved = localStorage.getItem('quran_audio_mode');
-            if (saved === 'urdu_only' || saved === 'arabic_only') return saved as AudioMode;
+            if (saved === 'urdu_only' || saved === 'arabic_only' || saved === 'arabic_urdu' || saved === 'full') return saved as AudioMode;
             return 'arabic_only';
         } catch {
             return 'arabic_only';
@@ -298,6 +298,16 @@ const QuranReader = () => {
             }
         }
     }, [sura, loading, ayas, lastRead]);
+
+    // Auto-scroll down smoothly as playback advances to the next and next ayah
+    useEffect(() => {
+        if (playingAya !== null) {
+            const element = document.getElementById(`ayah-${playingAya}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }, [playingAya]);
 
     const toggleBookmark = (ayahNumber: number) => {
         const bookmarkId = `${sura}:${ayahNumber}`;
@@ -837,7 +847,12 @@ const QuranReader = () => {
 
         const tracks = buildQueueForAyah(aya, targetMode);
         if (tracks.length === 0) {
-            showToast(targetMode === 'urdu_only' ? "Urdu audio not available for this Ayah." : "Quran audio not available for this Ayah.");
+            let msg = "Audio not available for this Ayah.";
+            if (targetMode === 'urdu_only') msg = "Urdu audio not available for this Ayah.";
+            else if (targetMode === 'arabic_only') msg = "Quran audio not available for this Ayah.";
+            else if (targetMode === 'arabic_urdu') msg = "Arabic & Urdu audio not available for this Ayah.";
+            else if (targetMode === 'full') msg = "Audio recitation tracks not available for this Ayah.";
+            showToast(msg);
             setPlayingAya(null);
             return;
         }
@@ -1309,69 +1324,140 @@ const QuranReader = () => {
                         )}
                     </div>
 
-                    {/* Clean & Normal Audio Toolbar: 2 buttons (Quran Only & Urdu Only) with default continuous playback */}
+                    {/* Clean Audio Toolbar with all 4 listening options & default continuous auto-play */}
                     <div className="mb-6 bg-white/95 backdrop-blur-md p-4 rounded-3xl border-2 border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <span className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                            <span className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5 mr-1">
                                 <Headphones size={16} className="text-sky-500" /> Audio:
                             </span>
+
+                            {/* 1. Quran Only */}
                             <button
                                 onClick={() => {
                                     const targetAyah = playingAya !== null ? (ayas.find(a => a.number === playingAya) || ayas[0]) : ayas[0];
                                     if (targetAyah) playAudioSequence(targetAyah, 'arabic_only');
                                 }}
-                                className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all border-2 shadow-[0_3px_0_rgba(0,0,0,0.08)] active:shadow-none active:translate-y-[3px] ${
+                                className={`px-3.5 py-2 rounded-2xl text-xs font-black flex items-center gap-1.5 transition-all border-2 shadow-[0_3px_0_rgba(0,0,0,0.08)] active:shadow-none active:translate-y-[3px] ${
                                     audioMode === 'arabic_only' && playingAya !== null
                                         ? 'bg-sky-500 text-white border-sky-600 shadow-[0_3px_0_#0284c7]'
                                         : 'bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100'
                                 }`}
-                                title="Listen to Arabic Quran Recitation (Continuous)"
+                                title="Listen to Arabic Quran Recitation only (Auto-scrolls & continuous)"
                             >
                                 {audioMode === 'arabic_only' && playingAya !== null ? (
                                     <>
-                                        <Pause size={16} fill="currentColor" />
+                                        <Pause size={15} fill="currentColor" />
                                         <span>Pause Quran</span>
                                     </>
                                 ) : (
                                     <>
-                                        <Play size={16} fill="currentColor" />
+                                        <Play size={15} fill="currentColor" />
                                         <span>Quran Only</span>
                                     </>
                                 )}
                             </button>
 
+                            {/* 2. Urdu Only */}
                             <button
                                 onClick={() => {
                                     const targetAyah = playingAya !== null ? (ayas.find(a => a.number === playingAya) || ayas[0]) : ayas[0];
                                     if (targetAyah) playAudioSequence(targetAyah, 'urdu_only');
                                 }}
-                                className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all border-2 shadow-[0_3px_0_rgba(0,0,0,0.08)] active:shadow-none active:translate-y-[3px] ${
+                                className={`px-3.5 py-2 rounded-2xl text-xs font-black flex items-center gap-1.5 transition-all border-2 shadow-[0_3px_0_rgba(0,0,0,0.08)] active:shadow-none active:translate-y-[3px] ${
                                     audioMode === 'urdu_only' && playingAya !== null
                                         ? 'bg-emerald-500 text-white border-emerald-600 shadow-[0_3px_0_#059669]'
                                         : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
                                 }`}
-                                title="Listen to Urdu Translation (Continuous)"
+                                title="Listen to Urdu Translation only (Auto-scrolls & continuous)"
                             >
                                 {audioMode === 'urdu_only' && playingAya !== null ? (
                                     <>
-                                        <Pause size={16} fill="currentColor" />
+                                        <Pause size={15} fill="currentColor" />
                                         <span>Pause Urdu</span>
                                     </>
                                 ) : (
                                     <>
-                                        <Radio size={16} />
+                                        <Radio size={15} />
                                         <span>Urdu Only</span>
+                                    </>
+                                )}
+                            </button>
+
+                            {/* 3. Arabic + Urdu */}
+                            <button
+                                onClick={() => {
+                                    const targetAyah = playingAya !== null ? (ayas.find(a => a.number === playingAya) || ayas[0]) : ayas[0];
+                                    if (targetAyah) playAudioSequence(targetAyah, 'arabic_urdu');
+                                }}
+                                className={`px-3.5 py-2 rounded-2xl text-xs font-black flex items-center gap-1.5 transition-all border-2 shadow-[0_3px_0_rgba(0,0,0,0.08)] active:shadow-none active:translate-y-[3px] ${
+                                    audioMode === 'arabic_urdu' && playingAya !== null
+                                        ? 'bg-violet-600 text-white border-violet-700 shadow-[0_3px_0_#6d28d9]'
+                                        : 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100'
+                                }`}
+                                title="Listen to Arabic Recitation followed by Urdu Translation (Auto-scrolls & continuous)"
+                            >
+                                {audioMode === 'arabic_urdu' && playingAya !== null ? (
+                                    <>
+                                        <Pause size={15} fill="currentColor" />
+                                        <span>Pause Ar + Ur</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Volume2 size={15} />
+                                        <span>Arabic + Urdu</span>
+                                    </>
+                                )}
+                            </button>
+
+                            {/* 4. Arabic + Urdu + English */}
+                            <button
+                                onClick={() => {
+                                    const targetAyah = playingAya !== null ? (ayas.find(a => a.number === playingAya) || ayas[0]) : ayas[0];
+                                    if (targetAyah) playAudioSequence(targetAyah, 'full');
+                                }}
+                                className={`px-3.5 py-2 rounded-2xl text-xs font-black flex items-center gap-1.5 transition-all border-2 shadow-[0_3px_0_rgba(0,0,0,0.08)] active:shadow-none active:translate-y-[3px] ${
+                                    audioMode === 'full' && playingAya !== null
+                                        ? 'bg-indigo-600 text-white border-indigo-700 shadow-[0_3px_0_#4338ca]'
+                                        : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
+                                }`}
+                                title="Listen to Arabic Recitation + Urdu + English (Auto-scrolls & continuous)"
+                            >
+                                {audioMode === 'full' && playingAya !== null ? (
+                                    <>
+                                        <Pause size={15} fill="currentColor" />
+                                        <span>Pause All</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles size={15} />
+                                        <span>Arabic + Urdu + Eng</span>
                                     </>
                                 )}
                             </button>
                         </div>
 
-                        {/* Active Playback controls */}
+                        {/* Active Playback info & navigation controls */}
                         {playingAya !== null && (
-                            <div className="flex items-center gap-2.5 bg-slate-50 px-3.5 py-1.5 rounded-2xl border border-slate-200">
+                            <div className="flex flex-wrap items-center gap-2.5 bg-slate-50 px-3.5 py-1.5 rounded-2xl border border-slate-200">
                                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
                                 <span className="text-xs font-black text-slate-700">
-                                    Ayah {playingAya}: <span className={audioMode === 'urdu_only' ? 'text-emerald-600' : 'text-sky-600'}>{audioMode === 'urdu_only' ? 'Urdu Only' : 'Quran Only'}</span>
+                                    Ayah {playingAya}:{' '}
+                                    <span className={
+                                        audioMode === 'urdu_only' ? 'text-emerald-600' :
+                                        audioMode === 'arabic_urdu' ? 'text-violet-600' :
+                                        audioMode === 'full' ? 'text-indigo-600' :
+                                        'text-sky-600'
+                                    }>
+                                        {audioMode === 'urdu_only' ? 'Urdu Only' :
+                                         audioMode === 'arabic_urdu' ? 'Arabic + Urdu' :
+                                         audioMode === 'full' ? 'Arabic + Urdu + Eng' :
+                                         'Quran Only'}
+                                    </span>
+                                    {currentTrackType && (
+                                        <span className="text-[10px] ml-1.5 font-bold text-slate-500 uppercase">
+                                            ({currentTrackType === 'arabic' ? 'Arabic' : currentTrackType === 'urdu' ? 'Urdu' : 'English'})
+                                        </span>
+                                    )}
                                 </span>
                                 <div className="flex items-center gap-1 ml-1">
                                     <button
@@ -1506,6 +1592,58 @@ const QuranReader = () => {
                                                         <>
                                                             <Radio size={15} />
                                                             <span>Urdu Only</span>
+                                                        </>
+                                                    )}
+                                                </button>
+
+                                                {/* Arabic + Urdu Button */}
+                                                <button
+                                                    onClick={() => {
+                                                        playAudioSequence(aya, 'arabic_urdu');
+                                                        updateLastRead(aya.number);
+                                                    }}
+                                                    className={`px-3 py-2 rounded-2xl text-xs font-black flex items-center gap-1.5 transition border-2 shadow-[0_3px_0_rgba(0,0,0,0.08)] active:shadow-none active:translate-y-[3px] ${
+                                                        playingAya === aya.number && audioMode === 'arabic_urdu'
+                                                            ? 'bg-violet-600 text-white border-violet-700 shadow-[0_3px_0_#6d28d9]'
+                                                            : 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100'
+                                                    }`}
+                                                    title="Listen to Arabic Recitation + Urdu Translation (Auto-scrolls & continuous)"
+                                                >
+                                                    {playingAya === aya.number && audioMode === 'arabic_urdu' ? (
+                                                        <>
+                                                            <Pause size={15} fill="currentColor" />
+                                                            <span>Pause</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Volume2 size={15} />
+                                                            <span>Ar + Urdu</span>
+                                                        </>
+                                                    )}
+                                                </button>
+
+                                                {/* Arabic + Urdu + English Button */}
+                                                <button
+                                                    onClick={() => {
+                                                        playAudioSequence(aya, 'full');
+                                                        updateLastRead(aya.number);
+                                                    }}
+                                                    className={`px-3 py-2 rounded-2xl text-xs font-black flex items-center gap-1.5 transition border-2 shadow-[0_3px_0_rgba(0,0,0,0.08)] active:shadow-none active:translate-y-[3px] ${
+                                                        playingAya === aya.number && audioMode === 'full'
+                                                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-[0_3px_0_#4338ca]'
+                                                            : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
+                                                    }`}
+                                                    title="Listen to Arabic Recitation + Urdu + English (Auto-scrolls & continuous)"
+                                                >
+                                                    {playingAya === aya.number && audioMode === 'full' ? (
+                                                        <>
+                                                            <Pause size={15} fill="currentColor" />
+                                                            <span>Pause</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Sparkles size={15} />
+                                                            <span>Ar + Ur + Eng</span>
                                                         </>
                                                     )}
                                                 </button>
