@@ -28,12 +28,20 @@ const PrayerTimesWidget = () => {
     
     // Load offsets from local storage
     const [offsets, setOffsets] = useState<PrayerOffsets>(() => {
-        const saved = localStorage.getItem('prayer_offsets');
-        return saved ? JSON.parse(saved) : { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 };
+        try {
+            const saved = localStorage.getItem('prayer_offsets');
+            return saved ? JSON.parse(saved) : { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 };
+        } catch {
+            return { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 };
+        }
     });
 
     useEffect(() => {
-        localStorage.setItem('prayer_offsets', JSON.stringify(offsets));
+        try {
+            localStorage.setItem('prayer_offsets', JSON.stringify(offsets));
+        } catch {
+            // Ignore storage restrictions
+        }
     }, [offsets]);
 
     useEffect(() => {

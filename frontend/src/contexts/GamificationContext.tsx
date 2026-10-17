@@ -24,13 +24,21 @@ export const useGamification = () => {
 
 export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [points, setPoints] = useState(() => {
-        const saved = localStorage.getItem('islam_app_points');
-        return saved ? parseInt(saved) : 0;
+        try {
+            const saved = localStorage.getItem('islam_app_points');
+            return saved ? parseInt(saved) : 0;
+        } catch {
+            return 0;
+        }
     });
 
     const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>(() => {
-        const saved = localStorage.getItem('unlockedAchievements');
-        return saved ? JSON.parse(saved) : [];
+        try {
+            const saved = localStorage.getItem('unlockedAchievements');
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
+        }
     });
 
     const [notification, setNotification] = useState<Achievement | null>(null);
@@ -38,11 +46,19 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const level = Math.floor(points / 100) + 1;
 
     useEffect(() => {
-        localStorage.setItem('islam_app_points', points.toString());
+        try {
+            localStorage.setItem('islam_app_points', points.toString());
+        } catch {
+            // Ignore storage restrictions
+        }
     }, [points]);
 
     useEffect(() => {
-        localStorage.setItem('unlockedAchievements', JSON.stringify(unlockedAchievements));
+        try {
+            localStorage.setItem('unlockedAchievements', JSON.stringify(unlockedAchievements));
+        } catch {
+            // Ignore storage restrictions
+        }
     }, [unlockedAchievements]);
 
     const addPoints = (amount: number) => {

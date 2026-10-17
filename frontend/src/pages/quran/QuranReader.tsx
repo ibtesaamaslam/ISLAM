@@ -48,6 +48,21 @@ interface LastRead {
     timestamp: number;
 }
 
+// Safely access CacheStorage without throwing UnknownError or SecurityError in sandboxed contexts
+const getAudioCache = async (): Promise<Cache | null> => {
+    try {
+        if (typeof window === 'undefined') return null;
+        if (!('caches' in window) || !window.caches || typeof window.caches.open !== 'function') {
+            return null;
+        }
+        return await window.caches.open('quran-audio');
+    } catch (err) {
+        // CacheStorage may throw UnknownError or SecurityError in iframe/sandboxed environments
+        console.warn('CacheStorage is not available:', err);
+        return null;
+    }
+};
+
 const QuranReader = () => {
     const [sura, setSura] = useState(1);
     const [ayas, setAyas] = useState<Aya[]>([]);
@@ -56,13 +71,29 @@ const QuranReader = () => {
     
     // User Preferences State
     const [bookmarks, setBookmarks] = useState<string[]>(() => {
-        const saved = localStorage.getItem('quran_bookmarks');
-        return saved ? JSON.parse(saved) : [];
+        try {
+            const saved = localStorage.getItem('quran_bookmarks');
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
+        }
     });
     const [lastRead, setLastRead] = useState<LastRead | null>(() => {
-        const saved = localStorage.getItem('quran_last_read');
-        return saved ? JSON.parse(saved) : null;
+        try {
+            const saved = localStorage.getItem('quran_last_read');
+            return saved ? JSON.parse(saved) : null;
+        } catch {
+            return null;
+        }
     });
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+    const showToast = (msg: string) => {
+        setToastMessage(msg);
+        setTimeout(() => {
+            setToastMessage(prev => (prev === msg ? null : prev));
+        }, 3500);
+    };
 
     // Audio State
     const [playingAya, setPlayingAya] = useState<number | null>(null);
@@ -194,7 +225,7 @@ const QuranReader = () => {
 
         } catch (error) {
             console.error('Offline download failed', error);
-            alert('Failed to download complete data. Basic text saved.');
+            showToast('Failed to download complete data. Basic text saved.');
             setIsDownloading(false);
         }
     };
@@ -314,22 +345,43 @@ const QuranReader = () => {
 
     // Check if Surah is downloaded
     useEffect(() => {
+        let isCancelled = false;
         const checkDownloadStatus = async () => {
-            const localData = localStorage.getItem(`surah_${sura}_data`);
-            if (localData) {
-                setIsDownloaded(true);
-            } else if ('caches' in window) {
-                // Fallback check for audio only (legacy)
-                const cache = await caches.open('quran-audio');
-                if (ayas.length > 0) {
-                    const match = await cache.match(ayas[0].audio);
-                    if (match) setIsDownloaded(true);
+            try {
+                let localData: string | null = null;
+                try {
+                    localData = localStorage.getItem(`surah_${sura}_data`);
+                } catch {
+                    localData = null;
                 }
-            } else {
-                setIsDownloaded(false);
+
+                if (localData) {
+                    if (!isCancelled) setIsDownloaded(true);
+                    return;
+                }
+
+                // Fallback check for audio only via safe CacheStorage helper
+                const cache = await getAudioCache();
+                if (cache && ayas.length > 0 && ayas[0]?.audio) {
+                    try {
+                        const match = await cache.match(ayas[0].audio);
+                        if (match && !isCancelled) {
+                            setIsDownloaded(true);
+                            return;
+                        }
+                    } catch {
+                        // ignore cache match error
+                    }
+                }
+                if (!isCancelled) setIsDownloaded(false);
+            } catch {
+                if (!isCancelled) setIsDownloaded(false);
             }
         };
         checkDownloadStatus();
+        return () => {
+            isCancelled = true;
+        };
     }, [sura, ayas]);
 
     useEffect(() => {
@@ -457,7 +509,7 @@ const QuranReader = () => {
             } catch (err) {
                 console.error(err);
                 if (isOffline) {
-                    alert("You are offline and this Surah hasn't been downloaded yet.");
+                    showToast("You are offline and this Surah hasn't been downloaded yet.");
                 }
             } finally {
                 setLoading(false);
@@ -467,7 +519,6 @@ const QuranReader = () => {
     }, [sura]);
 
     const downloadSurahContent = async () => {
-        if (!('caches' in window)) return;
         setDownloading(true);
         setDownloadProgress(0);
         try {
@@ -477,51 +528,58 @@ const QuranReader = () => {
                 ayas,
                 timestamp: Date.now()
             };
-            localStorage.setItem(`surah_${sura}_data`, JSON.stringify(surahData));
+            try {
+                localStorage.setItem(`surah_${sura}_data`, JSON.stringify(surahData));
+            } catch (storageErr) {
+                console.warn("LocalStorage save error", storageErr);
+            }
 
-            // 2. Download Audio Files
-            const cache = await caches.open('quran-audio');
-            
-            // Collect all unique URLs
-            const urls = Array.from(new Set(ayas.flatMap(aya => [
-                aya.audio,
-                aya.urduAudio,
-                aya.englishAudio
-            ]).filter(Boolean)));
+            // 2. Download Audio Files if CacheStorage is supported
+            const cache = await getAudioCache();
+            if (cache) {
+                // Collect all unique URLs
+                const urls = Array.from(new Set(ayas.flatMap(aya => [
+                    aya.audio,
+                    aya.urduAudio,
+                    aya.englishAudio
+                ]).filter(Boolean)));
 
-            let completed = 0;
-            const total = urls.length;
+                let completed = 0;
+                const total = urls.length;
 
-            // Process in batches
-            const BATCH_SIZE = 5;
-            for (let i = 0; i < urls.length; i += BATCH_SIZE) {
-                const batch = urls.slice(i, i + BATCH_SIZE);
-                await Promise.all(batch.map(async (url) => {
-                    try {
-                        const match = await cache.match(url);
-                        if (!match) {
-                            const response = await fetch(url, { mode: 'cors' });
-                            if (response.ok) {
-                                await cache.put(url, response);
-                            } else {
-                                console.warn(`Skipping cache for ${url} - response not OK`);
+                // Process in batches
+                const BATCH_SIZE = 5;
+                for (let i = 0; i < urls.length; i += BATCH_SIZE) {
+                    const batch = urls.slice(i, i + BATCH_SIZE);
+                    await Promise.all(batch.map(async (url) => {
+                        try {
+                            const match = await cache.match(url);
+                            if (!match) {
+                                const response = await fetch(url, { mode: 'cors' });
+                                if (response.ok) {
+                                    await cache.put(url, response);
+                                } else {
+                                    console.warn(`Skipping cache for ${url} - response not OK`);
+                                }
                             }
+                        } catch (e) {
+                            console.warn(`Failed to cache ${url}`, e);
+                        } finally {
+                            completed++;
+                            setDownloadProgress(Math.round((completed / total) * 100));
                         }
-                    } catch (e) {
-                        console.warn(`Failed to cache ${url}`, e);
-                    } finally {
-                        completed++;
-                        setDownloadProgress(Math.round((completed / total) * 100));
-                    }
-                }));
+                    }));
+                }
+            } else {
+                setDownloadProgress(100);
             }
 
             setIsDownloaded(true);
             addPoints(50);
-            alert(`Surah downloaded successfully for offline use!`);
+            showToast("Surah downloaded successfully for offline use!");
         } catch (err) {
             console.error("Download failed", err);
-            alert("Failed to download. Please check your connection.");
+            showToast("Failed to download. Please check your connection.");
         } finally {
             setDownloading(false);
             setDownloadProgress(0);
@@ -529,22 +587,27 @@ const QuranReader = () => {
     };
 
     const deleteSurahContent = async () => {
-        if (!('caches' in window)) return;
         try {
             // Remove text data
-            localStorage.removeItem(`surah_${sura}_data`);
+            try {
+                localStorage.removeItem(`surah_${sura}_data`);
+            } catch (storageErr) {
+                console.warn("LocalStorage delete error", storageErr);
+            }
 
             // Remove audio data
-            const cache = await caches.open('quran-audio');
-            const urls = Array.from(new Set(ayas.flatMap(aya => [
-                aya.audio,
-                aya.urduAudio,
-                aya.englishAudio
-            ]).filter(Boolean)));
+            const cache = await getAudioCache();
+            if (cache) {
+                const urls = Array.from(new Set(ayas.flatMap(aya => [
+                    aya.audio,
+                    aya.urduAudio,
+                    aya.englishAudio
+                ]).filter(Boolean)));
 
-            await Promise.all(urls.map(url => cache.delete(url)));
+                await Promise.all(urls.map(url => cache.delete(url).catch(() => {})));
+            }
             setIsDownloaded(false);
-            alert("Surah removed from offline storage.");
+            showToast("Surah removed from offline storage.");
         } catch (err) {
             console.error("Delete failed", err);
         }
@@ -563,9 +626,9 @@ const QuranReader = () => {
         let playUrl = queue[index];
         let isBlobUrl = false;
 
-        if ('caches' in window) {
-            try {
-                const cache = await caches.open('quran-audio');
+        try {
+            const cache = await getAudioCache();
+            if (cache) {
                 const response = await cache.match(playUrl);
                 if (response) {
                     const blob = await response.blob();
@@ -576,9 +639,9 @@ const QuranReader = () => {
                         console.warn("Cached audio blob is empty, using network URL");
                     }
                 }
-            } catch (e) {
-                console.error("Error accessing cache for playback", e);
             }
+        } catch (e) {
+            console.warn("Error accessing cache for playback", e);
         }
 
         const newAudio = new Audio(playUrl);
@@ -1404,6 +1467,20 @@ const QuranReader = () => {
                     )}
                 </div>
             </div>
+
+            {/* Non-intrusive Toast Notification */}
+            <AnimatePresence>
+                {toastMessage && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                        className="fixed bottom-6 right-6 z-50 bg-slate-900/90 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 font-bold border border-slate-700/50 text-sm max-w-sm"
+                    >
+                        <span>{toastMessage}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
