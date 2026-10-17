@@ -1254,41 +1254,36 @@ const QuranReader = () => {
                                 )}
                             </div>
 
-                            {/* Navigation & Controls */}
-                            <div className="flex flex-col gap-4 mt-2">
-                                <div className="flex justify-between items-center">
-                                    <button 
-                                        onClick={() => setSura(Math.max(1, sura - 1))}
-                                        disabled={sura === 1}
-                                        className="p-3 bg-sky-100 text-sky-600 rounded-2xl hover:bg-sky-200 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm border-2 border-sky-200 active:scale-95"
-                                    >
-                                        <ChevronLeft size={24} strokeWidth={3} />
-                                    </button>
-                                    
-                                    <button 
-                                        onClick={() => setSura(Math.min(114, sura + 1))}
-                                        disabled={sura === 114}
-                                        className="p-3 bg-emerald-100 text-emerald-700 rounded-2xl hover:bg-emerald-200 disabled:opacity-50 transition shadow-sm border-2 border-emerald-200 active:scale-95"
-                                    >
-                                        <ChevronRight size={24} strokeWidth={3} />
-                                    </button>
-                                </div>
+                            {/* Navigation & Surah Title Card: Left/Right buttons integrated inside */}
+                            <div className="mt-2 bg-sky-50 p-3 sm:p-4 rounded-2xl border-2 border-sky-100 flex items-center justify-between gap-3 shadow-sm">
+                                <button 
+                                    onClick={() => setSura(Math.max(1, sura - 1))}
+                                    disabled={sura === 1}
+                                    className="p-2.5 sm:p-3 bg-white text-sky-600 rounded-xl hover:bg-sky-100 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-sm border border-sky-200 active:scale-95 flex-shrink-0"
+                                    title="Previous Surah"
+                                >
+                                    <ChevronLeft size={20} strokeWidth={3} />
+                                </button>
 
-                                <div className="text-center bg-sky-50 p-4 rounded-2xl border-2 border-sky-100">
-                                    <h1 className="text-2xl font-black text-slate-800 drop-shadow-sm">
+                                <div className="text-center flex-1 min-w-0 px-2">
+                                    <h1 className="text-xl sm:text-2xl font-black text-slate-800 drop-shadow-sm truncate">
                                         {surahInfo ? `${surahInfo.englishName}` : `Surah ${sura}`}
                                     </h1>
                                     {surahInfo && (
-                                        <div className="flex flex-col items-center">
-                                            <p className="text-lg text-sky-500 font-black mt-1">
-                                                {surahInfo.name}
-                                            </p>
-                                            <div className="flex items-center gap-2 mt-2">
-                                                {/* Offline controls removed */}
-                                            </div>
-                                        </div>
+                                        <p className="text-base sm:text-lg text-sky-500 font-black mt-0.5" style={{ fontFamily: 'Traditional Arabic, serif' }}>
+                                            {surahInfo.name}
+                                        </p>
                                     )}
                                 </div>
+
+                                <button 
+                                    onClick={() => setSura(Math.min(114, sura + 1))}
+                                    disabled={sura === 114}
+                                    className="p-2.5 sm:p-3 bg-white text-emerald-700 rounded-xl hover:bg-emerald-100 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-sm border border-emerald-200 active:scale-95 flex-shrink-0"
+                                    title="Next Surah"
+                                >
+                                    <ChevronRight size={20} strokeWidth={3} />
+                                </button>
                             </div>
                         </div>
                     </div>
