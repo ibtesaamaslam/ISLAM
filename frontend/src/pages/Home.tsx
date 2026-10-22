@@ -60,10 +60,12 @@ const Home = () => {
                         </p>
 
                         <div className="flex flex-wrap gap-4 justify-center">
-                            <Link to="/quran" className="group relative px-8 py-4 bg-gradient-to-b from-orange-400 to-orange-500 rounded-3xl font-black text-white shadow-[0_5px_0_#c2410c] active:shadow-none active:translate-y-[5px] transition-all border-2 border-orange-300 hover:brightness-105">
-                                <span className="relative flex items-center gap-2.5 text-lg">
-                                    Start Quran Quest <ChevronRight size={22} strokeWidth={3} />
-                                </span>
+                            <Link 
+                                to="/quran" 
+                                className="group inline-flex items-center gap-2 px-8 py-3.5 bg-[#ff6e00] hover:bg-[#ff7700] rounded-full font-black text-white text-base sm:text-lg shadow-[0_5px_0_#c2410c,0_8px_16px_rgba(0,0,0,0.12)] hover:shadow-[0_6px_0_#c2410c,0_10px_20px_rgba(0,0,0,0.15)] hover:-translate-y-0.5 active:translate-y-[4px] active:shadow-[0_1px_0_#c2410c] transition-all duration-150 border-t border-white/30 border-b border-orange-700/50 select-none cursor-pointer"
+                            >
+                                <span>Start the Adventure</span>
+                                <ChevronRight size={20} strokeWidth={3.5} className="inline-block transition-transform group-hover:translate-x-0.5" />
                             </Link>
                         </div>
                     </motion.div>
@@ -73,7 +75,7 @@ const Home = () => {
                 <DailyDhikrWidget />
 
                 {/* Features Grid */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid md:grid-cols-3 gap-6">
                     <FeatureCard 
                         to="/quran"
                         icon={<BookOpen size={32} className="text-white" />}
@@ -93,20 +95,11 @@ const Home = () => {
                         shadow="shadow-amber-600"
                     />
                     <FeatureCard 
-                        to="/chat"
-                        icon={<MessageCircle size={32} className="text-white" />}
-                        title="Ask A Friend"
-                        desc="Have a question? Chat with our friendly robot guide!"
-                        delay={0.8}
-                        color="bg-rose-400"
-                        shadow="shadow-rose-600"
-                    />
-                    <FeatureCard 
                         to="/discover"
                         icon={<Globe size={32} className="text-white" />}
                         title="Discover"
                         desc="Explore the wonders of Islam and the world around us!"
-                        delay={0.9}
+                        delay={0.8}
                         color="bg-indigo-400"
                         shadow="shadow-indigo-600"
                     />

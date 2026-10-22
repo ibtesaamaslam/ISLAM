@@ -16,6 +16,7 @@ import surahSummaryHandler from './api/surah-summary.ts';
 import tafseerBatchHandler from './api/tafseer-batch.ts';
 import tafseerHandler from './api/tafseer.ts';
 import ttsHandler from './api/tts.ts';
+import hadithHandler from './api/hadith.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -45,6 +46,7 @@ async function startServer() {
   app.all('/api/tafseer-batch', wrapHandler(tafseerBatchHandler));
   app.all('/api/tafseer', wrapHandler(tafseerHandler));
   app.all('/api/tts', wrapHandler(ttsHandler));
+  app.all('/api/hadith', wrapHandler(hadithHandler));
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {

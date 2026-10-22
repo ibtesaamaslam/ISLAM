@@ -53,48 +53,40 @@ const playCompletionChime = () => {
     }
 };
 
-// Format helper to ensure every Hadith starts with Hazrat Muhammad ﷺ ne farmaya & is quoted with ""
-const formatUrduHadith = (text: string) => {
-    let clean = (text || '').trim();
-    clean = clean.replace(/^[“”"']+|[“”"']+$/g, '').trim();
-    
-    // Check if it already has "حضرت محمد ﷺ نے فرمایا" or similar prefix
+// Helper to ensure every Hadith starts naturally with Hazrat Muhammad ﷺ ne farmaya & is enclosed in quotes ""
+const getNaturalUrduHadith = (text: string) => {
+    const clean = (text || '').trim();
     const hasPrefix = /^(حضرت محمد ﷺ نے فرمایا|رسول اللہ ﷺ نے فرمایا|نبی کریم ﷺ نے فرمایا|نبی اکرم ﷺ نے فرمایا)/.test(clean);
     
     if (hasPrefix) {
+        if ((clean.includes('”') && clean.includes('“')) || clean.includes('"')) {
+            return clean;
+        }
         const colonIndex = clean.indexOf(':') !== -1 ? clean.indexOf(':') + 1 : clean.indexOf('فرمایا') + 6;
         const prefix = clean.substring(0, colonIndex).trim();
         const content = clean.substring(colonIndex).replace(/^[“”"'\s]+|[“”"'\s]+$/g, '').trim();
-        return {
-            prefix: prefix || 'حضرت محمد ﷺ نے فرمایا:',
-            quote: content
-        };
+        return `${prefix} ”${content}“`;
     } else {
-        return {
-            prefix: 'حضرت محمد ﷺ نے فرمایا:',
-            quote: clean
-        };
+        const withoutQuotes = clean.replace(/^[“”"']+|[“”"']+$/g, '').trim();
+        return `حضرت محمد ﷺ نے فرمایا: ”${withoutQuotes}“`;
     }
 };
 
-const formatEnglishHadith = (text: string) => {
-    let clean = (text || '').trim();
-    clean = clean.replace(/^[“”"']+|[“”"']+$/g, '').trim();
+const getNaturalEnglishHadith = (text: string) => {
+    const clean = (text || '').trim();
     const hasPrefix = /^(The Prophet Muhammad \(ﷺ\)|The Prophet Muhammad \(PBUH\)|The Prophet \(PBUH\)|The Messenger of Allah \(PBUH\)|The Prophet \(ﷺ\)|The Messenger of Allah \(ﷺ\))/i.test(clean);
     
     if (hasPrefix) {
+        if ((clean.includes('“') && clean.includes('”')) || clean.includes('"')) {
+            return clean;
+        }
         const colonIndex = clean.indexOf(':') !== -1 ? clean.indexOf(':') + 1 : clean.indexOf('said') + 4;
         const prefix = clean.substring(0, colonIndex).trim();
         const content = clean.substring(colonIndex).replace(/^[“”"'\s]+|[“”"'\s]+$/g, '').trim();
-        return {
-            prefix: prefix || 'The Prophet Muhammad (ﷺ) said:',
-            quote: content
-        };
+        return `${prefix} "${content}"`;
     } else {
-        return {
-            prefix: 'The Prophet Muhammad (ﷺ) said:',
-            quote: clean
-        };
+        const withoutQuotes = clean.replace(/^[“”"']+|[“”"']+$/g, '').trim();
+        return `The Prophet Muhammad (ﷺ) said: "${withoutQuotes}"`;
     }
 };
 
@@ -118,6 +110,9 @@ export const DailyDhikrWidget: React.FC = () => {
     const [pickerSearch, setPickerSearch] = useState<string>('');
     const [pickerCategory, setPickerCategory] = useState<string>('all');
     const activeVoiceControllerRef = useRef<VoicePlaybackController | null>(null);
+
+    const naturalUrduHadith = getNaturalUrduHadith(selectedDhikr.urduVirtue);
+    const naturalEnglishHadith = getNaturalEnglishHadith(selectedDhikr.virtue);
 
     const { addPoints } = useGamification();
 
@@ -233,7 +228,7 @@ export const DailyDhikrWidget: React.FC = () => {
         stopSpeaking();
         setSpeakingTrack('hadith');
         setSpeakingStepText('AI Scholar Voice: Speaking Hadith Reward in Urdu...');
-        const ctrl = playAiVoice(selectedDhikr.urduVirtue, {
+        const ctrl = playAiVoice(naturalUrduHadith, {
             lang: 'ur-PK',
             onEnd: () => {
                 setSpeakingTrack('none');
@@ -253,7 +248,7 @@ export const DailyDhikrWidget: React.FC = () => {
         stopSpeaking();
         setSpeakingTrack('hadith_eng');
         setSpeakingStepText('AI Scholar Voice: Speaking English Hadith Reward...');
-        const ctrl = playAiVoice(selectedDhikr.virtue, {
+        const ctrl = playAiVoice(naturalEnglishHadith, {
             lang: 'en-US',
             onEnd: () => {
                 setSpeakingTrack('none');
@@ -417,9 +412,6 @@ export const DailyDhikrWidget: React.FC = () => {
             d.category.toLowerCase().includes(q);
         return matchesCategory && matchesSearch;
     });
-
-    const urduHadith = formatUrduHadith(selectedDhikr.urduVirtue);
-    const englishHadith = formatEnglishHadith(selectedDhikr.virtue);
 
     return (
         <section className="w-full my-12 relative">
@@ -847,18 +839,13 @@ export const DailyDhikrWidget: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* HADITH PREFIX & QUOTE DISPLAY */}
+                                {/* NATURAL HADITH WORDING (INCORPORATED NATURALLY IN TEXT) */}
                                 <div className="text-right" dir="rtl">
-                                    <div className="inline-block bg-emerald-100/80 text-emerald-900 text-sm font-black px-3 py-1 rounded-lg mb-2">
-                                        {urduHadith.prefix}
-                                    </div>
                                     <p 
                                         className="text-xl md:text-2xl font-medium text-emerald-950 leading-[2.3] pr-1" 
                                         style={{ fontFamily: 'Noto Nastaliq Urdu, serif' }}
                                     >
-                                        <span className="text-emerald-600 font-serif text-2xl font-bold ml-1">”</span>
-                                        {urduHadith.quote}
-                                        <span className="text-emerald-600 font-serif text-2xl font-bold mr-1">“</span>
+                                        {naturalUrduHadith}
                                     </p>
                                 </div>
                             </div>
@@ -885,13 +872,8 @@ export const DailyDhikrWidget: React.FC = () => {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <span className="inline-block bg-amber-100/70 text-amber-900 text-xs font-black px-2.5 py-0.5 rounded-md">
-                                        {englishHadith.prefix}
-                                    </span>
                                     <p className="text-base font-bold text-slate-800 leading-relaxed pl-1">
-                                        <span className="text-amber-600 font-bold text-lg mr-0.5">"</span>
-                                        {englishHadith.quote}
-                                        <span className="text-amber-600 font-bold text-lg ml-0.5">"</span>
+                                        {naturalEnglishHadith}
                                     </p>
                                 </div>
                             </div>
