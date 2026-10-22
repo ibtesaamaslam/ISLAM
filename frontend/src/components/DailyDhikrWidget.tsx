@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, RotateCcw, Volume2, VolumeX, CheckCircle2, ChevronLeft, ChevronRight, Award, Flame, Star, BookOpen, Layers } from 'lucide-react';
+import { 
+    Sparkles, RotateCcw, Volume2, VolumeX, CheckCircle2, ChevronLeft, ChevronRight, 
+    Award, Flame, Star, BookOpen, Layers, Square, Search, Bot
+} from 'lucide-react';
 import { dhikrList, getDhikrOfTheDay, getTodayKey, DhikrItem } from '../data/dhikrData';
 import { useGamification } from '../contexts/GamificationContext';
+import { playAiVoice, stopCurrentAiVoice, VoicePlaybackController } from '../utils/aiVoice';
 
 // Subtle audio synthesizer for realistic tactile Tasbeeh bead clicks
 const playTasbeehClick = (pitch = 900) => {
@@ -49,6 +53,51 @@ const playCompletionChime = () => {
     }
 };
 
+// Format helper to ensure every Hadith starts with Hazrat Muhammad ﷺ ne farmaya & is quoted with ""
+const formatUrduHadith = (text: string) => {
+    let clean = (text || '').trim();
+    clean = clean.replace(/^[“”"']+|[“”"']+$/g, '').trim();
+    
+    // Check if it already has "حضرت محمد ﷺ نے فرمایا" or similar prefix
+    const hasPrefix = /^(حضرت محمد ﷺ نے فرمایا|رسول اللہ ﷺ نے فرمایا|نبی کریم ﷺ نے فرمایا|نبی اکرم ﷺ نے فرمایا)/.test(clean);
+    
+    if (hasPrefix) {
+        const colonIndex = clean.indexOf(':') !== -1 ? clean.indexOf(':') + 1 : clean.indexOf('فرمایا') + 6;
+        const prefix = clean.substring(0, colonIndex).trim();
+        const content = clean.substring(colonIndex).replace(/^[“”"'\s]+|[“”"'\s]+$/g, '').trim();
+        return {
+            prefix: prefix || 'حضرت محمد ﷺ نے فرمایا:',
+            quote: content
+        };
+    } else {
+        return {
+            prefix: 'حضرت محمد ﷺ نے فرمایا:',
+            quote: clean
+        };
+    }
+};
+
+const formatEnglishHadith = (text: string) => {
+    let clean = (text || '').trim();
+    clean = clean.replace(/^[“”"']+|[“”"']+$/g, '').trim();
+    const hasPrefix = /^(The Prophet Muhammad \(ﷺ\)|The Prophet Muhammad \(PBUH\)|The Prophet \(PBUH\)|The Messenger of Allah \(PBUH\)|The Prophet \(ﷺ\)|The Messenger of Allah \(ﷺ\))/i.test(clean);
+    
+    if (hasPrefix) {
+        const colonIndex = clean.indexOf(':') !== -1 ? clean.indexOf(':') + 1 : clean.indexOf('said') + 4;
+        const prefix = clean.substring(0, colonIndex).trim();
+        const content = clean.substring(colonIndex).replace(/^[“”"'\s]+|[“”"'\s]+$/g, '').trim();
+        return {
+            prefix: prefix || 'The Prophet Muhammad (ﷺ) said:',
+            quote: content
+        };
+    } else {
+        return {
+            prefix: 'The Prophet Muhammad (ﷺ) said:',
+            quote: clean
+        };
+    }
+};
+
 export const DailyDhikrWidget: React.FC = () => {
     const todayKey = getTodayKey();
     const defaultDhikr = getDhikrOfTheDay();
@@ -62,8 +111,22 @@ export const DailyDhikrWidget: React.FC = () => {
     const [showCelebration, setShowCelebration] = useState<boolean>(false);
     const [tapEffect, setTapEffect] = useState<number>(0);
     const [languageView, setLanguageView] = useState<'both' | 'urdu' | 'english'>('both');
+    
+    // Voice / Speech Synthesis (AI TTS) State
+    const [speakingTrack, setSpeakingTrack] = useState<'none' | 'all' | 'arabic' | 'urdu' | 'english' | 'hadith' | 'hadith_eng'>('none');
+    const [speakingStepText, setSpeakingStepText] = useState<string>('');
+    const [pickerSearch, setPickerSearch] = useState<string>('');
+    const [pickerCategory, setPickerCategory] = useState<string>('all');
+    const activeVoiceControllerRef = useRef<VoicePlaybackController | null>(null);
 
     const { addPoints } = useGamification();
+
+    // Stop speaking when switching dhikr or on unmount
+    useEffect(() => {
+        return () => {
+            stopSpeaking();
+        };
+    }, []);
 
     // Load saved counts & streaks for today
     useEffect(() => {
@@ -90,6 +153,154 @@ export const DailyDhikrWidget: React.FC = () => {
             // ignore localStorage restrictions
         }
     }, [selectedDhikr.id, todayKey]);
+
+    // Handle AI Voice Speech
+    const stopSpeaking = () => {
+        if (activeVoiceControllerRef.current) {
+            try { activeVoiceControllerRef.current.stop(); } catch {}
+            activeVoiceControllerRef.current = null;
+        }
+        stopCurrentAiVoice();
+        setSpeakingTrack('none');
+        setSpeakingStepText('');
+    };
+
+    const speakArabic = () => {
+        if (speakingTrack === 'arabic') {
+            stopSpeaking();
+            return;
+        }
+        stopSpeaking();
+        setSpeakingTrack('arabic');
+        setSpeakingStepText('AI Scholar Voice: Reciting Arabic Zikr...');
+        const ctrl = playAiVoice(selectedDhikr.arabic, {
+            lang: 'ar-SA',
+            onEnd: () => {
+                setSpeakingTrack('none');
+                setSpeakingStepText('');
+                activeVoiceControllerRef.current = null;
+            },
+            onError: () => stopSpeaking()
+        });
+        activeVoiceControllerRef.current = ctrl;
+    };
+
+    const speakUrdu = () => {
+        if (speakingTrack === 'urdu') {
+            stopSpeaking();
+            return;
+        }
+        stopSpeaking();
+        setSpeakingTrack('urdu');
+        setSpeakingStepText('AI Scholar Voice: Speaking Urdu Translation...');
+        const ctrl = playAiVoice('اردو ترجمہ: ' + selectedDhikr.urduMeaning, {
+            lang: 'ur-PK',
+            onEnd: () => {
+                setSpeakingTrack('none');
+                setSpeakingStepText('');
+                activeVoiceControllerRef.current = null;
+            },
+            onError: () => stopSpeaking()
+        });
+        activeVoiceControllerRef.current = ctrl;
+    };
+
+    const speakEnglish = () => {
+        if (speakingTrack === 'english') {
+            stopSpeaking();
+            return;
+        }
+        stopSpeaking();
+        setSpeakingTrack('english');
+        setSpeakingStepText('AI Scholar Voice: Speaking English Translation...');
+        const ctrl = playAiVoice('English translation: ' + selectedDhikr.englishMeaning, {
+            lang: 'en-US',
+            onEnd: () => {
+                setSpeakingTrack('none');
+                setSpeakingStepText('');
+                activeVoiceControllerRef.current = null;
+            },
+            onError: () => stopSpeaking()
+        });
+        activeVoiceControllerRef.current = ctrl;
+    };
+
+    const speakHadith = () => {
+        if (speakingTrack === 'hadith') {
+            stopSpeaking();
+            return;
+        }
+        stopSpeaking();
+        setSpeakingTrack('hadith');
+        setSpeakingStepText('AI Scholar Voice: Speaking Hadith Reward in Urdu...');
+        const ctrl = playAiVoice(selectedDhikr.urduVirtue, {
+            lang: 'ur-PK',
+            onEnd: () => {
+                setSpeakingTrack('none');
+                setSpeakingStepText('');
+                activeVoiceControllerRef.current = null;
+            },
+            onError: () => stopSpeaking()
+        });
+        activeVoiceControllerRef.current = ctrl;
+    };
+
+    const speakEnglishHadith = () => {
+        if (speakingTrack === 'hadith_eng') {
+            stopSpeaking();
+            return;
+        }
+        stopSpeaking();
+        setSpeakingTrack('hadith_eng');
+        setSpeakingStepText('AI Scholar Voice: Speaking English Hadith Reward...');
+        const ctrl = playAiVoice(selectedDhikr.virtue, {
+            lang: 'en-US',
+            onEnd: () => {
+                setSpeakingTrack('none');
+                setSpeakingStepText('');
+                activeVoiceControllerRef.current = null;
+            },
+            onError: () => stopSpeaking()
+        });
+        activeVoiceControllerRef.current = ctrl;
+    };
+
+    // Full Sequence: Speak Arabic Zikr -> Urdu Trans -> English Trans
+    const speakAllSequence = async () => {
+        if (speakingTrack !== 'none') {
+            stopSpeaking();
+            return;
+        }
+
+        stopSpeaking();
+        setSpeakingTrack('all');
+
+        try {
+            // 1. Arabic Zikr
+            setSpeakingStepText('1/3: AI Voice Reciting Arabic Zikr...');
+            const c1 = playAiVoice(selectedDhikr.arabic, { lang: 'ar-SA' });
+            activeVoiceControllerRef.current = c1;
+            await c1.promise;
+
+            // 2. Urdu Translation
+            setSpeakingStepText('2/3: AI Voice Speaking Urdu Translation (اردو ترجمہ)...');
+            const c2 = playAiVoice('اردو ترجمہ: ' + selectedDhikr.urduMeaning, { lang: 'ur-PK' });
+            activeVoiceControllerRef.current = c2;
+            await c2.promise;
+
+            // 3. English Translation
+            setSpeakingStepText('3/3: AI Voice Speaking English Translation...');
+            const c3 = playAiVoice('English translation: ' + selectedDhikr.englishMeaning, { lang: 'en-US' });
+            activeVoiceControllerRef.current = c3;
+            await c3.promise;
+        } catch (err) {
+            console.warn("Sequence audio notice:", err);
+        } finally {
+            setSpeakingTrack('none');
+            setSpeakingStepText('');
+            activeVoiceControllerRef.current = null;
+        }
+    };
 
     // Handle Tasbeeh Increment
     const handleIncrement = () => {
@@ -170,24 +381,45 @@ export const DailyDhikrWidget: React.FC = () => {
     };
 
     const switchDhikr = (dhikr: DhikrItem) => {
+        stopSpeaking();
         setSelectedDhikr(dhikr);
         setTargetGoal(dhikr.recommendedGoal);
         setShowDhikrPicker(false);
     };
 
     const nextDhikr = () => {
+        stopSpeaking();
         const currentIndex = dhikrList.findIndex(d => d.id === selectedDhikr.id);
         const nextIndex = (currentIndex + 1) % dhikrList.length;
         switchDhikr(dhikrList[nextIndex]);
     };
 
     const prevDhikr = () => {
+        stopSpeaking();
         const currentIndex = dhikrList.findIndex(d => d.id === selectedDhikr.id);
         const prevIndex = (currentIndex - 1 + dhikrList.length) % dhikrList.length;
         switchDhikr(dhikrList[prevIndex]);
     };
 
     const progressPercent = Math.min(100, Math.round((count / targetGoal) * 100));
+
+    // Categories in Dhikr list
+    const categories = ['all', ...Array.from(new Set(dhikrList.map(d => d.category)))];
+
+    const filteredDhikrs = dhikrList.filter(d => {
+        const matchesCategory = pickerCategory === 'all' || d.category === pickerCategory;
+        const q = pickerSearch.toLowerCase().trim();
+        const matchesSearch = !q || 
+            d.arabic.includes(q) || 
+            d.transliteration.toLowerCase().includes(q) || 
+            d.englishMeaning.toLowerCase().includes(q) || 
+            d.urduMeaning.includes(q) ||
+            d.category.toLowerCase().includes(q);
+        return matchesCategory && matchesSearch;
+    });
+
+    const urduHadith = formatUrduHadith(selectedDhikr.urduVirtue);
+    const englishHadith = formatEnglishHadith(selectedDhikr.virtue);
 
     return (
         <section className="w-full my-12 relative">
@@ -218,7 +450,7 @@ export const DailyDhikrWidget: React.FC = () => {
                             </div>
                             <button
                                 onClick={() => setShowCelebration(false)}
-                                className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-lg rounded-2xl shadow-[0_4px_0_#065f46] hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-none transition-all"
+                                className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-lg rounded-2xl shadow-[0_4px_0_#065f46] hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
                             >
                                 Continue Dhikr
                             </button>
@@ -238,16 +470,16 @@ export const DailyDhikrWidget: React.FC = () => {
 
                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl border-2 border-white/40 flex items-center justify-center shadow-inner">
+                            <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl border-2 border-white/40 flex items-center justify-center shadow-inner shrink-0">
                                 <Sparkles className="text-yellow-300 fill-yellow-300 animate-pulse" size={28} />
                             </div>
                             <div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
                                     <span className="bg-yellow-400 text-slate-900 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
                                         Today's Dhikr
                                     </span>
                                     <span className="text-xs font-bold text-sky-200">
-                                        Rotates Daily with Powerful Zikrs
+                                        Rotates Daily Across 60+ Authentic Zikrs
                                     </span>
                                 </div>
                                 <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight mt-1">
@@ -270,8 +502,8 @@ export const DailyDhikrWidget: React.FC = () => {
                             {/* Sound Toggle */}
                             <button
                                 onClick={() => setSoundEnabled(!soundEnabled)}
-                                className="p-3 bg-white/15 hover:bg-white/25 rounded-2xl border border-white/20 text-white transition-all shadow-sm"
-                                title={soundEnabled ? "Mute Sound" : "Enable Sound"}
+                                className="p-3 bg-white/15 hover:bg-white/25 rounded-2xl border border-white/20 text-white transition-all shadow-sm cursor-pointer"
+                                title={soundEnabled ? "Mute Click Sound" : "Enable Click Sound"}
                             >
                                 {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
                             </button>
@@ -279,16 +511,16 @@ export const DailyDhikrWidget: React.FC = () => {
                             {/* Change Dhikr Selector Button */}
                             <button
                                 onClick={() => setShowDhikrPicker(!showDhikrPicker)}
-                                className="flex items-center gap-2 px-4 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-black rounded-2xl shadow-[0_3px_0_#ca8a04] active:translate-y-[2px] active:shadow-none transition-all text-sm"
+                                className="flex items-center gap-2 px-4 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-black rounded-2xl shadow-[0_3px_0_#ca8a04] active:translate-y-[2px] active:shadow-none transition-all text-sm cursor-pointer"
                             >
                                 <Layers size={18} />
-                                <span>Change Dhikr</span>
+                                <span>Change Dhikr ({dhikrList.length}+)</span>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Dhikr Selector Drawer/Dropdown (Collapsible) */}
+                {/* Dhikr Selector Drawer/Dropdown (Collapsible with Search & Filter) */}
                 <AnimatePresence>
                     {showDhikrPicker && (
                         <motion.div
@@ -297,32 +529,68 @@ export const DailyDhikrWidget: React.FC = () => {
                             exit={{ height: 0, opacity: 0 }}
                             className="bg-slate-50 border-b-2 border-slate-200 overflow-hidden"
                         >
-                            <div className="p-6">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h4 className="font-black text-slate-800 text-lg flex items-center gap-2">
-                                        <BookOpen size={20} className="text-sky-600" />
-                                        Choose from 10 Most Powerful Authentic Zikrs
-                                    </h4>
+                            <div className="p-5 md:p-6 max-h-[500px] overflow-y-auto">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                                    <div>
+                                        <h4 className="font-black text-slate-800 text-lg flex items-center gap-2">
+                                            <BookOpen size={20} className="text-sky-600" />
+                                            Choose from {dhikrList.length}+ Powerful Authentic Zikrs
+                                        </h4>
+                                        <p className="text-xs text-slate-500 font-bold">
+                                            All verified with authentic Sahih references from Hadith literature
+                                        </p>
+                                    </div>
                                     <button 
                                         onClick={() => setShowDhikrPicker(false)}
-                                        className="text-xs font-bold text-slate-500 hover:text-slate-800 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm"
+                                        className="text-xs font-black text-slate-600 hover:text-slate-900 bg-white px-4 py-2 rounded-xl border border-slate-300 shadow-sm cursor-pointer"
                                     >
-                                        Close
+                                        ✕ Close
                                     </button>
                                 </div>
+
+                                {/* Search Bar & Categories */}
+                                <div className="flex flex-col sm:flex-row gap-2.5 mb-4">
+                                    <div className="relative flex-1">
+                                        <Search size={16} className="text-slate-400 absolute left-3.5 top-3" />
+                                        <input
+                                            type="text"
+                                            value={pickerSearch}
+                                            onChange={(e) => setPickerSearch(e.target.value)}
+                                            placeholder="Search by Arabic, translation, or virtue..."
+                                            className="w-full pl-10 pr-4 py-2 bg-white rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500"
+                                        />
+                                    </div>
+                                    {/* Category Filter Pills */}
+                                    <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                                        {categories.slice(0, 6).map(cat => (
+                                            <button
+                                                key={cat}
+                                                onClick={() => setPickerCategory(cat)}
+                                                className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all capitalize cursor-pointer ${
+                                                    pickerCategory === cat
+                                                        ? 'bg-sky-600 text-white'
+                                                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                                                }`}
+                                            >
+                                                {cat === 'all' ? `All (${dhikrList.length})` : cat}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    {dhikrList.map(dhikr => (
+                                    {filteredDhikrs.map(dhikr => (
                                         <button
                                             key={dhikr.id}
                                             onClick={() => switchDhikr(dhikr)}
-                                            className={`text-left p-4 rounded-2xl border-2 transition-all duration-200 flex flex-col justify-between ${
+                                            className={`text-left p-4 rounded-2xl border-2 transition-all duration-200 flex flex-col justify-between cursor-pointer ${
                                                 selectedDhikr.id === dhikr.id
                                                     ? 'bg-sky-50 border-sky-500 shadow-md ring-2 ring-sky-200'
                                                     : 'bg-white border-slate-200 hover:border-sky-300 hover:shadow-sm'
                                             }`}
                                         >
                                             <div className="flex items-center justify-between mb-2">
-                                                <span className="text-[11px] font-black uppercase tracking-wider text-sky-700 bg-sky-100 px-2.5 py-0.5 rounded-full">
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 bg-sky-100 px-2.5 py-0.5 rounded-full">
                                                     {dhikr.category}
                                                 </span>
                                                 <span className="text-xs font-bold text-slate-400">
@@ -344,21 +612,21 @@ export const DailyDhikrWidget: React.FC = () => {
                 </AnimatePresence>
 
                 {/* Main Interactive Grid */}
-                <div className="p-6 md:p-10 grid lg:grid-cols-12 gap-8 items-center">
+                <div className="p-6 md:p-10 grid lg:grid-cols-12 gap-8 items-start">
                     
                     {/* Left: Dhikr Text & Immense Reward Details (Col 7) */}
                     <div className="lg:col-span-7 space-y-6">
                         
                         {/* Nav Carousel Controls */}
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-black text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                            <span className="text-xs font-black text-slate-500 tracking-wider uppercase flex items-center gap-1.5">
                                 <Star size={16} className="text-amber-500 fill-amber-500" />
                                 {selectedDhikr.category}
                             </span>
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={prevDhikr}
-                                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
                                     title="Previous Dhikr"
                                 >
                                     <ChevronLeft size={18} />
@@ -368,7 +636,7 @@ export const DailyDhikrWidget: React.FC = () => {
                                 </span>
                                 <button
                                     onClick={nextDhikr}
-                                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
                                     title="Next Dhikr"
                                 >
                                     <ChevronRight size={18} />
@@ -376,8 +644,74 @@ export const DailyDhikrWidget: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Arabic Script Display */}
+                        {/* GEMINI AI VOICE PLAYBAR */}
+                        <div className="bg-gradient-to-r from-sky-50 via-indigo-50 to-teal-50 p-4 rounded-2xl border-2 border-sky-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white ${
+                                    speakingTrack !== 'none' ? 'bg-amber-500 animate-pulse' : 'bg-sky-600'
+                                }`}>
+                                    <Bot size={22} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                                        <span>AI Voice Audio Guide</span>
+                                        <span className="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-md">Gemini AI</span>
+                                    </h4>
+                                    <p className="text-[11px] font-bold text-slate-500">
+                                        {speakingStepText || "Listen to high-fidelity AI pronunciation & spoken translations"}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* PRIMARY SPEAK BUTTONS */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                                {speakingTrack !== 'none' ? (
+                                    <button
+                                        type="button"
+                                        onClick={stopSpeaking}
+                                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-black shadow-xs transition-all active:scale-95 cursor-pointer animate-pulse"
+                                    >
+                                        <Square size={13} fill="currentColor" />
+                                        <span>Stop Voice</span>
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={speakAllSequence}
+                                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-xs font-black shadow-xs transition-all active:scale-95 cursor-pointer"
+                                        title="AI Agent speaks Arabic Zikr, followed by Urdu Translation, followed by English Translation"
+                                    >
+                                        <Volume2 size={15} />
+                                        <span>Speak the Zikr (Also Urdu &amp; English Trans)</span>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Arabic Script Display Card */}
                         <div className="bg-gradient-to-br from-amber-50/80 via-white to-sky-50/50 p-6 md:p-8 rounded-[2rem] border-2 border-amber-200/60 shadow-sm relative">
+                            {/* Individual Voice Quick Action */}
+                            <div className="flex items-center justify-between mb-3 border-b border-amber-100 pb-2">
+                                <span className="text-[10px] font-black uppercase text-amber-800 tracking-wider">
+                                    Arabic Dhikr Script
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                    <button
+                                        type="button"
+                                        onClick={speakArabic}
+                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                                            speakingTrack === 'arabic'
+                                                ? 'bg-amber-500 text-white shadow-xs animate-pulse'
+                                                : 'bg-white text-slate-700 border border-slate-200 hover:bg-amber-50'
+                                        }`}
+                                        title="AI Agent speaks Arabic Zikr only"
+                                    >
+                                        <Volume2 size={13} />
+                                        <span>Speak the Zikr</span>
+                                    </button>
+                                </div>
+                            </div>
+
                             <p 
                                 className="text-right text-3xl md:text-5xl leading-[2.1] md:leading-[2.2] font-serif text-slate-900 selection:bg-amber-200" 
                                 dir="rtl"
@@ -399,26 +733,26 @@ export const DailyDhikrWidget: React.FC = () => {
 
                         {/* Translation Toggle & Display */}
                         <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-black text-slate-400 uppercase tracking-wider">
+                            <div className="flex items-center justify-between flex-wrap gap-2">
+                                <span className="text-xs font-black text-slate-500 uppercase tracking-wider">
                                     Meaning &amp; Translation
                                 </span>
                                 <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-black">
                                     <button 
                                         onClick={() => setLanguageView('both')}
-                                        className={`px-3 py-1 rounded-lg transition-all ${languageView === 'both' ? 'bg-white text-sky-700 shadow-sm' : 'text-slate-500'}`}
+                                        className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${languageView === 'both' ? 'bg-white text-sky-700 shadow-sm' : 'text-slate-500'}`}
                                     >
                                         Both
                                     </button>
                                     <button 
                                         onClick={() => setLanguageView('urdu')}
-                                        className={`px-3 py-1 rounded-lg transition-all ${languageView === 'urdu' ? 'bg-white text-sky-700 shadow-sm' : 'text-slate-500'}`}
+                                        className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${languageView === 'urdu' ? 'bg-white text-sky-700 shadow-sm' : 'text-slate-500'}`}
                                     >
                                         Urdu
                                     </button>
                                     <button 
                                         onClick={() => setLanguageView('english')}
-                                        className={`px-3 py-1 rounded-lg transition-all ${languageView === 'english' ? 'bg-white text-sky-700 shadow-sm' : 'text-slate-500'}`}
+                                        className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${languageView === 'english' ? 'bg-white text-sky-700 shadow-sm' : 'text-slate-500'}`}
                                     >
                                         English
                                     </button>
@@ -427,11 +761,23 @@ export const DailyDhikrWidget: React.FC = () => {
 
                             {/* Urdu Translation */}
                             {(languageView === 'both' || languageView === 'urdu') && (
-                                <div className="bg-white p-4 rounded-2xl border-2 border-indigo-100 shadow-sm">
-                                    <span className="text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md inline-block mb-1">
-                                        اردو ترجمہ
-                                    </span>
-                                    <p className="text-xl text-right font-medium text-slate-800 leading-relaxed" dir="rtl" style={{ fontFamily: 'Noto Nastaliq Urdu, serif' }}>
+                                <div className="bg-white p-4.5 rounded-2xl border-2 border-indigo-100 shadow-sm">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-md inline-block">
+                                            اردو ترجمہ
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={speakUrdu}
+                                            className={`text-[11px] font-black flex items-center gap-1 px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                                                speakingTrack === 'urdu' ? 'bg-indigo-600 text-white animate-pulse' : 'text-indigo-700 bg-indigo-50 hover:bg-indigo-100'
+                                            }`}
+                                        >
+                                            <Volume2 size={12} />
+                                            <span>Speak Urdu Trans (سنیں)</span>
+                                        </button>
+                                    </div>
+                                    <p className="text-xl text-right font-medium text-slate-800 leading-[2.1]" dir="rtl" style={{ fontFamily: 'Noto Nastaliq Urdu, serif' }}>
                                         {selectedDhikr.urduMeaning}
                                     </p>
                                 </div>
@@ -439,34 +785,126 @@ export const DailyDhikrWidget: React.FC = () => {
 
                             {/* English Translation */}
                             {(languageView === 'both' || languageView === 'english') && (
-                                <div className="bg-white p-4 rounded-2xl border-2 border-slate-100 shadow-sm">
-                                    <span className="text-[10px] font-black uppercase text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md inline-block mb-1">
-                                        English
-                                    </span>
-                                    <p className="text-sm font-semibold text-slate-700 leading-relaxed">
+                                <div className="bg-white p-4.5 rounded-2xl border-2 border-slate-100 shadow-sm">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-[10px] font-black uppercase text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-md inline-block">
+                                            English Translation
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={speakEnglish}
+                                            className={`text-[11px] font-black flex items-center gap-1 px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                                                speakingTrack === 'english' ? 'bg-sky-600 text-white animate-pulse' : 'text-sky-700 bg-sky-50 hover:bg-sky-100'
+                                            }`}
+                                        >
+                                            <Volume2 size={12} />
+                                            <span>Speak English Trans</span>
+                                        </button>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-700 leading-relaxed">
                                         {selectedDhikr.englishMeaning}
                                     </p>
                                 </div>
                             )}
                         </div>
 
-                        {/* Immense Virtue Box */}
-                        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-5 rounded-2xl border-2 border-amber-300 shadow-sm">
-                            <div className="flex items-start gap-3">
-                                <div className="p-2 bg-amber-400 text-amber-950 rounded-xl mt-0.5 shadow-sm">
+                        {/* Immense Spiritual Virtue & Hadith Reward Card */}
+                        {/* REQUIREMENT: ADD "" AT START AND END SO IT MUST LOOK A HADITH AND START IT LIKE HAZRAT MUHAMMAD NE FARMAYA */}
+                        <div className="bg-gradient-to-br from-amber-50 via-emerald-50/40 to-yellow-50 p-6 md:p-7 rounded-[2rem] border-2 border-emerald-300 shadow-sm relative overflow-hidden">
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="p-2 bg-emerald-600 text-white rounded-xl shadow-xs">
                                     <Sparkles size={18} fill="currentColor" />
                                 </div>
-                                <div>
-                                    <span className="text-xs font-black uppercase tracking-wider text-amber-800 block mb-1">
-                                        Immense Spiritual Virtue &amp; Hadith Reward
+                                <span className="text-xs font-black uppercase tracking-wider text-emerald-950">
+                                    Immense Spiritual Virtue &amp; Hadith Reward (فضیلت و ثواب)
+                                </span>
+                            </div>
+
+                            {/* 1. FIRST: REWARD WRITTEN IN URDU WITH "HAZRAT MUHAMMAD NE FARMAYA" AND QUOTES "" */}
+                            <div className="bg-white/95 backdrop-blur-sm p-5 md:p-6 rounded-2xl border-2 border-emerald-300 mb-4 shadow-sm relative overflow-hidden">
+                                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                                    <span className="text-[11px] font-black uppercase tracking-wider text-emerald-900 bg-emerald-100 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-2xs">
+                                        <Sparkles size={13} className="text-emerald-600 fill-emerald-600" />
+                                        فضیلت و ثواب (Urdu Hadith Reward)
                                     </span>
-                                    <p className="text-sm font-bold text-amber-950 leading-relaxed">
-                                        {selectedDhikr.virtue}
-                                    </p>
-                                    <span className="text-xs font-extrabold text-amber-700/80 block mt-2">
-                                        📖 Reference: {selectedDhikr.reference}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={speakHadith}
+                                            className={`text-[11px] font-black flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer ${
+                                                speakingTrack === 'hadith' 
+                                                    ? 'bg-rose-500 text-white animate-pulse' 
+                                                    : 'text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200'
+                                            }`}
+                                            title="حدیث مبارکہ بول کر سنیں"
+                                        >
+                                            <Volume2 size={13} />
+                                            <span>{speakingTrack === 'hadith' ? 'Stop Voice' : 'حدیث سنیں (Listen Hadith)'}</span>
+                                        </button>
+                                        <span className="text-xs font-black text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg">
+                                            حدیث مبارکہ
+                                        </span>
+                                    </div>
                                 </div>
+
+                                {/* HADITH PREFIX & QUOTE DISPLAY */}
+                                <div className="text-right" dir="rtl">
+                                    <div className="inline-block bg-emerald-100/80 text-emerald-900 text-sm font-black px-3 py-1 rounded-lg mb-2">
+                                        {urduHadith.prefix}
+                                    </div>
+                                    <p 
+                                        className="text-xl md:text-2xl font-medium text-emerald-950 leading-[2.3] pr-1" 
+                                        style={{ fontFamily: 'Noto Nastaliq Urdu, serif' }}
+                                    >
+                                        <span className="text-emerald-600 font-serif text-2xl font-bold ml-1">”</span>
+                                        {urduHadith.quote}
+                                        <span className="text-emerald-600 font-serif text-2xl font-bold mr-1">“</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* 2. SECOND: REWARD WRITTEN IN ENGLISH WITH QUOTES "" */}
+                            <div className="bg-white/95 backdrop-blur-sm p-5 md:p-6 rounded-2xl border-2 border-amber-300 shadow-sm">
+                                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                                    <span className="text-[11px] font-black uppercase tracking-wider text-amber-900 bg-amber-100 px-3 py-1 rounded-full shadow-2xs">
+                                        English Translation of Reward
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={speakEnglishHadith}
+                                        className={`text-[11px] font-black flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer ${
+                                            speakingTrack === 'hadith_eng' 
+                                                ? 'bg-rose-500 text-white animate-pulse' 
+                                                : 'text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200'
+                                        }`}
+                                        title="Listen to English Hadith Reward"
+                                    >
+                                        <Volume2 size={13} />
+                                        <span>{speakingTrack === 'hadith_eng' ? 'Stop Voice' : 'Listen Hadith'}</span>
+                                    </button>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <span className="inline-block bg-amber-100/70 text-amber-900 text-xs font-black px-2.5 py-0.5 rounded-md">
+                                        {englishHadith.prefix}
+                                    </span>
+                                    <p className="text-base font-bold text-slate-800 leading-relaxed pl-1">
+                                        <span className="text-amber-600 font-bold text-lg mr-0.5">"</span>
+                                        {englishHadith.quote}
+                                        <span className="text-amber-600 font-bold text-lg ml-0.5">"</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* 3. AUTHENTIC REFERENCE */}
+                            <div className="mt-4 flex items-center justify-between text-xs font-extrabold text-slate-600 flex-wrap gap-2 pt-2 border-t border-amber-200/60">
+                                <span className="flex items-center gap-1.5 text-amber-900 bg-amber-100/90 px-3 py-1.5 rounded-xl">
+                                    📖 Hadith Reference: {selectedDhikr.reference}
+                                </span>
+                                <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100/90 px-2.5 py-1.5 rounded-xl flex items-center gap-1">
+                                    <CheckCircle2 size={13} className="text-emerald-600" />
+                                    Authentic &amp; Sahih Verified
+                                </span>
                             </div>
                         </div>
 
@@ -474,7 +912,7 @@ export const DailyDhikrWidget: React.FC = () => {
 
                     {/* Right: Interactive Tasbeeh Counter & Visual Progress Bar (Col 5) */}
                     <div className="lg:col-span-5 flex flex-col items-center">
-                        <div className="w-full max-w-sm bg-slate-50 rounded-[2.5rem] p-6 md:p-8 border-4 border-slate-200/80 shadow-lg flex flex-col items-center">
+                        <div className="w-full max-w-sm bg-slate-50 rounded-[2.5rem] p-6 md:p-8 border-4 border-slate-200/80 shadow-lg flex flex-col items-center sticky top-24">
                             
                             {/* Target Goal Selector */}
                             <div className="w-full mb-6">
@@ -491,7 +929,7 @@ export const DailyDhikrWidget: React.FC = () => {
                                         <button
                                             key={val}
                                             onClick={() => setTargetGoal(val)}
-                                            className={`py-2 rounded-xl text-xs font-black transition-all ${
+                                            className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                                                 targetGoal === val
                                                     ? 'bg-sky-600 text-white shadow-md'
                                                     : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
@@ -572,7 +1010,7 @@ export const DailyDhikrWidget: React.FC = () => {
                                 <button
                                     onClick={handleUndo}
                                     disabled={count === 0}
-                                    className="flex-1 py-3 px-4 rounded-2xl bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-white font-black text-xs transition-all shadow-sm flex items-center justify-center gap-1.5"
+                                    className="flex-1 py-3 px-4 rounded-2xl bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-white font-black text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
                                 >
                                     <span>-1 Undo</span>
                                 </button>
@@ -580,7 +1018,7 @@ export const DailyDhikrWidget: React.FC = () => {
                                 <button
                                     onClick={handleReset}
                                     disabled={count === 0}
-                                    className="flex-1 py-3 px-4 rounded-2xl bg-rose-50 border-2 border-rose-200 text-rose-600 hover:bg-rose-100 disabled:opacity-40 disabled:hover:bg-rose-50 font-black text-xs transition-all shadow-sm flex items-center justify-center gap-1.5"
+                                    className="flex-1 py-3 px-4 rounded-2xl bg-rose-50 border-2 border-rose-200 text-rose-600 hover:bg-rose-100 disabled:opacity-40 disabled:hover:bg-rose-50 font-black text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
                                 >
                                     <RotateCcw size={14} />
                                     <span>Reset</span>

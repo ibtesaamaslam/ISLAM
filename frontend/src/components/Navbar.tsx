@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { BookOpen, MessageCircle, Home, Star, Trophy, Heart } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useGamification } from '../contexts/GamificationContext';
+import LevelsAndAchievementsModal from './LevelsAndAchievementsModal';
 
 const Navbar = () => {
     const location = useLocation();
-    const { points } = useGamification();
+    const { points, level } = useGamification();
+    const [isLevelsModalOpen, setIsLevelsModalOpen] = useState(false);
 
     const NavItem = ({ to, icon: Icon, label, activeColor, inactiveColor }: { to: string, icon: any, label: string, activeColor: string, inactiveColor: string }) => {
         const isActive = location.pathname === to;
@@ -30,19 +32,33 @@ const Navbar = () => {
 
     return (
         <>
-            {/* Points Badge (Top Right) */}
+            {/* Points & Level Badge (Top Right) - Opens Levels and Achievements Modal */}
             <div className="fixed top-4 right-4 z-50">
-                <Link to="/discover">
+                <button 
+                    type="button"
+                    onClick={() => setIsLevelsModalOpen(true)}
+                    className="focus:outline-none"
+                    title="View Levels & Achievements"
+                >
                     <motion.div 
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="bg-white px-4 py-2 rounded-full shadow-[0_4px_0_#fbbf24] border-2 border-amber-200 flex items-center gap-2 cursor-pointer active:shadow-none active:translate-y-[4px] transition-all"
+                        className="bg-white px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-[0_4px_0_#fbbf24] border-2 border-amber-200 flex items-center gap-2 cursor-pointer active:shadow-none active:translate-y-[4px] transition-all"
                     >
-                        <Star className="text-amber-400 fill-amber-400" size={24} strokeWidth={2.5} />
-                        <span className="font-black text-slate-700 text-lg">{points}</span>
+                        <span className="text-[10px] sm:text-xs font-black bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            Lvl {level}
+                        </span>
+                        <Star className="text-amber-400 fill-amber-400" size={20} strokeWidth={2.5} />
+                        <span className="font-black text-slate-700 text-base sm:text-lg">{points}</span>
                     </motion.div>
-                </Link>
+                </button>
             </div>
+
+            {/* Levels and Achievements Modal */}
+            <LevelsAndAchievementsModal 
+                isOpen={isLevelsModalOpen} 
+                onClose={() => setIsLevelsModalOpen(false)} 
+            />
 
             {/* Bottom Nav */}
             <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-xl p-3 rounded-[2rem] shadow-2xl border-4 border-white/50 flex gap-2 sm:gap-4 z-50 max-w-[95vw] overflow-x-auto scrollbar-hide">

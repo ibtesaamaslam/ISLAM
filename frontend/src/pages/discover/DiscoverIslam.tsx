@@ -265,7 +265,7 @@ const DiscoverIslam = () => {
                     [{ "question": "string", "options": ["string", "string", "string", "string"], "correct": number (0-3) }]`;
                     
                     const response = await ai.models.generateContent({
-                        model: "gemini-2.5-flash",
+                        model: "gemini-3.8-flash",
                         contents: prompt,
                         config: { responseMimeType: "application/json" }
                     });
@@ -338,77 +338,13 @@ const DiscoverIslam = () => {
     };
 
     const speak = async (text: string, lang: string = 'en-US'): Promise<void> => {
-        try {
-            if (shahadaAudioRef.current) {
+        if (shahadaAudioRef.current) {
+            try {
                 shahadaAudioRef.current.pause();
-            }
-
-            const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-            if (!apiKey) throw new Error("API Key missing");
-
-            const ai = new GoogleGenAI({ apiKey });
-            
-            const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash-preview-tts",
-                contents: [{ parts: [{ text }] }],
-                config: {
-                    responseModalities: ["AUDIO"],
-                    speechConfig: {
-                        voiceConfig: {
-                            prebuiltVoiceConfig: { voiceName: "Fenrir" },
-                        },
-                    },
-                },
-            });
-
-            const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-            if (!base64Audio) throw new Error("No audio data received");
-
-            return new Promise((resolve) => {
-                try {
-                    const binaryString = window.atob(base64Audio);
-                    const bytes = new Uint8Array(binaryString.length);
-                    for (let i = 0; i < binaryString.length; i++) {
-                        bytes[i] = binaryString.charCodeAt(i);
-                    }
-                    
-                    if (bytes.length === 0) {
-                        throw new Error("Empty audio buffer");
-                    }
-
-                    const blob = new Blob([bytes], { type: 'audio/mpeg' }); // Changed to audio/mpeg
-                    const url = URL.createObjectURL(blob);
-
-                    const audio = new Audio(url);
-                    shahadaAudioRef.current = audio;
-                    
-                    audio.onended = () => {
-                        shahadaAudioRef.current = null;
-                        URL.revokeObjectURL(url);
-                        resolve();
-                    };
-                    
-                    audio.onerror = (e) => {
-                        console.error("Audio playback error", e);
-                        URL.revokeObjectURL(url);
-                        // Fallback to browser TTS if audio element fails
-                        fallbackToBrowserTTS(text, lang).then(resolve);
-                    };
-                    
-                    audio.play().catch((e) => {
-                        console.error("Audio play failed", e);
-                        URL.revokeObjectURL(url);
-                        fallbackToBrowserTTS(text, lang).then(resolve);
-                    });
-                } catch (err) {
-                    console.error("Error creating audio blob", err);
-                    fallbackToBrowserTTS(text, lang).then(resolve);
-                }
-            });
-        } catch (e) {
-            console.error("Gemini TTS failed, fallback to browser", e);
-            return fallbackToBrowserTTS(text, lang);
+            } catch {}
+            shahadaAudioRef.current = null;
         }
+        return fallbackToBrowserTTS(text, lang);
     };
 
     const fallbackToBrowserTTS = (text: string, lang: string): Promise<void> => {
@@ -538,7 +474,7 @@ const DiscoverIslam = () => {
             Question: ${chatInput}`;
             
             const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
+                model: "gemini-3.8-flash",
                 contents: prompt,
             });
             setChatResponse(response.text);

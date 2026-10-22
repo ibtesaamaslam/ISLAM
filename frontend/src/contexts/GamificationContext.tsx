@@ -43,7 +43,7 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const [notification, setNotification] = useState<Achievement | null>(null);
 
-    const level = Math.floor(points / 100) + 1;
+    const level = Math.min(100, Math.floor(points / 100) + 1);
 
     useEffect(() => {
         try {

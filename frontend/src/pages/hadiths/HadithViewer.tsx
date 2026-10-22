@@ -40,7 +40,7 @@ const HadithViewer = () => {
             `;
 
             const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
+                model: "gemini-3.8-flash",
                 contents: prompt,
                 config: { responseMimeType: "application/json" }
             });
@@ -64,6 +64,7 @@ const HadithViewer = () => {
     };
 
     useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         fetchHadithByTopic('General Wisdom');
     }, []);
 

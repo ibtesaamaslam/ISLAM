@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { BookOpen, MessageCircle, Star, Sparkles, ChevronRight, CloudSun, Heart, Globe, Atom, Orbit } from 'lucide-react';
+import { BookOpen, MessageCircle, Star, Sparkles, ChevronRight, Heart, Globe } from 'lucide-react';
 import DailyDhikrWidget from '../components/DailyDhikrWidget';
 
 const Home = () => {
@@ -39,93 +39,32 @@ const Home = () => {
                     </div>
                 </motion.header>
 
-                <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center mb-20 w-full">
-                    
+                <div className="mb-8 sm:mb-10 w-full">
                     {/* Hero Text */}
                     <motion.div 
-                        initial={{ x: -50, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-center lg:text-left lg:col-span-7"
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-center max-w-4xl mx-auto"
                     >
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-yellow-400 text-orange-500 font-black uppercase tracking-wide mb-6 shadow-sm">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-yellow-400 text-orange-500 font-black uppercase tracking-wide mb-4 shadow-sm">
                             <Sparkles size={16} className="text-yellow-500 fill-yellow-500" /> Fun Learning Adventure!
                         </div>
                         
-                        <h1 className="text-5xl md:text-7xl xl:text-8xl font-black leading-tight mb-6 text-white drop-shadow-[0_4px_0_rgba(0,0,0,0.1)]">
-                            Learn Islam the <br />
-                            <span className="text-yellow-300 inline-block cursor-default">Fun Way!</span> 🚀
+                        <h1 className="text-4xl md:text-6xl xl:text-7xl font-black leading-tight mb-4 text-white drop-shadow-[0_4px_0_rgba(0,0,0,0.1)]">
+                            Learn Islam the <span className="text-yellow-300 inline-block cursor-default">Fun Way!</span> 🚀
                         </h1>
                         
-                        <p className="text-xl md:text-2xl text-blue-900/80 font-bold mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0 bg-white/30 p-5 rounded-3xl backdrop-blur-sm border-2 border-white/50">
+                        <p className="text-lg md:text-xl text-blue-950 font-bold mb-6 leading-relaxed max-w-2xl mx-auto bg-white/40 p-4 rounded-3xl backdrop-blur-sm border-2 border-white/60">
                             Join the magical journey! Read the Quran, collect Hadith stars, and make new friends with our AI guide.
                         </p>
 
-                        <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
-                            <Link to="/quran" className="group relative px-10 py-5 bg-gradient-to-b from-orange-400 to-orange-500 rounded-3xl font-black text-white shadow-[0_6px_0_#c2410c] active:shadow-none active:translate-y-[6px] transition-all border-2 border-orange-300">
-                                <span className="relative flex items-center gap-3 text-xl">
-                                    Start Adventure <ChevronRight size={26} strokeWidth={3} />
+                        <div className="flex flex-wrap gap-4 justify-center">
+                            <Link to="/quran" className="group relative px-8 py-4 bg-gradient-to-b from-orange-400 to-orange-500 rounded-3xl font-black text-white shadow-[0_5px_0_#c2410c] active:shadow-none active:translate-y-[5px] transition-all border-2 border-orange-300 hover:brightness-105">
+                                <span className="relative flex items-center gap-2.5 text-lg">
+                                    Start Quran Quest <ChevronRight size={22} strokeWidth={3} />
                                 </span>
                             </Link>
-                        </div>
-                    </motion.div>
-
-                    {/* Hero Visual / Futuristic Animation */}
-                    <motion.div 
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                        className="relative h-[420px] flex items-center justify-center lg:col-span-5 w-full"
-                    >
-                        {/* Central Glowing Orb */}
-                        <motion.div 
-                            animate={{ 
-                                scale: [1, 1.1, 1],
-                                rotate: [0, 5, -5, 0],
-                            }}
-                            transition={{ 
-                                duration: 4, 
-                                repeat: Infinity,
-                                ease: "easeInOut" 
-                            }}
-                            className="relative z-20 w-48 h-48 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-[0_0_60px_rgba(59,130,246,0.5)] border-4 border-white/50 backdrop-blur-sm"
-                        >
-                            <Atom size={80} className="text-white drop-shadow-lg" strokeWidth={1.5} />
-                        </motion.div>
-
-                        {/* Orbiting Elements */}
-                        <div className="absolute inset-0 z-10">
-                            <motion.div 
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                                className="absolute inset-0"
-                            >
-                                <div className="absolute top-10 left-1/2 -translate-x-1/2 w-12 h-12 bg-yellow-300 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
-                                    <Star size={20} className="text-yellow-600 fill-yellow-600" />
-                                </div>
-                                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-12 h-12 bg-emerald-400 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
-                                    <BookOpen size={20} className="text-white" />
-                                </div>
-                            </motion.div>
-                            
-                            <motion.div 
-                                animate={{ rotate: -360 }}
-                                transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                                className="absolute inset-0 scale-75"
-                            >
-                                <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-rose-400 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
-                                    <Heart size={18} className="text-white fill-white" />
-                                </div>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-sky-400 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
-                                    <Globe size={18} className="text-white" />
-                                </div>
-                            </motion.div>
-                        </div>
-
-                        {/* Background Rings */}
-                        <div className="absolute inset-0 z-0 flex items-center justify-center">
-                            <div className="w-[300px] h-[300px] border-2 border-white/30 rounded-full animate-pulse" />
-                            <div className="absolute w-[400px] h-[400px] border border-white/20 rounded-full" />
                         </div>
                     </motion.div>
                 </div>
