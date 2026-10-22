@@ -116,9 +116,14 @@ export const DailyDhikrWidget: React.FC = () => {
 
     const { addPoints } = useGamification();
 
-    // Stop speaking when switching dhikr or on unmount
+    // Stop speaking when switching dhikr, on unmount, or when Azan triggers
     useEffect(() => {
+        const handleStopAudio = () => {
+            stopSpeaking();
+        };
+        window.addEventListener('app:stop_all_audio', handleStopAudio);
         return () => {
+            window.removeEventListener('app:stop_all_audio', handleStopAudio);
             stopSpeaking();
         };
     }, []);

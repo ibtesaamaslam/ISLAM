@@ -465,6 +465,18 @@ const QuranReader = () => {
         };
     }, [sura, ayas]);
 
+    // Halt Quran audio when Azan or global sound halt triggers
+    useEffect(() => {
+        const handleGlobalStop = () => {
+            stopAudio();
+            stopTafseerAudio();
+        };
+        window.addEventListener('app:stop_all_audio', handleGlobalStop);
+        return () => {
+            window.removeEventListener('app:stop_all_audio', handleGlobalStop);
+        };
+    }, []);
+
     useEffect(() => {
         const fetchSura = async () => {
             setLoading(true);

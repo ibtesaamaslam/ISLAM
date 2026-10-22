@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { achievements as allAchievements, Achievement } from '../data/achievements';
+import { calculateLevelFromPoints, getLevelProgressMetrics, LevelProgressMetrics } from '../utils/levelScaling';
 
 interface GamificationState {
     points: number;
     level: number;
+    levelProgress: LevelProgressMetrics;
     unlockedAchievements: string[];
     addPoints: (amount: number) => void;
     unlockAchievement: (id: string) => void;
@@ -43,7 +45,8 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const [notification, setNotification] = useState<Achievement | null>(null);
 
-    const level = Math.min(100, Math.floor(points / 100) + 1);
+    const level = calculateLevelFromPoints(points);
+    const levelProgress = getLevelProgressMetrics(points);
 
     useEffect(() => {
         try {
@@ -83,6 +86,7 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         <GamificationContext.Provider value={{ 
             points, 
             level, 
+            levelProgress,
             unlockedAchievements, 
             addPoints, 
             unlockAchievement,

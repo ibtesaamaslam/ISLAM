@@ -10,7 +10,7 @@ interface LevelsAndAchievementsModalProps {
 }
 
 export const LevelsAndAchievementsModal: React.FC<LevelsAndAchievementsModalProps> = ({ isOpen, onClose }) => {
-    const { points, level, unlockedAchievements, achievements } = useGamification();
+    const { points, level, levelProgress, unlockedAchievements, achievements } = useGamification();
     const [activeTab, setActiveTab] = useState<'levels' | 'achievements' | 'earn'>('levels');
     const [selectedTierId, setSelectedTierId] = useState<number | 'all'>('all');
     const [filter, setFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
@@ -20,9 +20,7 @@ export const LevelsAndAchievementsModal: React.FC<LevelsAndAchievementsModalProp
     const currentLevelInfo = getLevelInfo(level);
     const currentTier = getTierForLevel(level);
 
-    const currentXpInLevel = points % 100;
-    const xpNeededForNext = level >= 100 ? 0 : 100 - currentXpInLevel;
-    const progressPercent = level >= 100 ? 100 : Math.min(100, Math.max(0, currentXpInLevel));
+    const { currentXpInLevel, xpNeededForNext, progressPercent, deltaForLevel } = levelProgress;
 
     // Scroll to current level when requested
     const scrollToCurrentLevel = () => {
@@ -117,7 +115,7 @@ export const LevelsAndAchievementsModal: React.FC<LevelsAndAchievementsModalProp
                                 {level >= 100 ? 'Supreme Level 100 Completed! 🏆' : `Level ${level} Progress`}
                             </span>
                             <span className="text-amber-800">
-                                {level >= 100 ? 'Maximum Level Master' : `${currentXpInLevel} / 100 XP (${xpNeededForNext} XP to Level ${level + 1})`}
+                                {level >= 100 ? 'Maximum Level Master' : `${currentXpInLevel} / ${deltaForLevel} XP (${xpNeededForNext} XP to Level ${level + 1})`}
                             </span>
                         </div>
                         <div className="w-full h-4 bg-amber-200/60 rounded-full overflow-hidden p-0.5 shadow-inner">

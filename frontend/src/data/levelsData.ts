@@ -1369,9 +1369,22 @@ export const LEVELS_100: LevelInfo[] = [
     }
 ];
 
+// Synchronize requiredXp with progressive level curve
+import { LEVEL_CUMULATIVE_XP } from '../utils/levelScaling';
+
+LEVELS_100.forEach((lvl) => {
+    if (LEVEL_CUMULATIVE_XP[lvl.level] !== undefined) {
+        lvl.requiredXp = LEVEL_CUMULATIVE_XP[lvl.level];
+    }
+});
+
 export const getLevelInfo = (levelNumber: number): LevelInfo => {
     const clamped = Math.max(1, Math.min(100, levelNumber));
-    return LEVELS_100[clamped - 1] || LEVELS_100[0];
+    const lvl = LEVELS_100[clamped - 1] || LEVELS_100[0];
+    return {
+        ...lvl,
+        requiredXp: LEVEL_CUMULATIVE_XP[lvl.level] ?? lvl.requiredXp
+    };
 };
 
 export const getTierForLevel = (levelNumber: number): LevelTier => {

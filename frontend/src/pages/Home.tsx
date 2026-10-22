@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { BookOpen, MessageCircle, Star, Sparkles, ChevronRight, Heart, Globe } from 'lucide-react';
 import DailyDhikrWidget from '../components/DailyDhikrWidget';
+import DailyStreakWidget from '../components/DailyStreakWidget';
+import PrayerTimesWidget from '../components/PrayerTimesWidget';
 
 const Home = () => {
     return (
@@ -71,6 +73,12 @@ const Home = () => {
                     </motion.div>
                 </div>
 
+                {/* Daily Streak Counter Widget */}
+                <DailyStreakWidget />
+
+                {/* Local Prayer Times Section with Geolocation & Azan */}
+                <PrayerTimesWidget />
+
                 {/* Daily Dhikr & Digital Tasbeeh Feature */}
                 <DailyDhikrWidget />
 
@@ -86,7 +94,7 @@ const Home = () => {
                         shadow="shadow-emerald-600"
                     />
                     <FeatureCard 
-                        to="/hadiths"
+                        to="/hadith"
                         icon={<Star size={32} className="text-white" />}
                         title="Hadith Heroes"
                         desc="Collect wisdom stars from the Prophet (PBUH) every day!"
