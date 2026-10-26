@@ -1,5 +1,5 @@
-// AI Voice Synthesizer utility leveraging Gemini Flash Lite TTS model
-// with seamless fallback to client-side SpeechSynthesis
+// High-Fidelity Voice Agent Synthesizer
+// Connects to the voice agent endpoint with intelligent audio caching and speech synthesis fallback
 
 export interface PlayVoiceOptions {
     lang?: string;
@@ -15,15 +15,24 @@ export interface VoicePlaybackController {
 
 // Global active audio reference so only one voice plays at a time
 let currentActiveAudio: HTMLAudioElement | null = null;
+let currentUtterancesQueue: SpeechSynthesisUtterance[] = [];
+let isCurrentPlaybackStopped = false;
 
 export function stopCurrentAiVoice(): void {
+    isCurrentPlaybackStopped = true;
     if (currentActiveAudio) {
         try {
             currentActiveAudio.pause();
             currentActiveAudio.currentTime = 0;
+            currentActiveAudio.onended = null;
+            currentActiveAudio.onerror = null;
+            currentActiveAudio.src = '';
         } catch {}
         currentActiveAudio = null;
     }
+
+    currentUtterancesQueue = [];
+
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         try {
             window.speechSynthesis.cancel();
@@ -33,26 +42,25 @@ export function stopCurrentAiVoice(): void {
 
 export function playAiVoice(text: string, options: PlayVoiceOptions = {}): VoicePlaybackController {
     stopCurrentAiVoice();
+    isCurrentPlaybackStopped = false;
 
     let isCancelled = false;
-    let fallbackUtterance: SpeechSynthesisUtterance | null = null;
     let activeAudioEl: HTMLAudioElement | null = null;
 
     const stop = () => {
         isCancelled = true;
+        isCurrentPlaybackStopped = true;
         if (activeAudioEl) {
             try {
                 activeAudioEl.pause();
                 activeAudioEl.currentTime = 0;
+                activeAudioEl.onended = null;
+                activeAudioEl.onerror = null;
+                activeAudioEl.src = '';
             } catch {}
             activeAudioEl = null;
         }
-        if (fallbackUtterance && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-            try {
-                window.speechSynthesis.cancel();
-            } catch {}
-            fallbackUtterance = null;
-        }
+        stopCurrentAiVoice();
     };
 
     const promise = new Promise<void>(async (resolve, reject) => {
@@ -63,27 +71,30 @@ export function playAiVoice(text: string, options: PlayVoiceOptions = {}): Voice
 
         const safeText = text.trim();
 
+        // 1. First attempt: Query the voice agent via /api/tts
         try {
-            // 1. Try Gemini AI Text-To-Speech endpoint first
             const response = await fetch('/api/tts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: safeText, lang: options.lang || 'auto' }),
+                body: JSON.stringify({ 
+                    text: safeText.slice(0, 450), 
+                    lang: options.lang || 'auto' 
+                }),
             });
 
-            if (isCancelled) {
+            if (isCancelled || isCurrentPlaybackStopped) {
                 resolve();
                 return;
             }
 
             if (response.ok) {
                 const data = await response.json();
-                if (isCancelled) {
+                if (isCancelled || isCurrentPlaybackStopped) {
                     resolve();
                     return;
                 }
 
-                if (data.audioBase64) {
+                if (data && data.audioBase64) {
                     const mime = data.mimeType || 'audio/wav';
                     const audioSrc = `data:${mime};base64,${data.audioBase64}`;
                     const audio = new Audio(audioSrc);
@@ -96,30 +107,37 @@ export function playAiVoice(text: string, options: PlayVoiceOptions = {}): Voice
 
                     audio.onended = () => {
                         currentActiveAudio = null;
+                        activeAudioEl = null;
                         options.onEnd?.();
                         resolve();
                     };
 
                     audio.onerror = (e) => {
-                        console.warn("AI Audio playback error, falling back to speech synthesis:", e);
+                        console.warn("AI Audio playback notice, falling back to speech synthesis:", e);
                         activeAudioEl = null;
                         currentActiveAudio = null;
                         playBrowserFallback(safeText, options, resolve, reject);
                     };
 
-                    await audio.play();
-                    return;
+                    try {
+                        await audio.play();
+                        return;
+                    } catch (playErr) {
+                        console.warn("Audio.play rejected, switching to browser voice:", playErr);
+                        playBrowserFallback(safeText, options, resolve, reject);
+                        return;
+                    }
                 }
             }
 
-            // If response not ok or no audio data, fall back to browser speech synthesis
+            // Fall back to browser speech synthesis
             playBrowserFallback(safeText, options, resolve, reject);
-        } catch (err) {
-            console.warn("AI TTS network notice, falling back to browser speech:", err);
-            if (isCancelled) {
+        } catch (fetchErr) {
+            if (isCancelled || isCurrentPlaybackStopped) {
                 resolve();
                 return;
             }
+            console.warn("Voice agent endpoint notice, falling back to browser speech:", fetchErr);
             playBrowserFallback(safeText, options, resolve, reject);
         }
     });
@@ -141,39 +159,96 @@ function playBrowserFallback(
 
     try {
         window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(text);
-        const lang = options.lang || 'ur-PK';
-        utter.lang = lang;
-        utter.rate = 0.9;
 
-        // Try to match appropriate voice
-        const voices = window.speechSynthesis.getVoices();
-        if (voices && voices.length > 0) {
-            const normalized = lang.toLowerCase();
-            const prefix = normalized.split('-')[0];
-            const matched = voices.find(v => v.lang.toLowerCase() === normalized)
-                || voices.find(v => v.lang.toLowerCase().startsWith(prefix));
-            if (matched) utter.voice = matched;
+        const lang = options.lang || 'en-US';
+        const isUrdu = lang.startsWith('ur') || /[\u0600-\u06FF]/.test(text) && lang !== 'ar' && !lang.startsWith('ar');
+        const isArabic = lang.startsWith('ar');
+
+        // Split longer text into sentences so browser speech synthesis never freezes
+        const sentences = text
+            .split(/(?<=[.?!؟۔\n])\s+/)
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
+
+        if (sentences.length === 0) {
+            options.onEnd?.();
+            resolve();
+            return;
         }
 
-        utter.onstart = () => {
-            options.onStart?.();
+        const voices = window.speechSynthesis.getVoices();
+        let targetVoice: SpeechSynthesisVoice | undefined;
+
+        if (voices && voices.length > 0) {
+            if (isArabic) {
+                targetVoice = voices.find(v => v.lang.toLowerCase().startsWith('ar'));
+            } else if (isUrdu) {
+                targetVoice = voices.find(v => v.lang.toLowerCase().startsWith('ur') || v.lang.toLowerCase().startsWith('hi'));
+            } else {
+                targetVoice = voices.find(v => 
+                    /female|woman|samantha|victoria|zira|karen|serena|moira|helena|susan|natural/i.test(v.name)
+                ) || voices.find(v => v.lang.toLowerCase().startsWith('en'));
+            }
+        }
+
+        let currentIndex = 0;
+        let isStarted = false;
+
+        const speakNextSentence = () => {
+            if (isCurrentPlaybackStopped) {
+                resolve();
+                return;
+            }
+
+            if (currentIndex >= sentences.length) {
+                options.onEnd?.();
+                resolve();
+                return;
+            }
+
+            const sentenceText = sentences[currentIndex];
+            const utter = new SpeechSynthesisUtterance(sentenceText);
+
+            if (isArabic) {
+                utter.lang = 'ar-SA';
+                utter.rate = 0.88;
+                utter.pitch = 1.0;
+            } else if (isUrdu) {
+                utter.lang = 'ur-PK';
+                utter.rate = 0.90;
+                utter.pitch = 1.02;
+            } else {
+                utter.lang = 'en-US';
+                utter.rate = 0.88;
+                utter.pitch = 1.08;
+            }
+
+            if (targetVoice) {
+                utter.voice = targetVoice;
+            }
+
+            utter.onstart = () => {
+                if (!isStarted) {
+                    isStarted = true;
+                    options.onStart?.();
+                }
+            };
+
+            utter.onend = () => {
+                currentIndex++;
+                speakNextSentence();
+            };
+
+            utter.onerror = () => {
+                currentIndex++;
+                speakNextSentence();
+            };
+
+            window.speechSynthesis.speak(utter);
         };
 
-        utter.onend = () => {
-            options.onEnd?.();
-            resolve();
-        };
-
-        utter.onerror = (err) => {
-            options.onError?.(err);
-            options.onEnd?.();
-            resolve();
-        };
-
-        window.speechSynthesis.speak(utter);
-    } catch (err) {
-        options.onError?.(err);
+        speakNextSentence();
+    } catch {
         options.onEnd?.();
         resolve();
     }

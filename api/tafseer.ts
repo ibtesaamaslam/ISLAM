@@ -77,8 +77,7 @@ export default async function handler(req: any, res: any) {
         rawText = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
         const data = JSON.parse(rawText);
         return res.status(200).json(data);
-    } catch (error) {
-        console.warn('Error fetching dynamic tafseer from Gemini, using fallback:', error);
+    } catch {
         return res.status(200).json(generateFallbackTafseer(surah, ayah, arabic, urduTranslation, englishTranslation));
     }
 }

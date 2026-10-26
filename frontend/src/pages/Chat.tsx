@@ -52,7 +52,7 @@ async function retrieveQuranGrounding(userQuery: string): Promise<string> {
     return '';
 }
 
-const ISLAMIC_ASSISTANT_SYSTEM_PROMPT = `You are an Islamic knowledge assistant for a web app ("Reclaim Your Heart" / "Ask Noor"). Your single most important rule is: NEVER fabricate or guess Islamic content. Hallucination in religious matters is a serious harm — it misleads people about their deen. Follow every rule below strictly, in order of priority.
+const ISLAMIC_ASSISTANT_SYSTEM_PROMPT = `You are an Islamic knowledge assistant for a web app ("Reclaim Your Heart" / "Ask Hikmah"). Your single most important rule is: NEVER fabricate or guess Islamic content. Hallucination in religious matters is a serious harm — it misleads people about their deen. Follow every rule below strictly, in order of priority.
 
 ═══════════════════════════════════════════
 1. GROUNDING RULES (Anti-Hallucination)
@@ -231,8 +231,8 @@ Question: ${userMsg.content}`;
                         <div className="absolute top-0 right-0 w-6 h-6 bg-green-400 rounded-full border-2 border-white animate-pulse" />
                         <Bot size={48} strokeWidth={2.5} />
                     </div>
-                    <h1 className="text-4xl font-black text-rose-500 mb-1 drop-shadow-sm">Ask Noor 🤖</h1>
-                    <p className="text-rose-400 font-bold text-lg">Your Friendly AI Islamic Guide (ELI12 & Bilingual)</p>
+                    <h1 className="text-4xl font-black text-rose-500 mb-1 drop-shadow-sm">Ask Hikmah</h1>
+                    <p className="text-rose-400 font-bold text-lg">Your Friendly AI Islamic Guide</p>
                 </motion.div>
 
                 <div className="flex-1 overflow-y-auto space-y-6 mb-6 p-4 scrollbar-hide">
@@ -246,7 +246,7 @@ Question: ${userMsg.content}`;
                                 <Sparkles className="text-rose-400 animate-pulse" size={64} />
                             </div>
                             <p className="font-black text-xl max-w-md text-rose-500">
-                                Salaam! I'm Noor. Ask me any question about Islam, the Quran, or daily practice! 🕌✨
+                                Salaam! I am Hikmah. Ask me any question about Islam, the Quran, or daily practice.
                             </p>
                             <p className="text-sm text-slate-500 max-w-sm">
                                 Accurate, authentic references explained simply in English & Urdu.

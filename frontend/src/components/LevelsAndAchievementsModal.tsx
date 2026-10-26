@@ -50,28 +50,19 @@ export const LevelsAndAchievementsModal: React.FC<LevelsAndAchievementsModalProp
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto">
-                {/* Backdrop */}
+            <div className="fixed inset-0 z-[90] flex flex-col w-full h-full bg-slate-900/70 backdrop-blur-md overflow-hidden">
+                {/* Full Window Modal Container */}
                 <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={onClose}
-                    className="fixed inset-0 bg-slate-900/65 backdrop-blur-md"
-                />
-
-                {/* Modal Container */}
-                <motion.div 
-                    initial={{ scale: 0.92, opacity: 0, y: 20 }}
-                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.92, opacity: 0, y: 20 }}
-                    transition={{ type: "spring", duration: 0.45, bounce: 0.15 }}
-                    className="relative z-10 w-full max-w-3xl bg-white rounded-[2.5rem] shadow-2xl border-4 border-amber-300 overflow-hidden flex flex-col max-h-[92vh]"
+                    initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98, y: 10 }}
+                    transition={{ type: "spring", duration: 0.35 }}
+                    className="relative z-10 w-full h-full bg-slate-50 flex flex-col overflow-hidden"
                 >
-                    {/* Header Bar */}
-                    <div className="relative bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 p-5 sm:p-7 text-white flex items-center justify-between shadow-md">
+                    {/* Full Window Header Bar */}
+                    <div className="relative bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 p-4 sm:p-6 text-white flex items-center justify-between shadow-md shrink-0">
                         {/* Decorative Background Elements */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-2xl -mr-20 -mt-20 pointer-events-none" />
+                        <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
 
                         <div className="relative z-10 flex items-center gap-3.5">
                             <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-inner border-2 border-white/40 text-3xl shrink-0">
@@ -98,13 +89,26 @@ export const LevelsAndAchievementsModal: React.FC<LevelsAndAchievementsModalProp
                             </div>
                         </div>
 
-                        <button 
-                            onClick={onClose}
-                            className="relative z-10 w-11 h-11 rounded-2xl bg-black/15 hover:bg-black/25 text-white flex items-center justify-center transition-all active:scale-95 shrink-0"
-                            title="Close"
-                        >
-                            <X size={22} strokeWidth={3} />
-                        </button>
+                        <div className="relative z-10 flex items-center gap-2">
+                            <a 
+                                href="/achievements"
+                                onClick={(e) => {
+                                    onClose();
+                                }}
+                                className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white/20 hover:bg-white/30 text-white font-black text-xs transition-all border border-white/30 shadow-xs"
+                                title="Open Full Achievement Gallery Page"
+                            >
+                                <Trophy size={15} className="text-yellow-200" />
+                                <span>Achievement Gallery</span>
+                            </a>
+                            <button 
+                                onClick={onClose}
+                                className="w-11 h-11 rounded-2xl bg-black/15 hover:bg-black/25 text-white flex items-center justify-center transition-all active:scale-95 shrink-0"
+                                title="Close Full Window"
+                            >
+                                <X size={22} strokeWidth={3} />
+                            </button>
+                        </div>
                     </div>
 
                     {/* Level Progress Banner */}

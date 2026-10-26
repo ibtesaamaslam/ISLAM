@@ -37,10 +37,10 @@ export default async function handler(req, res) {
             config: { responseMimeType: "application/json" }
         });
 
-        const questions = JSON.parse(response.text);
-        res.status(200).json(questions);
-    } catch (error) {
-        console.error('Error generating quiz:', error);
+        const parsed = JSON.parse(response.text);
+        const questionsList = Array.isArray(parsed) ? parsed : (parsed.questions || []);
+        res.status(200).json({ questions: questionsList });
+    } catch {
         res.status(500).json({ error: 'Failed to generate quiz' });
     }
 }

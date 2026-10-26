@@ -1,672 +1,576 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { Heart, Star, Sun, Moon, Cloud, Book, Sparkles, Compass, Atom, Dna, Globe, Leaf, Mountain, Wind, Droplets, Layers, Fingerprint, Target, Users, BookOpen, Clock, Coins, Utensils, MapPin, Scale, Coffee, Calendar, HeartHandshake, Undo, GraduationCap, HelpCircle, TrendingUp, Brain, Building, UserCheck, MessageSquare, Shield, Zap, Maximize, Orbit, Hammer, Baby, Thermometer, CloudRain, Waves, Hexagon, Bug, Network, Trophy, CheckCircle, XCircle, RotateCcw, Play, Lock } from 'lucide-react';
-import { Achievement } from '../../data/achievements';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import {
+  Search, BookOpen, Sparkles, Heart, Layers, Atom, Users, Shield, 
+  HeartHandshake, Globe, Compass, CheckCircle, XCircle, RotateCcw, 
+  Volume2, VolumeX, X, Bookmark, Award, ChevronRight, 
+  HelpCircle, Target, Sun, Moon, Clock, Coins, 
+  Leaf, Star, GraduationCap, Zap, Scale, Check
+} from 'lucide-react';
 import { useGamification } from '../../contexts/GamificationContext';
+import {
+  discoverTopics,
+  discoverCategories,
+  DiscoverTopic,
+  DiscoverCategory
+} from '../../data/discoverTopicsData';
+import { playAiVoice, stopCurrentAiVoice } from '../../utils/aiVoice';
 
-interface QuizQuestion {
-    question: string;
-    options: string[];
-    correct: number;
-}
-
-const guideCategories = [
-    {
-        title: "Foundations of Faith",
-        icon: <Heart className="text-rose-500" />,
-        steps: [
-            { title: "The Shahada", subtitle: "The Declaration of Faith", icon: <Fingerprint className="text-rose-500" />, content: "The essential first step is the Shahada: sincerely declaring “There is no god but God, and Muhammad is the Messenger of God.” This statement expresses belief in the oneness of God and acceptance of Prophet Muhammad’s message." },
-            { title: "Understanding Tawḥīd", subtitle: "Oneness of God", icon: <Target className="text-rose-500" />, content: "Tawḥīd is the core theological concept — belief that God is one, unique, without partners or equals. Grasping this idea shapes the Muslim worldview, worship, and ethics." },
-            { title: "Belief in the Prophets", subtitle: "and Revelation", icon: <Users className="text-rose-500" />, content: "Islam teaches a chain of prophets (including Adam, Abraham, Moses, Jesus, and Muhammad) who brought guidance. Accepting that Prophet Muhammad is the final messenger is key." },
-            { title: "The Qur’an", subtitle: "Reading and Respecting", icon: <BookOpen className="text-rose-500" />, content: "The Qur’an is the central scripture. Newcomers should know how it’s organized, the availability of reliable translations, and that respectful reading is encouraged." },
-        ]
-    },
-    {
-        title: "Pillars of Action",
-        icon: <Sun className="text-amber-500" />,
-        steps: [
-            { title: "Daily Prayer (Ṣalāh)", subtitle: "Structure & Meaning", icon: <Clock className="text-amber-500" />, content: "Prayer is a five-times-daily practice. Learning the short prayers, their times, and the spiritual purpose behind them (remembrance, discipline, gratitude) makes the ritual approachable." },
-            { title: "Wudu", subtitle: "Ritual Purification", icon: <Droplets className="text-amber-500" />, content: "Wudu (ablution) is the simple washing routine performed before prayer. It’s both practical hygiene and symbolic purification." },
-            { title: "Zakat & Charity", subtitle: "Social Responsibility", icon: <Coins className="text-amber-500" />, content: "Zakat is a prescribed form of charity. Understanding the ethical purpose — supporting the vulnerable — helps converts align values with practical giving." },
-            { title: "Fasting in Ramadan", subtitle: "Purpose and Practice", icon: <Utensils className="text-amber-500" />, content: "Fasting cultivates empathy and discipline. Guidance on fasting rules and the social aspects like ifṭār helps newcomers participate." },
-            { title: "Hajj", subtitle: "Pilgrimage Overview", icon: <MapPin className="text-amber-500" />, content: "Hajj is the pilgrimage to Mecca. A high-level explanation of its spiritual significance and basic rites is useful even if Hajj is a distant goal." },
-        ]
-    },
-    {
-        title: "Living Islam",
-        icon: <Leaf className="text-emerald-500" />,
-        steps: [
-            { title: "Intention (Niyyah)", subtitle: "Internal Purpose", icon: <Compass className="text-emerald-500" />, content: "Making a conscious inner commitment transforms routine actions into spiritual deeds; teaching newcomers to form simple, sincere intentions helps integrate faith." },
-            { title: "Ethics & Morality", subtitle: "Daily Conduct", icon: <Scale className="text-emerald-500" />, content: "Islam emphasizes compassion, honesty, and justice. Practical examples (kindness, fair dealings) demonstrate how faith translates into everyday behavior." },
-            { title: "Lifestyle Adjustments", subtitle: "Food & Habits", icon: <Coffee className="text-emerald-500" />, content: "Adopting halal dietary guidelines and mindful social habits. Present these as health- and value-based choices with simple, practical tips." },
-            { title: "Daily Habits", subtitle: "Mini-Rituals", icon: <Calendar className="text-emerald-500" />, content: "Simple habits: morning supplications, saying “Bismillah” before meals, and small acts of kindness build spiritual momentum." },
-            { title: "Marriage & Family", subtitle: "Guidance", icon: <HeartHandshake className="text-emerald-500" />, content: "Basic Islamic perspectives on marriage, family responsibilities, and rights, emphasizing mutual respect and care." },
-        ]
-    },
-    {
-        title: "Personal Growth",
-        icon: <Sparkles className="text-purple-500" />,
-        steps: [
-            { title: "Repentance (Tawbah)", subtitle: "Returning to God", icon: <Undo className="text-purple-500" />, content: "Repentance is immediate: sincere regret, stopping the action, and asking forgiveness. This comforting process helps understand Islam’s path of moral restoration." },
-            { title: "Learning & Study", subtitle: "Start Small", icon: <GraduationCap className="text-purple-500" />, content: "A gradual learning plan prevents overwhelm. Suggest curated beginner lessons and short daily readings." },
-            { title: "Handling Doubts", subtitle: "Compassionate Inquiry", icon: <HelpCircle className="text-purple-500" />, content: "Doubt is normal. Encourage honest exploration and critical thinking — reassure users that faith can coexist with sincere inquiry." },
-            { title: "Gradual Adoption", subtitle: "Patience", icon: <TrendingUp className="text-purple-500" />, content: "Spiritual journeys are personal. Encourage small steps rather than immediate perfection to avoid burnout." },
-            { title: "Mental Health", subtitle: "Pastoral Care", icon: <Brain className="text-purple-500" />, content: "Support spiritual and psychological wellbeing. Faith is a source of strength, but professional help is also encouraged for mental health." },
-        ]
-    },
-    {
-        title: "Community & Society",
-        icon: <Globe className="text-sky-500" />,
-        steps: [
-            { title: "Find a Community", subtitle: "Local Mosque", icon: <Building className="text-sky-500" />, content: "A welcoming local mosque provides practical help and social support. Guidance on what to expect when visiting a mosque reduces anxiety." },
-            { title: "Mentorship", subtitle: "Scholar Guidance", icon: <UserCheck className="text-sky-500" />, content: "Having a trustworthy mentor or qualified scholar to answer questions is invaluable compared to relying solely on internet sources." },
-            { title: "Social Dynamics", subtitle: "Family & Friends", icon: <MessageSquare className="text-sky-500" />, content: "Prepare newcomers with communication tips and patience strategies for managing relationships with non-Muslim family and friends." },
-            { title: "Community Service", subtitle: "Volunteering", icon: <Heart className="text-sky-500" />, content: "Connecting faith to action through volunteering — practical ways to live values and build a supportive social circle." },
-            { title: "Privacy & Safety", subtitle: "Public Identity", icon: <Shield className="text-sky-500" />, content: "Advice on managing online presence and safe ways to share one's journey publicly, especially in sensitive environments." },
-        ]
-    }
-];
-
-const scienceTopics = [
-    {
-        category: "Astronomy & Physics",
-        icon: <Atom className="text-indigo-500" />,
-        items: [
-            { title: "The Big Bang", reference: "Quran 21:30", icon: <Zap className="text-indigo-500" />, content: "“Do not the disbelievers see that the heavens and the earth were a closed-up mass (ratqan), then We opened them out?” This aligns with the Big Bang theory that the universe began from a single singularity." },
-            { title: "Expansion of the Universe", reference: "Quran 51:47", icon: <Maximize className="text-indigo-500" />, content: "“And the heaven We constructed with strength, and indeed, We are [its] expander.” Modern astrophysics confirmed in the 20th century that the universe is continuously expanding." },
-            { title: "Orbits of Celestial Bodies", reference: "Quran 21:33", icon: <Orbit className="text-indigo-500" />, content: "“It is He who created the night and the day and the sun and the moon; all [heavenly bodies] in an orbit are swimming.” This accurately describes the motion of celestial bodies." },
-            { title: "The Sun's Trajectory", reference: "Quran 36:38", icon: <Sun className="text-indigo-500" />, content: "“And the sun runs [on course] toward its stopping point.” The sun is not stationary; it moves within the Milky Way galaxy." },
-            { title: "Iron Sent from Space", reference: "Quran 57:25", icon: <Hammer className="text-indigo-500" />, content: "“And We sent down iron...” Scientists have discovered that iron cannot be formed within the earth; it originated from supernova explosions and was sent down via meteorites." }
-        ]
-    },
-    {
-        category: "Human Biology",
-        icon: <Dna className="text-rose-500" />,
-        items: [
-            { title: "Embryonic Development", reference: "Quran 23:12-14", icon: <Baby className="text-rose-500" />, content: "The Quran describes the stages of the fetus: from a drop (Nutfah) to a clinging clot (Alaqah), to a chewed lump (Mudghah), then bones clothed with flesh. This matches modern embryology." },
-            { title: "Creation from Water", reference: "Quran 21:30", icon: <Droplets className="text-rose-500" />, content: "“...and made from water every living thing?” Cytoplasm, the basic substance of the cell, is 80% water, and every living organism consists primarily of water." },
-            { title: "Pain Receptors", reference: "Quran 4:56", icon: <Thermometer className="text-rose-500" />, content: "The Quran mentions that skins will be replaced so they may taste the punishment, implying that pain receptors are located in the skin, a fact discovered by modern anatomy." },
-            { title: "The Frontal Lobe", reference: "Quran 96:15-16", icon: <Brain className="text-rose-500" />, content: "The Quran refers to the “lying, sinning forelock.” Modern neuroscience identifies the prefrontal cortex (forehead area) as the center for decision-making, planning, and lying." }
-        ]
-    },
-    {
-        category: "Geology & Earth",
-        icon: <Mountain className="text-stone-500" />,
-        items: [
-            { title: "Mountains as Pegs", reference: "Quran 78:6-7", icon: <Mountain className="text-stone-500" />, content: "“Have We not made the earth a resting place? And the mountains as stakes?” Mountains have deep roots (isostasy) that stabilize the earth's crust, like pegs holding a tent." },
-            { title: "The Water Cycle", reference: "Quran 39:21", icon: <CloudRain className="text-stone-500" />, content: "“Do you not see that Allah sends down rain from the sky and makes it flow as springs in the earth?” This describes the infiltration of groundwater, a key part of the water cycle." },
-            { title: "Layers of the Atmosphere", reference: "Quran 67:3", icon: <Layers className="text-stone-500" />, content: "“He who created seven heavens in layers.” The atmosphere is composed of distinct layers (troposphere, stratosphere, etc.), each with specific functions." },
-            { title: "Barrier Between Seas", reference: "Quran 55:19-20", icon: <Waves className="text-stone-500" />, content: "“He released the two seas... Between them is a barrier which they do not transgress.” Oceanography confirms that bodies of water with different salinities and densities meet but do not immediately mix." }
-        ]
-    },
-    {
-        category: "Nature & Zoology",
-        icon: <Leaf className="text-green-500" />,
-        items: [
-            { title: "Pollinating Winds", reference: "Quran 15:22", icon: <Wind className="text-green-500" />, content: "“And We have sent the fertilizing winds...” Winds play a crucial role in pollination for many plants, a botanical fact." },
-            { title: "Female Bees", reference: "Quran 16:68-69", icon: <Hexagon className="text-green-500" />, content: "The Quran addresses the bee using the female grammatical gender when describing its work (building hives, gathering nectar). Science confirms worker bees are female." },
-            { title: "Communication of Ants", reference: "Quran 27:18", icon: <Bug className="text-green-500" />, content: "“An ant said, 'O ants, enter your dwellings...'” Entomologists have discovered that ants have a complex chemical communication system to warn and guide the colony." },
-            { title: "The Spider's Web", reference: "Quran 29:41", icon: <Network className="text-green-500" />, content: "The Quran compares false reliance to a spider's web, noting it is the “weakest of houses.” It also uses the female gender for the spider building the web; biologically, the female builds the web." }
-        ]
-    }
-];
-
-const basicsContent = [
-    {
-        title: "Shahada",
-        subtitle: "Faith",
-        icon: <Heart className="text-rose-500" />,
-        description: "The declaration of faith: 'There is no god but Allah, and Muhammad is the Messenger of Allah.' It is the key to entering Islam.",
-        details: "This simple statement is the foundation of all Islamic beliefs. It affirms Monotheism (Tawhid) and the Prophethood of Muhammad (PBUH)."
-    },
-    {
-        title: "Salah",
-        subtitle: "Prayer",
-        icon: <Sun className="text-amber-500" />,
-        description: "Performing the five daily prayers to maintain a spiritual connection with God.",
-        details: "Fajr (Dawn), Dhuhr (Noon), Asr (Afternoon), Maghrib (Sunset), and Isha (Night). Prayer keeps us grounded and grateful."
-    },
-    {
-        title: "Zakat",
-        subtitle: "Charity",
-        icon: <Sparkles className="text-purple-500" />,
-        description: "Giving a fixed portion (2.5%) of one's wealth to help the poor and needy.",
-        details: "Zakat purifies wealth and fosters empathy. It ensures that the community looks after its most vulnerable members."
-    },
-    {
-        title: "Sawm",
-        subtitle: "Fasting",
-        icon: <Moon className="text-indigo-500" />,
-        description: "Fasting during the holy month of Ramadan from dawn until sunset.",
-        details: "Fasting teaches self-discipline, patience, and compassion for the hungry. It is a time for spiritual recharge and Quran recitation."
-    },
-    {
-        title: "Hajj",
-        subtitle: "Pilgrimage",
-        icon: <Book className="text-emerald-500" />,
-        description: "The pilgrimage to the holy city of Makkah, required once in a lifetime for those who are able.",
-        details: "Hajj unites Muslims from all over the world, dressed in simple white cloth, symbolizing equality before God."
-    }
-];
-
-const beliefsContent = [
-    {
-        title: "Belief in Allah",
-        icon: <Heart className="text-rose-500" />,
-        content: "Believing that God is One, Unique, and has no partners or children. He is the Creator and Sustainer of everything."
-    },
-    {
-        title: "Belief in Angels",
-        icon: <Sparkles className="text-sky-400" />,
-        content: "Angels are beings made of light who obey God's commands. They record deeds and protect humans (e.g., Gabriel/Jibreel)."
-    },
-    {
-        title: "Belief in Books",
-        icon: <Book className="text-emerald-500" />,
-        content: "God sent books to guide humanity, including the Torah (Moses), Psalms (David), Gospel (Jesus), and the Quran (Muhammad)."
-    },
-    {
-        title: "Belief in Prophets",
-        icon: <Star className="text-amber-400" />,
-        content: "God sent messengers to every nation, starting with Adam and ending with Muhammad (Peace Be Upon Him), to teach the truth."
-    },
-    {
-        title: "Belief in the Last Day",
-        icon: <Compass className="text-indigo-500" />,
-        content: "One day, all life will end, and everyone will be resurrected to be judged for their deeds. It is a day of absolute justice."
-    },
-    {
-        title: "Divine Decree (Qadr)",
-        icon: <Cloud className="text-slate-500" />,
-        content: "Everything happens by the will and knowledge of God. We have free will to choose, but God knows all outcomes."
-    }
-];
-
-const DiscoverIslam = () => {
-    const [activeSection, setActiveSection] = useState('basics');
-
-    // Quiz State
-    const [quizState, setQuizState] = useState<'start' | 'loading' | 'playing' | 'result'>('start');
-    const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
-    const [currentQuestion, setCurrentQuestion] = useState(0);
-    const [score, setScore] = useState(0);
-    const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-    const [quizTopic, setQuizTopic] = useState<string>('');
-    
-    // Achievements State
-    const { unlockedAchievements, achievements } = useGamification();
-    const [showAchievement, setShowAchievement] = useState<Achievement | null>(null);
-    const prevUnlockedCount = useRef(unlockedAchievements.length);
-
-    useEffect(() => {
-        if (unlockedAchievements.length > prevUnlockedCount.current) {
-            const lastId = unlockedAchievements[unlockedAchievements.length - 1];
-            const achievement = achievements.find(a => a.id === lastId);
-            if (achievement) {
-                setShowAchievement(achievement);
-                setTimeout(() => setShowAchievement(null), 3000);
-            }
-        }
-        prevUnlockedCount.current = unlockedAchievements.length;
-    }, [unlockedAchievements, achievements]);
-
-    const navItems = [
-        { id: 'basics', title: 'The 5 Pillars', icon: <Star className="text-amber-500" />, isGuide: false, guideIndex: -1 },
-        { id: 'beliefs', title: 'Articles of Faith', icon: <Heart className="text-rose-500" />, isGuide: false, guideIndex: -1 },
-        ...guideCategories.map((cat, idx) => ({
-            id: `guide-${idx}`,
-            title: cat.title,
-            icon: cat.icon,
-            isGuide: true,
-            guideIndex: idx
-        })),
-        { id: 'science', title: 'Islam & Science', icon: <Atom className="text-indigo-500" />, isGuide: false, guideIndex: -1 },
-        { id: 'achievements', title: 'Achievements', icon: <Trophy className="text-yellow-500" />, isGuide: false, guideIndex: -1 }
-    ];
-
-    const generateQuiz = async (topic: string) => {
-        setQuizTopic(topic);
-        setQuizState('loading');
-        setActiveSection('quiz');
-        
-        try {
-            const response = await fetch('/api/quiz', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ topic })
-            });
-            if (response.ok) {
-                const data = await response.json();
-                if (data && data.questions && data.questions.length > 0) {
-                    setQuizQuestions(data.questions);
-                    setCurrentQuestion(0);
-                    setScore(0);
-                    setSelectedAnswer(null);
-                    setQuizState('playing');
-                    return;
-                }
-            }
-            throw new Error('API Quiz generation failed');
-        } catch {
-            setQuizQuestions([
-                {
-                    question: "What is the first pillar of Islam?",
-                    options: ["Shahada (Faith)", "Salah (Prayer)", "Zakat (Charity)", "Hajj (Pilgrimage)"],
-                    correct: 0
-                },
-                {
-                    question: "How many daily prayers do Muslims perform?",
-                    options: ["3 prayers", "5 prayers", "7 prayers", "2 prayers"],
-                    correct: 1
-                },
-                {
-                    question: "In which holy month do Muslims fast?",
-                    options: ["Muharram", "Shawwal", "Ramadan", "Dhul Hijjah"],
-                    correct: 2
-                }
-            ]);
-            setCurrentQuestion(0);
-            setScore(0);
-            setSelectedAnswer(null);
-            setQuizState('playing');
-        }
-    };
-
-    const handleAnswer = (idx: number) => {
-        if (selectedAnswer !== null) return;
-        setSelectedAnswer(idx);
-        if (idx === quizQuestions[currentQuestion].correct) {
-            setScore(s => s + 10);
-        }
-        setTimeout(() => {
-            if (currentQuestion + 1 < quizQuestions.length) {
-                setCurrentQuestion(c => c + 1);
-                setSelectedAnswer(null);
-            } else {
-                setQuizState('result');
-            }
-        }, 1200);
-    };
-
-    const activeGuideCategory = navItems.find(item => item.id === activeSection)?.guideIndex;
-
-    return (
-        <div className="min-h-screen bg-slate-50 pb-32 font-sans selection:bg-emerald-200 selection:text-emerald-900 w-full overflow-x-hidden">
-            {/* Header Hero */}
-            <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white py-16 px-4 sm:px-8 text-center relative overflow-hidden shadow-xl">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.15),transparent)] pointer-events-none" />
-                <div className="relative z-10 max-w-4xl mx-auto">
-                    <span className="inline-block bg-white/20 backdrop-blur-sm px-6 py-2 rounded-full text-sm font-black uppercase tracking-widest text-yellow-300 mb-4 border border-white/30 shadow-sm">
-                        Adventure Time! 🌍
-                    </span>
-                    <h1 className="text-5xl md:text-7xl font-black mb-6 drop-shadow-lg">
-                        Discover Peace
-                    </h1>
-                    <p className="text-xl md:text-2xl text-emerald-50 max-w-2xl mx-auto font-bold leading-relaxed">
-                        Welcome to a journey of love, kindness, and understanding. Let's explore the beautiful world of Islam together! 🚀
-                    </p>
-                </div>
-            </div>
-
-            {/* Main Interactive Layout */}
-            <div className="w-full px-4 sm:px-8 lg:px-12 xl:px-16 mt-12">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
-                    
-                    {/* Sidebar Tabs */}
-                    <div className="lg:col-span-3 space-y-3 lg:sticky lg:top-4 z-20">
-                        {navItems.map((item) => (
-                            <button
-                                key={item.id}
-                                onClick={() => setActiveSection(item.id)}
-                                className={`w-full text-left p-4 rounded-2xl transition-all flex items-center gap-3 font-bold border-2 shadow-sm active:scale-95 cursor-pointer ${
-                                    activeSection === item.id
-                                        ? 'bg-emerald-500 text-white border-emerald-600 shadow-emerald-200'
-                                        : 'bg-white text-slate-600 border-slate-100 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600'
-                                }`}
-                            >
-                                <div className={`p-2 rounded-xl ${activeSection === item.id ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600'}`}>
-                                    {React.cloneElement(item.icon as any, { 
-                                        size: 20,
-                                        strokeWidth: 3,
-                                        className: activeSection === item.id ? 'text-white' : '' 
-                                    })}
-                                </div>
-                                <span className="text-sm">{item.title}</span>
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Content Panel */}
-                    <motion.div 
-                        key={activeSection}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="lg:col-span-9 bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl border-4 border-emerald-100 relative overflow-hidden w-full"
-                    >
-                        {/* 1. THE 5 PILLARS OF ISLAM */}
-                        {activeSection === 'basics' && (
-                            <div className="space-y-12 relative z-10">
-                                <div className="text-center mb-10">
-                                    <h2 className="text-4xl font-black text-emerald-600 mb-4 flex items-center justify-center gap-3">
-                                        <Star className="text-yellow-400 fill-yellow-400" size={40} />
-                                        The 5 Pillars of Islam
-                                    </h2>
-                                    <p className="text-slate-500 text-lg font-bold">Just like a house needs strong pillars to stand, Islam is built on 5 beautiful actions! 🏠</p>
-                                </div>
-                                <div className="grid grid-cols-1 gap-6">
-                                    {basicsContent.map((pillar, idx) => (
-                                        <motion.div 
-                                            key={idx}
-                                            whileHover={{ y: -8 }}
-                                            className="bg-white p-6 rounded-[2rem] border-4 border-slate-100 hover:border-emerald-300 transition-all shadow-sm hover:shadow-xl group flex items-start gap-6 text-left"
-                                        >
-                                            <div className="bg-emerald-50 w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner group-hover:scale-110 transition-transform duration-300">
-                                                {React.cloneElement(pillar.icon as any, { size: 40, strokeWidth: 2.5 })}
-                                            </div>
-                                            <div>
-                                                <h3 className="text-2xl font-black text-emerald-700 mb-2">{pillar.title}</h3>
-                                                <p className="text-emerald-500 text-xs font-black uppercase tracking-widest mb-2 bg-emerald-50 py-1 px-3 rounded-full inline-block">{pillar.subtitle}</p>
-                                                <p className="text-slate-700 font-bold mb-2 text-lg">{pillar.description}</p>
-                                                <p className="text-slate-500 text-sm leading-relaxed font-medium">{pillar.details}</p>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                                <div className="text-center mt-10">
-                                    <button 
-                                        onClick={() => generateQuiz('basics')}
-                                        className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black hover:bg-emerald-600 transition-all shadow-[0_6px_0_#059669] active:shadow-none active:translate-y-[6px] flex items-center gap-3 mx-auto text-lg cursor-pointer"
-                                    >
-                                        <Play size={24} fill="currentColor" /> Take a Fun Quiz!
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 2. ARTICLES OF FAITH */}
-                        {activeSection === 'beliefs' && (
-                            <div className="space-y-12 relative z-10">
-                                <div className="text-center mb-10">
-                                    <h2 className="text-4xl font-black text-emerald-600 mb-4 flex items-center justify-center gap-3">
-                                        <Heart className="text-rose-400 fill-rose-400" size={40} />
-                                        The 6 Articles of Faith
-                                    </h2>
-                                    <p className="text-slate-500 text-lg font-bold">The core beliefs that every Muslim holds in their heart. ❤️</p>
-                                </div>
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    {beliefsContent.map((item, idx) => (
-                                        <motion.div 
-                                            key={idx}
-                                            whileHover={{ scale: 1.02 }}
-                                            className="bg-white p-6 rounded-[2rem] shadow-sm border-4 border-emerald-50 flex items-start gap-5 hover:shadow-lg transition-all hover:border-emerald-200"
-                                        >
-                                            <div className="bg-emerald-100 p-4 rounded-2xl flex-shrink-0 text-emerald-600">
-                                                {React.cloneElement(item.icon as any, { size: 28, strokeWidth: 3 })}
-                                            </div>
-                                            <div>
-                                                <h3 className="text-xl font-black text-emerald-800 mb-2">{item.title}</h3>
-                                                <p className="text-slate-600 leading-relaxed text-lg font-medium">{item.content}</p>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                                
-                                <div className="bg-emerald-50 rounded-[2.5rem] p-10 text-center mt-10 border-4 border-emerald-100 relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-200 rounded-full -mr-10 -mt-10 opacity-20" />
-                                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-yellow-200 rounded-full -ml-10 -mb-10 opacity-30" />
-                                    
-                                    <h3 className="text-3xl font-black text-emerald-800 mb-4 relative z-10">Who is Allah?</h3>
-                                    <p className="text-emerald-900 text-xl leading-relaxed max-w-3xl mx-auto font-medium relative z-10">
-                                        Allah is the Arabic word for God. He is the Creator of the stars, the oceans, the animals, and you! He is not a man or a woman, and He has no partners. He is the Most Merciful and the Most Kind. 🌟
-                                    </p>
-                                </div>
-                                <div className="text-center mt-10">
-                                    <button 
-                                        onClick={() => generateQuiz('beliefs')}
-                                        className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black hover:bg-emerald-600 transition-all shadow-[0_6px_0_#059669] active:shadow-none active:translate-y-[6px] flex items-center gap-3 mx-auto text-lg cursor-pointer"
-                                    >
-                                        <Play size={24} fill="currentColor" /> Take a Quiz on Faith
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 3. STEP-BY-STEP GUIDES */}
-                        {activeGuideCategory !== undefined && activeGuideCategory >= 0 && (
-                            <div className="space-y-8 relative z-10">
-                                <div className="flex items-center gap-6 mb-10 border-b-4 border-slate-100 pb-8">
-                                    <div className="bg-emerald-100 p-6 rounded-[2rem] shadow-sm text-emerald-600">
-                                        {React.cloneElement(guideCategories[activeGuideCategory].icon as any, { size: 48, strokeWidth: 2.5 })}
-                                    </div>
-                                    <div>
-                                        <h3 className="text-4xl font-black text-slate-800 mb-2">{guideCategories[activeGuideCategory].title}</h3>
-                                        <p className="text-emerald-500 font-bold text-lg uppercase tracking-wider bg-emerald-50 px-4 py-1 rounded-full inline-block">Step-by-step guidance</p>
-                                    </div>
-                                </div>
-                                
-                                <div className="grid gap-6">
-                                    {guideCategories[activeGuideCategory].steps.map((step, stepIdx) => (
-                                        <motion.div
-                                            key={stepIdx}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: stepIdx * 0.1 }}
-                                            className="bg-white p-8 rounded-[2rem] shadow-sm border-4 border-emerald-50 hover:shadow-lg transition-all hover:border-emerald-200 group"
-                                        >
-                                            <div className="flex items-start gap-6">
-                                                <div className="bg-emerald-100 text-emerald-700 w-16 h-16 rounded-2xl flex items-center justify-center font-black text-xl flex-shrink-0 mt-1 shadow-inner group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300">
-                                                    {step.icon ? React.cloneElement(step.icon as any, { size: 28, strokeWidth: 2.5 }) : stepIdx + 1}
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-black text-emerald-800 text-2xl mb-2">{step.title}</h4>
-                                                    <p className="text-emerald-500 text-xs font-black uppercase tracking-widest mb-3 bg-emerald-50 px-3 py-1 rounded-full inline-block">{step.subtitle}</p>
-                                                    <p className="text-slate-600 leading-relaxed text-lg font-medium">{step.content}</p>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                                <div className="text-center mt-10">
-                                    <button 
-                                        onClick={() => generateQuiz(`guide-${guideCategories[activeGuideCategory].title}`)}
-                                        className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black hover:bg-emerald-600 transition-all shadow-[0_6px_0_#059669] active:shadow-none active:translate-y-[6px] flex items-center gap-3 mx-auto text-lg cursor-pointer"
-                                    >
-                                        <Play size={24} fill="currentColor" /> Quiz Time! 🧠
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 4. ISLAM & SCIENCE */}
-                        {activeSection === 'science' && (
-                            <div className="space-y-12 relative z-10">
-                                <div className="text-center mb-10">
-                                    <h2 className="text-4xl font-black text-emerald-600 mb-4 flex items-center justify-center gap-3">
-                                        <Atom className="text-indigo-500" size={40} />
-                                        Islam &amp; Science
-                                    </h2>
-                                    <p className="text-slate-600 text-lg font-bold">Exploring the scientific miracles mentioned in the Quran centuries ago! 🧪</p>
-                                </div>
-
-                                {scienceTopics.map((topic, idx) => (
-                                    <div key={idx} className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-lg border-4 border-emerald-100 relative overflow-hidden mb-8">
-                                        <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-50 rounded-bl-full -mr-10 -mt-10 opacity-50" />
-                                        
-                                        <div className="flex items-center gap-4 mb-8 relative z-10">
-                                            <div className="bg-emerald-100 p-4 rounded-2xl text-emerald-600">
-                                                {React.cloneElement(topic.icon as any, { size: 32, strokeWidth: 2.5 })}
-                                            </div>
-                                            <h3 className="text-3xl font-black text-emerald-900">{topic.category}</h3>
-                                        </div>
-                                        
-                                        <div className="grid md:grid-cols-2 gap-6 relative z-10">
-                                            {topic.items.map((item, itemIdx) => (
-                                                <motion.div 
-                                                    key={itemIdx}
-                                                    whileHover={{ scale: 1.02 }}
-                                                    className="bg-slate-50 p-6 rounded-[2rem] border-2 border-slate-100 hover:border-emerald-300 transition-all hover:bg-white hover:shadow-md"
-                                                >
-                                                    <div className="flex justify-between items-start mb-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="bg-white p-3 rounded-xl shadow-sm text-emerald-600">
-                                                                {item.icon && React.cloneElement(item.icon as any, { size: 20, strokeWidth: 2.5 })}
-                                                            </div>
-                                                            <h4 className="font-black text-slate-800 text-lg">{item.title}</h4>
-                                                        </div>
-                                                        <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1 rounded-full whitespace-nowrap uppercase tracking-wider">
-                                                            {item.reference}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-slate-600 leading-relaxed font-medium">{item.content}</p>
-                                                </motion.div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                                <div className="text-center mt-10">
-                                    <button 
-                                        onClick={() => generateQuiz('science')}
-                                        className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black hover:bg-emerald-600 transition-all shadow-[0_6px_0_#059669] active:shadow-none active:translate-y-[6px] flex items-center gap-3 mx-auto text-lg cursor-pointer"
-                                    >
-                                        <Play size={24} fill="currentColor" /> Take a Science Quiz!
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 5. ACHIEVEMENTS */}
-                        {activeSection === 'achievements' && (
-                            <div className="w-full relative z-10">
-                                <div className="text-center mb-10">
-                                    <h2 className="text-4xl font-black text-emerald-800 mb-4 flex items-center justify-center gap-3">
-                                        <Trophy className="text-yellow-500 fill-yellow-500" size={40} />
-                                        Your Achievements
-                                    </h2>
-                                    <p className="text-slate-600 text-lg font-bold">Collect badges as you learn! Can you get them all? 🏆</p>
-                                </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                    {achievements.map((achievement) => {
-                                        const isUnlocked = unlockedAchievements.includes(achievement.id);
-                                        return (
-                                            <motion.div 
-                                                key={achievement.id}
-                                                whileHover={{ scale: 1.02 }}
-                                                className={`p-6 rounded-[2rem] border-4 transition-all relative overflow-hidden flex items-center gap-6 text-left ${
-                                                    isUnlocked 
-                                                        ? 'bg-white border-emerald-200 shadow-lg' 
-                                                        : 'bg-slate-50 border-slate-100 opacity-70 grayscale'
-                                                }`}
-                                            >
-                                                {isUnlocked && <div className="absolute top-0 right-0 w-16 h-16 bg-yellow-100 rounded-bl-full -mr-8 -mt-8 opacity-50" />}
-                                                
-                                                <div className="text-5xl transform transition-transform hover:scale-110 duration-300 flex-shrink-0">{achievement.icon}</div>
-                                                <div>
-                                                    <h3 className="font-black text-slate-800 text-lg mb-1 uppercase tracking-wide">{achievement.title}</h3>
-                                                    <p className="text-sm text-slate-500 font-bold leading-relaxed">{achievement.description}</p>
-                                                    {!isUnlocked && (
-                                                        <div className="mt-2 bg-slate-200 text-slate-500 text-[10px] font-black uppercase tracking-widest py-1 px-3 rounded-full inline-flex items-center gap-1">
-                                                            <Lock size={10} /> Locked
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </motion.div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 6. QUIZ PLAYING / RESULT */}
-                        {activeSection === 'quiz' && (
-                            <div className="max-w-3xl mx-auto relative z-10">
-                                {quizState === 'loading' && (
-                                    <div className="text-center py-20 flex flex-col items-center gap-6">
-                                        <div className="w-20 h-20 border-8 border-emerald-100 border-t-emerald-500 rounded-full animate-spin" />
-                                        <h3 className="text-2xl font-black text-slate-700 animate-pulse">Cooking up a fun quiz... 🍳</h3>
-                                    </div>
-                                )}
-
-                                {quizState === 'playing' && quizQuestions.length > 0 && (
-                                    <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl border-4 border-emerald-100 relative overflow-hidden">
-                                        <div className="absolute top-0 left-0 w-full h-2 bg-slate-100">
-                                            <div 
-                                                className="h-full bg-emerald-500 transition-all duration-500 ease-out"
-                                                style={{ width: `${((currentQuestion + 1) / quizQuestions.length) * 100}%` }}
-                                            />
-                                        </div>
-
-                                        <div className="flex justify-between items-center mb-10 mt-4">
-                                            <span className="font-black text-slate-400 uppercase tracking-widest text-sm bg-slate-100 px-4 py-2 rounded-full">
-                                                Question {currentQuestion + 1} / {quizQuestions.length}
-                                            </span>
-                                            <span className="font-black text-emerald-600 uppercase tracking-widest text-sm bg-emerald-100 px-4 py-2 rounded-full flex items-center gap-2">
-                                                <Star size={14} fill="currentColor" /> Score: {score}
-                                            </span>
-                                        </div>
-
-                                        <h3 className="text-3xl font-black text-slate-800 mb-10 leading-relaxed">
-                                            {quizQuestions[currentQuestion].question}
-                                        </h3>
-
-                                        <div className="space-y-4">
-                                            {quizQuestions[currentQuestion].options.map((option, idx) => {
-                                                const isSelected = selectedAnswer === idx;
-                                                const isCorrect = idx === quizQuestions[currentQuestion].correct;
-                                                const showResult = selectedAnswer !== null;
-                                                
-                                                let buttonClass = "w-full p-5 rounded-2xl text-left font-bold text-lg transition-all border-4 shadow-sm cursor-pointer ";
-                                                if (showResult) {
-                                                    if (isCorrect) buttonClass += "bg-emerald-100 border-emerald-500 text-emerald-800";
-                                                    else if (isSelected) buttonClass += "bg-rose-100 border-rose-500 text-rose-800";
-                                                    else buttonClass += "bg-slate-50 border-slate-100 text-slate-400 opacity-50";
-                                                } else {
-                                                    buttonClass += "bg-white border-slate-100 hover:border-emerald-300 hover:bg-emerald-50 text-slate-700 hover:shadow-md active:scale-[0.99]";
-                                                }
-
-                                                return (
-                                                    <button
-                                                        key={idx}
-                                                        onClick={() => handleAnswer(idx)}
-                                                        disabled={selectedAnswer !== null}
-                                                        className={buttonClass}
-                                                    >
-                                                        <div className="flex justify-between items-center">
-                                                            <span>{option}</span>
-                                                            {showResult && isCorrect && <CheckCircle className="text-emerald-600" size={28} strokeWidth={3} />}
-                                                            {showResult && isSelected && !isCorrect && <XCircle className="text-rose-600" size={28} strokeWidth={3} />}
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {quizState === 'result' && (
-                                    <div className="text-center py-12">
-                                        <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6 text-yellow-500 shadow-inner">
-                                            <Trophy size={48} />
-                                        </div>
-                                        <h3 className="text-4xl font-black text-slate-800 mb-2">Awesome Job! 🎉</h3>
-                                        <p className="text-xl text-slate-500 font-bold mb-8">You scored {score} points on this quiz!</p>
-                                        <button
-                                            onClick={() => setActiveSection('basics')}
-                                            className="bg-emerald-500 text-white px-8 py-4 rounded-2xl font-black hover:bg-emerald-600 transition-all shadow-[0_6px_0_#059669] active:shadow-none active:translate-y-[6px] cursor-pointer"
-                                        >
-                                            Explore More Topics
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                    </motion.div>
-                </div>
-            </div>
-        </div>
-    );
+// Map icon string names to Lucide icon components or emojis with matching colors
+const getTopicIcon = (iconName: string, categoryId: string) => {
+  switch (iconName) {
+    case 'Heart':
+      return <Heart className="w-7 h-7 text-rose-500 fill-rose-50 stroke-[2.2]" />;
+    case 'Sun':
+      return <Sun className="w-7 h-7 text-amber-500 fill-amber-50 stroke-[2.2]" />;
+    case 'Coins':
+      return <Coins className="w-7 h-7 text-emerald-600 stroke-[2.2]" />;
+    case 'Moon':
+      return <Moon className="w-7 h-7 text-indigo-500 fill-indigo-50 stroke-[2.2]" />;
+    case 'Compass':
+      return <Compass className="w-7 h-7 text-teal-600 stroke-[2.2]" />;
+    case 'Target':
+      return <Target className="w-7 h-7 text-rose-500 stroke-[2.2]" />;
+    case 'Sparkles':
+      return <Sparkles className="w-7 h-7 text-amber-500 fill-amber-50 stroke-[2.2]" />;
+    case 'BookOpen':
+      return <BookOpen className="w-7 h-7 text-indigo-600 stroke-[2.2]" />;
+    case 'Users':
+      return <Users className="w-7 h-7 text-sky-600 stroke-[2.2]" />;
+    case 'Scale':
+      return <Scale className="w-7 h-7 text-slate-700 stroke-[2.2]" />;
+    case 'Atom':
+      return <Atom className="w-7 h-7 text-indigo-500 stroke-[2.2]" />;
+    case 'GraduationCap':
+      return <GraduationCap className="w-7 h-7 text-emerald-600 stroke-[2.2]" />;
+    case 'Shield':
+      return <Shield className="w-7 h-7 text-teal-600 stroke-[2.2]" />;
+    case 'Leaf':
+      return <Leaf className="w-7 h-7 text-emerald-600 stroke-[2.2]" />;
+    case 'Globe':
+      return <Globe className="w-7 h-7 text-blue-600 stroke-[2.2]" />;
+    case 'Zap':
+      return <Zap className="w-7 h-7 text-amber-500 stroke-[2.2]" />;
+    case 'Star':
+      return <Star className="w-7 h-7 text-amber-400 fill-amber-400 stroke-[2.2]" />;
+    default:
+      return <Heart className="w-7 h-7 text-emerald-600 stroke-[2.2]" />;
+  }
 };
 
-export default DiscoverIslam;
+const getCategoryIcon = (iconName: string, isSelected: boolean) => {
+  const iconClass = `w-5 h-5 ${isSelected ? 'text-white' : 'text-emerald-600'}`;
+  switch (iconName) {
+    case 'Star':
+      return <Star className={iconClass} />;
+    case 'Heart':
+      return <Heart className={iconClass} />;
+    case 'Sun':
+      return <Sun className={iconClass} />;
+    case 'Leaf':
+      return <Leaf className={iconClass} />;
+    case 'Sparkles':
+      return <Sparkles className={iconClass} />;
+    case 'Globe':
+      return <Globe className={iconClass} />;
+    case 'Atom':
+      return <Atom className={iconClass} />;
+    case 'GraduationCap':
+      return <GraduationCap className={iconClass} />;
+    case 'Users':
+      return <Users className={iconClass} />;
+    case 'Shield':
+      return <Shield className={iconClass} />;
+    case 'HeartHandshake':
+      return <HeartHandshake className={iconClass} />;
+    default:
+      return <Compass className={iconClass} />;
+  }
+};
+
+export default function DiscoverIslam() {
+  const { points, level, addPoints, unlockAchievement } = useGamification();
+
+  // Selected Category (defaulting to the exact 5 Pillars matching image_9b13a83e.png)
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('five_pillars');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [expandedTopicId, setExpandedTopicId] = useState<string | null>(null);
+
+  // Quiz Modal State
+  const [activeQuizTopic, setActiveQuizTopic] = useState<DiscoverTopic | null>(null);
+  const [selectedQuizOption, setSelectedQuizOption] = useState<number | null>(null);
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+
+  // Audio Speaking State
+  const [speakingTopicId, setSpeakingTopicId] = useState<string | null>(null);
+
+  // Saved Topics
+  const [savedTopicIds, setSavedTopicIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('app_saved_discover_topics');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Stop audio when unmounting or event triggered
+  useEffect(() => {
+    const handleStopAudio = () => {
+      stopCurrentAiVoice();
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      setSpeakingTopicId(null);
+    };
+
+    window.addEventListener('app:stop_all_audio', handleStopAudio);
+    return () => {
+      window.removeEventListener('app:stop_all_audio', handleStopAudio);
+      stopCurrentAiVoice();
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  const toggleBookmark = (topicId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setSavedTopicIds((prev) => {
+      const updated = prev.includes(topicId)
+        ? prev.filter((id) => id !== topicId)
+        : [...prev, topicId];
+      try {
+        localStorage.setItem('app_saved_discover_topics', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const handleToggleSpeech = (topic: DiscoverTopic, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+
+    if (speakingTopicId === topic.id) {
+      stopCurrentAiVoice();
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      setSpeakingTopicId(null);
+      return;
+    }
+
+    setSpeakingTopicId(topic.id);
+    const textToSpeak = `${topic.title}. ${topic.subtitle}. ${topic.content}`;
+
+    playAiVoice(textToSpeak, {
+      lang: 'en-US',
+      onEnd: () => setSpeakingTopicId(null),
+      onError: () => setSpeakingTopicId(null)
+    });
+  };
+
+  const handleQuizSubmit = () => {
+    if (selectedQuizOption === null || !activeQuizTopic) return;
+    setQuizSubmitted(true);
+
+    if (selectedQuizOption === activeQuizTopic.quiz.correct) {
+      addPoints(25);
+      unlockAchievement('perfect_score');
+      unlockAchievement('knowledge_five_pillars');
+    }
+  };
+
+  // Find active category
+  const currentCategory = useMemo(() => {
+    return discoverCategories.find((c) => c.id === selectedCategoryId) || discoverCategories[0];
+  }, [selectedCategoryId]);
+
+  // Filter topics
+  const displayedTopics = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (q) {
+      // If user is searching, search across all 100+ topics
+      return discoverTopics.filter((topic) => {
+        const titleMatch = topic.title.toLowerCase().includes(q);
+        const subtitleMatch = topic.subtitle.toLowerCase().includes(q);
+        const contentMatch = topic.content.toLowerCase().includes(q);
+        const tagMatch = topic.tag.toLowerCase().includes(q);
+        const categoryMatch = topic.category.toLowerCase().includes(q);
+        return titleMatch || subtitleMatch || contentMatch || tagMatch || categoryMatch;
+      });
+    }
+
+    // Otherwise show topics for currently selected category
+    // Also include fallback for legacy category mapping
+    return discoverTopics.filter((t) => {
+      if (t.categoryId === selectedCategoryId) return true;
+      if (selectedCategoryId === 'science' && t.categoryId === 'science') return true;
+      if (selectedCategoryId === 'pioneers' && t.categoryId === 'pioneers') return true;
+      if (selectedCategoryId === 'prophets' && t.categoryId === 'prophets') return true;
+      if (selectedCategoryId === 'companions' && t.categoryId === 'companions') return true;
+      if (selectedCategoryId === 'ethics' && t.categoryId === 'ethics') return true;
+      if (selectedCategoryId === 'community_society' && (t.categoryId === 'society' || t.categoryId === 'community_society')) return true;
+      return false;
+    });
+  }, [selectedCategoryId, searchQuery]);
+
+  return (
+    <div className="min-h-screen bg-slate-100/60 pb-36 font-sans selection:bg-emerald-200 selection:text-emerald-950">
+      {/* ======================================================== */}
+      {/* 1. TOP GREEN HERO BANNER (Matches screenshot image_9b13a83e) */}
+      {/* ======================================================== */}
+      <div className="relative bg-gradient-to-b from-[#0e9f6e] via-[#0b8a5e] to-[#047857] text-white pt-8 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Subtle decorative circles */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-black/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="w-full max-w-[96rem] mx-auto relative z-10">
+          {/* Top Row: Level & Points Pill (Right) */}
+          <div className="flex justify-end mb-2">
+            <div className="inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full shadow-md border-2 border-amber-300 text-slate-800 text-xs sm:text-sm font-black">
+              <span className="uppercase text-[11px] text-slate-600 font-bold">LVL {level}</span>
+              <Star size={16} className="text-amber-400 fill-amber-400" />
+              <span>{points}</span>
+            </div>
+          </div>
+
+          {/* Centered Hero Heading */}
+          <div className="text-center max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-800/70 border border-emerald-400/50 text-amber-300 font-black text-xs uppercase tracking-wider mb-3 shadow-xs">
+              <span>ADVENTURE TIME! 🌍</span>
+            </div>
+
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight drop-shadow-sm">
+              Discover Peace
+            </h1>
+
+            <p className="mt-3 text-sm sm:text-base md:text-lg text-emerald-50/95 font-medium leading-relaxed max-w-2xl mx-auto">
+              Welcome to a journey of love, kindness, and understanding. Let's explore the beautiful world of Islam together! 🚀
+            </p>
+
+            {/* Prominent Search Bar without 100+ */}
+            <div className="mt-6 max-w-xl mx-auto">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search modules by topic, prophet, science, or deed..."
+                  className="w-full pl-12 pr-10 py-3.5 bg-white rounded-2xl border-2 border-emerald-300 shadow-xl font-bold text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-white text-sm sm:text-base transition-all"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ======================================================== */}
+      {/* 2. FULL WIDTH TWO-COLUMN LAYOUT */}
+      {/* ======================================================== */}
+      <div className="w-full max-w-[96rem] mx-auto px-2 sm:px-6 lg:px-8 -mt-8 relative z-20">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          
+          {/* LEFT SIDEBAR: Category List */}
+          <div className="w-full lg:w-80 shrink-0 space-y-2.5">
+            {discoverCategories.map((cat) => {
+              const isSelected = selectedCategoryId === cat.id && !searchQuery;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategoryId(cat.id);
+                    setSearchQuery('');
+                  }}
+                  className={`w-full p-4 rounded-2xl flex items-center gap-3.5 font-bold text-left transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-emerald-500 text-white shadow-lg ring-2 ring-emerald-300 scale-[1.01]'
+                      : 'bg-white text-slate-800 hover:bg-slate-50 border border-slate-100 shadow-2xs'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                    isSelected ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600'
+                  }`}>
+                    {getCategoryIcon(cat.iconName, isSelected)}
+                  </div>
+                  <span className="text-sm sm:text-base font-bold flex-1">
+                    {cat.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* RIGHT MAIN CONTENT: Rounded Container with Modules */}
+          <div className="flex-1 w-full bg-white rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-10 border-2 border-emerald-100 shadow-xl min-h-[500px]">
+            {/* Header inside right container */}
+            <div className="text-center mb-8 pb-6 border-b border-emerald-100/70">
+              <h2 className="text-2xl sm:text-3xl font-black text-emerald-700 tracking-tight flex items-center justify-center gap-2">
+                <span>{searchQuery ? `Search Results (${displayedTopics.length})` : `⭐ ${currentCategory.name}`}</span>
+              </h2>
+              <p className="mt-1.5 text-xs sm:text-sm text-slate-600 font-medium max-w-lg mx-auto">
+                {searchQuery
+                  ? `Showing all modules matching "${searchQuery}" across all topics`
+                  : currentCategory.subtitle
+                }
+              </p>
+            </div>
+
+            {/* Topics Cards List */}
+            {displayedTopics.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-base font-bold text-slate-600">No matching topics found.</p>
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="mt-3 px-4 py-2 bg-emerald-600 text-white font-bold rounded-xl text-xs"
+                >
+                  Clear Search
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4 sm:space-y-5">
+                {displayedTopics.map((topic) => {
+                  const isSpeaking = speakingTopicId === topic.id;
+                  const isExpanded = expandedTopicId === topic.id;
+                  const isSaved = savedTopicIds.includes(topic.id);
+
+                  return (
+                    <motion.div
+                      key={topic.id}
+                      layout
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="border border-emerald-100/90 rounded-2xl sm:rounded-3xl p-5 sm:p-6 bg-white hover:border-emerald-300 transition-all shadow-2xs hover:shadow-sm"
+                    >
+                      <div className="flex items-start gap-4 sm:gap-5">
+                        {/* Left rounded square icon box */}
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50/80 border border-emerald-100 flex items-center justify-center shrink-0 shadow-xs">
+                          {getTopicIcon(topic.iconName, topic.categoryId)}
+                        </div>
+
+                        {/* Middle Content */}
+                        <div className="flex-1 min-w-0">
+                          {/* Title */}
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <h3 className="text-lg sm:text-xl font-black text-emerald-800 tracking-tight">
+                              {topic.title}
+                            </h3>
+
+                            {/* Actions (Listen, Bookmark, Quiz) */}
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={(e) => handleToggleSpeech(topic, e)}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                                  isSpeaking
+                                    ? 'bg-rose-500 text-white animate-pulse'
+                                    : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                                }`}
+                                title="Listen to narration"
+                              >
+                                <Volume2 size={13} />
+                                <span>{isSpeaking ? 'STOP' : 'LISTEN'}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveQuizTopic(topic);
+                                  setSelectedQuizOption(null);
+                                  setQuizSubmitted(false);
+                                }}
+                                className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200 transition-all flex items-center gap-1 cursor-pointer"
+                                title="Quick Quiz"
+                              >
+                                <Sparkles size={13} className="text-amber-500" />
+                                <span>QUIZ</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={(e) => toggleBookmark(topic.id, e)}
+                                className={`p-1 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+                                  isSaved
+                                    ? 'bg-rose-50 text-rose-600 border-rose-200'
+                                    : 'text-slate-400 hover:text-slate-600 border-slate-200'
+                                }`}
+                                title="Save to favorites"
+                              >
+                                <Bookmark size={14} className={isSaved ? 'fill-rose-500' : ''} />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Category Pill Tag */}
+                          <div className="mt-1 mb-2">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-md inline-block">
+                              {topic.tag}
+                            </span>
+                          </div>
+
+                          {/* Bold Primary Summary */}
+                          <p className="text-xs sm:text-sm font-bold text-slate-800 leading-relaxed">
+                            {topic.subtitle}
+                          </p>
+
+                          {/* Detailed Explanation */}
+                          <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed mt-1">
+                            {topic.content}
+                          </p>
+
+                          {/* Expandable Key Takeaways & Evidence */}
+                          <div className="mt-3">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedTopicId(isExpanded ? null : topic.id)}
+                              className="text-xs font-black text-emerald-700 hover:text-emerald-900 inline-flex items-center gap-1 cursor-pointer"
+                            >
+                              <span>{isExpanded ? 'Hide Insights' : 'View Key Insights & Evidence'}</span>
+                              <ChevronRight size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
+                            </button>
+
+                            <AnimatePresence>
+                              {isExpanded && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  className="mt-3 pt-3 border-t border-slate-100 text-xs space-y-2 overflow-hidden"
+                                >
+                                  {topic.keyTakeaways && topic.keyTakeaways.length > 0 && (
+                                    <div className="bg-emerald-50/60 p-3 rounded-xl border border-emerald-100/70">
+                                      <span className="font-black text-emerald-900 uppercase tracking-wide text-[10px] block mb-1">
+                                        Key Takeaways:
+                                      </span>
+                                      <ul className="space-y-1">
+                                        {topic.keyTakeaways.map((takeaway, tIdx) => (
+                                          <li key={tIdx} className="flex items-start gap-1.5 text-slate-700">
+                                            <span className="text-emerald-600 font-bold">•</span>
+                                            <span>{takeaway}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+
+                                  {topic.evidenceOrCitation && (
+                                    <div className="bg-amber-50/50 p-2.5 rounded-xl border border-amber-200/70 text-slate-700 italic">
+                                      <span className="font-bold text-amber-900 not-italic block mb-0.5">Reference:</span>
+                                      "{topic.evidenceOrCitation}"
+                                    </div>
+                                  )}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ======================================================== */}
+      {/* 3. INTERACTIVE QUIZ MODAL */}
+      {/* ======================================================== */}
+      <AnimatePresence>
+        {activeQuizTopic && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border-4 border-emerald-300 relative"
+            >
+              <button
+                onClick={() => setActiveQuizTopic(null)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-md">
+                  Knowledge Check &bull; +25 XP
+                </span>
+              </div>
+
+              <h3 className="text-lg sm:text-xl font-black text-slate-900 mb-4">
+                {activeQuizTopic.quiz.question}
+              </h3>
+
+              <div className="space-y-2.5 mb-5">
+                {activeQuizTopic.quiz.options.map((option, optIdx) => {
+                  const isSelected = selectedQuizOption === optIdx;
+                  const isCorrect = optIdx === activeQuizTopic.quiz.correct;
+
+                  let btnStyle = 'bg-white border-slate-200 hover:bg-emerald-50 text-slate-800';
+                  if (quizSubmitted) {
+                    if (isCorrect) {
+                      btnStyle = 'bg-emerald-500 text-white border-emerald-600 font-black';
+                    } else if (isSelected && !isCorrect) {
+                      btnStyle = 'bg-rose-500 text-white border-rose-600';
+                    }
+                  } else if (isSelected) {
+                    btnStyle = 'bg-emerald-100 text-emerald-900 border-emerald-400 font-bold';
+                  }
+
+                  return (
+                    <button
+                      key={optIdx}
+                      type="button"
+                      disabled={quizSubmitted}
+                      onClick={() => setSelectedQuizOption(optIdx)}
+                      className={`w-full p-3 rounded-xl border-2 text-left text-xs sm:text-sm font-bold transition-all flex items-center justify-between cursor-pointer ${btnStyle}`}
+                    >
+                      <span>{option}</span>
+                      {quizSubmitted && isCorrect && <Check size={16} className="text-white shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {quizSubmitted && (
+                <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-xs text-slate-700 mb-4">
+                  <span className="font-bold text-emerald-900 block mb-0.5">
+                    {selectedQuizOption === activeQuizTopic.quiz.correct ? '🎉 Correct Answer! (+25 XP)' : '💡 Learning Insight:'}
+                  </span>
+                  {activeQuizTopic.quiz.explanation}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2">
+                {!quizSubmitted ? (
+                  <button
+                    type="button"
+                    disabled={selectedQuizOption === null}
+                    onClick={handleQuizSubmit}
+                    className="py-2.5 px-6 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-xs rounded-xl shadow-md cursor-pointer"
+                  >
+                    Submit Answer
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setActiveQuizTopic(null)}
+                    className="py-2.5 px-6 bg-slate-800 hover:bg-slate-900 text-white font-black text-xs rounded-xl shadow-md cursor-pointer"
+                  >
+                    Close
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

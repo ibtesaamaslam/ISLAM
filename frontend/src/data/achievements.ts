@@ -80,7 +80,8 @@ export const achievements: Achievement[] = [
     { id: 'quran_explorer', title: 'Quran Explorer', description: 'Read 10 Ayahs', icon: '📖', condition: (score, topic) => true },
     { id: 'scholar_junior', title: 'Junior Scholar', description: 'Read a Tafseer', icon: '🎓', condition: (score, topic) => true },
     
-    // Hadith & Chat Achievements
+    // Hadith, Duas & Chat Achievements
     { id: 'hadith_hero', title: 'Hadith Hero', description: 'Learn a Hadith', icon: '🌟', condition: (score, topic) => true },
+    { id: 'dua_devotee', title: 'Dua Devotee', description: 'Recite and learn a daily Dua', icon: '🤲', condition: (score, topic) => true },
     { id: 'ai_friend', title: 'AI Friend', description: 'Ask the AI a question', icon: '🤖', condition: (score, topic) => true },
 ];

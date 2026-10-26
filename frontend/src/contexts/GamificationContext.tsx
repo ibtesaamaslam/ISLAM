@@ -5,6 +5,7 @@ import { calculateLevelFromPoints, getLevelProgressMetrics, LevelProgressMetrics
 interface GamificationState {
     points: number;
     level: number;
+    streak: number;
     levelProgress: LevelProgressMetrics;
     unlockedAchievements: string[];
     addPoints: (amount: number) => void;
@@ -25,6 +26,14 @@ export const useGamification = () => {
 };
 
 export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [streak, setStreak] = useState(() => {
+        try {
+            return parseInt(localStorage.getItem('app_daily_streak') || localStorage.getItem('tasbeeh_streak') || '1', 10) || 1;
+        } catch {
+            return 1;
+        }
+    });
+
     const [points, setPoints] = useState(() => {
         try {
             const saved = localStorage.getItem('islam_app_points');
@@ -64,6 +73,35 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
     }, [unlockedAchievements]);
 
+    // Automatically claim Daily Streak whenever app opens
+    useEffect(() => {
+        try {
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+            const lastActiveDate = localStorage.getItem('app_last_active_date') || localStorage.getItem('tasbeeh_last_completed_date');
+            if (lastActiveDate !== todayStr) {
+                const currentStreak = parseInt(localStorage.getItem('app_daily_streak') || localStorage.getItem('tasbeeh_streak') || '0', 10);
+                const newStreak = lastActiveDate === yesterdayStr ? currentStreak + 1 : 1;
+                const bonusXp = 25 + (newStreak > 5 ? 25 : 0);
+
+                localStorage.setItem('app_daily_streak', newStreak.toString());
+                localStorage.setItem('tasbeeh_streak', newStreak.toString());
+                localStorage.setItem('app_last_active_date', todayStr);
+                localStorage.setItem('tasbeeh_last_completed_date', todayStr);
+
+                addPoints(bonusXp);
+                setStreak(newStreak);
+                window.dispatchEvent(new CustomEvent('app:daily_streak_claimed', { detail: { streak: newStreak, bonusXp } }));
+            }
+        } catch {
+            // Ignore storage restrictions
+        }
+    }, []);
+
     const addPoints = (amount: number) => {
         setPoints(prev => prev + amount);
     };
@@ -86,6 +124,7 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         <GamificationContext.Provider value={{ 
             points, 
             level, 
+            streak,
             levelProgress,
             unlockedAchievements, 
             addPoints, 

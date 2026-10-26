@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, MessageCircle, Home, Star, Trophy, Heart } from 'lucide-react';
+import { BookOpen, MessageCircle, Home, Star, Trophy, Heart, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useGamification } from '../contexts/GamificationContext';
 import LevelsAndAchievementsModal from './LevelsAndAchievementsModal';
@@ -10,21 +10,53 @@ const Navbar = () => {
     const { points, level } = useGamification();
     const [isLevelsModalOpen, setIsLevelsModalOpen] = useState(false);
 
-    const NavItem = ({ to, icon: Icon, label, activeColor, inactiveColor }: { to: string, icon: any, label: string, activeColor: string, inactiveColor: string }) => {
-        const isActive = location.pathname === to;
+    interface NavConfig {
+        to: string;
+        icon: any;
+        label: string;
+        activeBg: string;
+        activeBorder: string;
+        shadowColor: string;
+    }
+
+    const navItems: NavConfig[] = [
+        { to: '/', icon: Home, label: 'Home', activeBg: 'bg-indigo-600', activeBorder: 'border-indigo-700', shadowColor: 'shadow-indigo-300/60' },
+        { to: '/quran', icon: BookOpen, label: 'Quran', activeBg: 'bg-emerald-600', activeBorder: 'border-emerald-700', shadowColor: 'shadow-emerald-300/60' },
+        { to: '/hadith', icon: Star, label: 'Hadith', activeBg: 'bg-amber-500', activeBorder: 'border-amber-600', shadowColor: 'shadow-amber-300/60' },
+        { to: '/duas', icon: Sparkles, label: 'Duas', activeBg: 'bg-amber-500', activeBorder: 'border-amber-600', shadowColor: 'shadow-amber-300/60' },
+        { to: '/discover', icon: Heart, label: 'Discover', activeBg: 'bg-rose-500', activeBorder: 'border-rose-600', shadowColor: 'shadow-rose-300/60' },
+        { to: '/achievements', icon: Trophy, label: 'Badges', activeBg: 'bg-yellow-500', activeBorder: 'border-yellow-600', shadowColor: 'shadow-yellow-300/60' },
+        { to: '/chat', icon: MessageCircle, label: 'Ask AI', activeBg: 'bg-sky-500', activeBorder: 'border-sky-600', shadowColor: 'shadow-sky-300/60' },
+    ];
+
+    const NavItem = ({ item }: { item: NavConfig }) => {
+        const isActive = location.pathname === item.to;
+        const Icon = item.icon;
+
         return (
-            <Link to={to} className="relative group">
+            <Link to={item.to} className="relative group">
                 <motion.div 
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`flex flex-col items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl transition-all duration-300 border-b-4 active:border-b-0 active:translate-y-1 ${
+                    whileHover={{ scale: 1.06 }}
+                    whileTap={{ scale: 0.94 }}
+                    className={`flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl transition-all duration-300 border-b-4 active:border-b-0 active:translate-y-1 ${
                         isActive 
-                            ? `bg-white shadow-lg ${activeColor} border-slate-200` 
-                            : `bg-white/80 hover:bg-white ${inactiveColor} border-transparent hover:border-slate-100`
+                            ? `${item.activeBg} ${item.activeBorder} text-white shadow-xl ${item.shadowColor}` 
+                            : 'bg-slate-100/80 hover:bg-slate-100 text-slate-500 hover:text-slate-900 border-transparent hover:border-slate-200'
                     }`}
                 >
-                    <Icon size={28} strokeWidth={2.5} className={`transition-colors ${isActive ? '' : 'opacity-70 group-hover:opacity-100'}`} />
-                    <span className={`text-[10px] sm:text-xs font-black mt-1 uppercase tracking-wide ${isActive ? '' : 'opacity-70 group-hover:opacity-100'}`}>{label}</span>
+                    <Icon 
+                        strokeWidth={2.8} 
+                        className={`w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 transition-all ${
+                            isActive ? 'text-white drop-shadow-xs' : 'opacity-70 group-hover:opacity-100'
+                        }`} 
+                    />
+                    <span 
+                        className={`text-[9px] sm:text-[10px] md:text-xs font-black mt-1 uppercase tracking-wide transition-all ${
+                            isActive ? 'text-white' : 'opacity-70 group-hover:opacity-100'
+                        }`}
+                    >
+                        {item.label}
+                    </span>
                 </motion.div>
             </Link>
         );
@@ -60,13 +92,11 @@ const Navbar = () => {
                 onClose={() => setIsLevelsModalOpen(false)} 
             />
 
-            {/* Bottom Nav */}
-            <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-xl p-3 rounded-[2rem] shadow-2xl border-4 border-white/50 flex gap-2 sm:gap-4 z-50 max-w-[95vw] overflow-x-auto scrollbar-hide">
-                <NavItem to="/" icon={Home} label="Home" activeColor="text-indigo-500" inactiveColor="text-indigo-300" />
-                <NavItem to="/quran" icon={BookOpen} label="Quran" activeColor="text-emerald-500" inactiveColor="text-emerald-300" />
-                <NavItem to="/hadith" icon={Star} label="Hadith" activeColor="text-amber-500" inactiveColor="text-amber-300" />
-                <NavItem to="/discover" icon={Heart} label="Discover" activeColor="text-rose-500" inactiveColor="text-rose-300" />
-                <NavItem to="/chat" icon={MessageCircle} label="Ask AI" activeColor="text-sky-500" inactiveColor="text-sky-300" />
+            {/* Bottom Nav - Solid crisp background without bleed-through transparency */}
+            <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/98 sm:bg-white backdrop-blur-2xl p-2.5 sm:p-3 rounded-[2.2rem] shadow-[0_20px_50px_rgba(0,0,0,0.22)] border-2 border-slate-200/90 flex gap-1.5 sm:gap-3 z-50 max-w-[98vw] overflow-x-auto scrollbar-hide">
+                {navItems.map((item) => (
+                    <NavItem key={item.to} item={item} />
+                ))}
             </nav>
         </>
     );

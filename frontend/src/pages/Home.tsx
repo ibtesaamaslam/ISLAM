@@ -83,7 +83,7 @@ const Home = () => {
                 <DailyDhikrWidget />
 
                 {/* Features Grid */}
-                <div className="grid md:grid-cols-3 gap-6">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <FeatureCard 
                         to="/quran"
                         icon={<BookOpen size={32} className="text-white" />}
@@ -101,6 +101,15 @@ const Home = () => {
                         delay={0.7}
                         color="bg-amber-400"
                         shadow="shadow-amber-600"
+                    />
+                    <FeatureCard 
+                        to="/duas"
+                        icon={<Sparkles size={32} className="text-white" />}
+                        title="Daily Duas"
+                        desc="Authentic daily supplications with Urdu translation first, virtues, and voice!"
+                        delay={0.75}
+                        color="bg-orange-400"
+                        shadow="shadow-orange-600"
                     />
                     <FeatureCard 
                         to="/discover"

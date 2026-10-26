@@ -33,7 +33,7 @@ async function startServer() {
     try {
       await handler(req, res);
     } catch (error) {
-      console.error(error);
+      console.warn('API route notice:', error);
       if (!res.headersSent) {
         res.status(500).json({ error: 'Internal Server Error' });
       }

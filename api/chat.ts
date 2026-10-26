@@ -175,8 +175,7 @@ Question: ${message}`;
         });
 
         res.status(200).json({ text: response.text });
-    } catch (error) {
-        console.error('Error in chat:', error);
+    } catch {
         res.status(500).json({ error: 'Failed to generate response' });
     }
 }

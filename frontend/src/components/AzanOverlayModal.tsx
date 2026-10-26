@@ -1,88 +1,210 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Volume2, VolumeX, Play, Pause, X, Bell, Sparkles, Heart } from 'lucide-react';
+import { Volume2, VolumeX, Play, Pause, X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { stopAllAppMedia } from '../utils/audioStopper';
 
 interface AzanOverlayModalProps {
     isOpen: boolean;
-    prayerName: string;
+    prayerName?: string;
     onClose: () => void;
     autoPlay?: boolean;
 }
 
+interface AzanPhrase {
+    arabic: string;
+    transliteration: string;
+    urdu: string;
+    english: string;
+}
+
+const AZAN_PHRASES: AzanPhrase[] = [
+    {
+        arabic: "اللَّهُ أَكْبَرُ ، اللَّهُ أَكْبَرُ",
+        transliteration: "Allāhu Akbar, Allāhu Akbar",
+        urdu: "اللہ سب سے بڑا ہے، اللہ سب سے بڑا ہے",
+        english: "Allah is the Greatest, Allah is the Greatest"
+    },
+    {
+        arabic: "اللَّهُ أَكْبَرُ ، اللَّهُ أَكْبَرُ",
+        transliteration: "Allāhu Akbar, Allāhu Akbar",
+        urdu: "اللہ سب سے بڑا ہے، اللہ سب سے بڑا ہے",
+        english: "Allah is the Greatest, Allah is the Greatest"
+    },
+    {
+        arabic: "أَشْهَدُ أَنْ لَا إِلٰهَ إِلَّا اللَّهُ",
+        transliteration: "Ash-hadu allā ilāha illallāh",
+        urdu: "میں گواہی دیتا ہوں کہ اللہ کے سوا کوئی معبود نہیں",
+        english: "I bear witness that there is no deity worthy of worship except Allah"
+    },
+    {
+        arabic: "أَشْهَدُ أَنْ لَا إِلٰهَ إِلَّا اللَّهُ",
+        transliteration: "Ash-hadu allā ilāha illallāh",
+        urdu: "میں گواہی دیتا ہوں کہ اللہ کے سوا کوئی معبود نہیں",
+        english: "I bear witness that there is no deity worthy of worship except Allah"
+    },
+    {
+        arabic: "أَشْهَدُ أَنَّ مُحَمَّدًا رَسُولُ اللَّهِ",
+        transliteration: "Ash-hadu anna Muhammadan Rasūlullāh",
+        urdu: "میں گواہی دیتا ہوں کہ محمد اللہ کے رسول ہیں",
+        english: "I bear witness that Muhammad is the Messenger of Allah"
+    },
+    {
+        arabic: "أَشْهَدُ أَنَّ مُحَمَّدًا رَسُولُ اللَّهِ",
+        transliteration: "Ash-hadu anna Muhammadan Rasūlullāh",
+        urdu: "میں گواہی دیتا ہوں کہ محمد اللہ کے رسول ہیں",
+        english: "I bear witness that Muhammad is the Messenger of Allah"
+    },
+    {
+        arabic: "حَيَّ عَلَى الصَّلَاةِ",
+        transliteration: "Ḥayya 'alaṣ-Ṣalāh",
+        urdu: "نماز کی طرف آؤ",
+        english: "Come to prayer"
+    },
+    {
+        arabic: "حَيَّ عَلَى الصَّلَاةِ",
+        transliteration: "Ḥayya 'alaṣ-Ṣalāh",
+        urdu: "نماز کی طرف آؤ",
+        english: "Come to prayer"
+    },
+    {
+        arabic: "حَيَّ عَلَى الْفَلَاحِ",
+        transliteration: "Ḥayya 'alal-Falāḥ",
+        urdu: "کامیابی کی طرف آؤ",
+        english: "Come to success"
+    },
+    {
+        arabic: "حَيَّ عَلَى الْفَلَاحِ",
+        transliteration: "Ḥayya 'alal-Falāḥ",
+        urdu: "کامیابی کی طرف آؤ",
+        english: "Come to success"
+    },
+    {
+        arabic: "اللَّهُ أَكْبَرُ ، اللَّهُ أَكْبَرُ",
+        transliteration: "Allāhu Akbar, Allāhu Akbar",
+        urdu: "اللہ سب سے بڑا ہے، اللہ سب سے بڑا ہے",
+        english: "Allah is the Greatest, Allah is the Greatest"
+    },
+    {
+        arabic: "لَا إِلٰهَ إِلَّا اللَّهُ",
+        transliteration: "Lā ilāha illallāh",
+        urdu: "اللہ کے سوا کوئی معبود نہیں",
+        english: "There is no deity worthy of worship except Allah"
+    }
+];
+
+// Authentic Adhan audio sources
 const AZAN_AUDIO_URLS = [
-    'https://cdn.islamic.network/audio/athan/makkah.mp3',
-    'https://media.blubrry.com/muslim_central_quran/podcasts.qurancentral.com/athan/athan-makkah.mp3'
+    '/audio/makkah_azan.mp3',
+    'https://archive.org/download/AthanAlHaram3/AthanAlmaghrib9-11-1436.mp3',
+    'https://archive.org/download/AthanAlHaram3/athan_alisha_8-9-1436.mp3'
 ];
 
 export const AzanOverlayModal: React.FC<AzanOverlayModalProps> = ({
     isOpen,
-    prayerName,
     onClose,
     autoPlay = true
 }) => {
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isMuted, setIsMuted] = useState<boolean>(false);
     const [volume, setVolume] = useState<number>(0.9);
-    const [audioError, setAudioError] = useState<boolean>(false);
+    const [activePhraseIdx, setActivePhraseIdx] = useState<number>(0);
+    const [currentTime, setCurrentTime] = useState<number>(0);
+    const [duration, setDuration] = useState<number>(210);
     const [audioSourceIdx, setAudioSourceIdx] = useState<number>(0);
-    const [showDua, setShowDua] = useState<boolean>(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    // Stop all other audio across the app when Azan opens
+    // Stop audio
+    const stopAudio = () => {
+        if (audioRef.current) {
+            try {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            } catch {}
+            audioRef.current = null;
+        }
+        setIsPlaying(false);
+        setActivePhraseIdx(0);
+        setCurrentTime(0);
+    };
+
+    // Initialize audio element when modal opens
     useEffect(() => {
-        if (isOpen) {
-            stopAllAppMedia();
+        if (!isOpen) {
+            stopAudio();
+            return;
+        }
 
-            // Setup and start Azan audio
-            const audio = new Audio(AZAN_AUDIO_URLS[audioSourceIdx]);
-            audio.classList.add('azan-audio-element'); // so audioStopper doesn't accidentally kill this instance
-            audio.volume = volume;
-            audio.muted = isMuted;
+        stopAllAppMedia();
+        const currentUrl = AZAN_AUDIO_URLS[audioSourceIdx % AZAN_AUDIO_URLS.length];
+        const audio = new Audio();
+        audio.src = currentUrl;
+        audio.preload = 'auto';
+        audio.volume = volume;
+        audio.muted = isMuted;
 
-            audio.onplay = () => {
-                setIsPlaying(true);
-                setAudioError(false);
-            };
+        audio.onplay = () => {
+            setIsPlaying(true);
+        };
 
-            audio.onpause = () => {
+        audio.onpause = () => {
+            setIsPlaying(false);
+        };
+
+        audio.onended = () => {
+            setIsPlaying(false);
+            setActivePhraseIdx(AZAN_PHRASES.length - 1);
+        };
+
+        audio.onloadedmetadata = () => {
+            if (audio.duration && !isNaN(audio.duration) && audio.duration > 10) {
+                setDuration(audio.duration);
+            }
+        };
+
+        audio.ontimeupdate = () => {
+            const current = audio.currentTime;
+            setCurrentTime(current);
+
+            const dur = (audio.duration && !isNaN(audio.duration) && audio.duration > 10) 
+                ? audio.duration 
+                : duration;
+
+            // Proportionally sync the 12 phrases across the Azan duration
+            const segmentDuration = dur / AZAN_PHRASES.length;
+            const phraseIdx = Math.min(
+                AZAN_PHRASES.length - 1,
+                Math.floor(current / segmentDuration)
+            );
+            setActivePhraseIdx(phraseIdx);
+        };
+
+        audio.onerror = () => {
+            if (audioSourceIdx < AZAN_AUDIO_URLS.length - 1) {
+                setAudioSourceIdx(prev => prev + 1);
+            } else {
                 setIsPlaying(false);
-            };
+            }
+        };
 
-            audio.onended = () => {
-                setIsPlaying(false);
-            };
+        audioRef.current = audio;
 
-            audio.onerror = () => {
-                // Try backup audio source if first one failed
-                if (audioSourceIdx < AZAN_AUDIO_URLS.length - 1) {
-                    setAudioSourceIdx(prev => prev + 1);
-                } else {
-                    setAudioError(true);
-                    setIsPlaying(false);
-                }
-            };
-
-            audioRef.current = audio;
-
-            if (autoPlay) {
-                audio.play().catch((err) => {
-                    console.warn('Autoplay blocked by browser policy:', err);
+        if (autoPlay) {
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    setIsPlaying(true);
+                }).catch(() => {
                     setIsPlaying(false);
                 });
             }
-
-            return () => {
-                if (audioRef.current) {
-                    audioRef.current.pause();
-                    audioRef.current.src = '';
-                    audioRef.current = null;
-                }
-            };
         }
+
+        return () => {
+            stopAudio();
+        };
     }, [isOpen, audioSourceIdx]);
 
-    // Handle Volume & Mute changes
+    // Update volume / mute dynamically
     useEffect(() => {
         if (audioRef.current) {
             audioRef.current.volume = volume;
@@ -91,97 +213,162 @@ export const AzanOverlayModal: React.FC<AzanOverlayModalProps> = ({
     }, [volume, isMuted]);
 
     const handleTogglePlay = () => {
-        if (!audioRef.current) return;
         if (isPlaying) {
-            audioRef.current.pause();
+            if (audioRef.current) audioRef.current.pause();
+            setIsPlaying(false);
         } else {
             stopAllAppMedia();
-            audioRef.current.play().catch(() => setAudioError(true));
+            if (audioRef.current) {
+                audioRef.current.play().then(() => {
+                    setIsPlaying(true);
+                }).catch(() => {
+                    setAudioSourceIdx(prev => (prev + 1) % AZAN_AUDIO_URLS.length);
+                });
+            }
         }
     };
 
-    const handleToggleMute = () => {
-        setIsMuted(prev => !prev);
+    const handleSeekPhrase = (idx: number) => {
+        const targetIdx = Math.max(0, Math.min(AZAN_PHRASES.length - 1, idx));
+        setActivePhraseIdx(targetIdx);
+        if (audioRef.current && duration > 0) {
+            const segmentDuration = duration / AZAN_PHRASES.length;
+            audioRef.current.currentTime = targetIdx * segmentDuration;
+        }
     };
 
     if (!isOpen) return null;
 
+    const currentPhrase = AZAN_PHRASES[activePhraseIdx] || AZAN_PHRASES[0];
+    const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-                {/* Backdrop with dark overlay */}
+            <div className="fixed inset-0 z-[85] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+                {/* Serene Dark Backdrop */}
                 <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={onClose}
-                    className="fixed inset-0 bg-slate-950/80 backdrop-blur-md"
+                    className="fixed inset-0 bg-slate-950/90 backdrop-blur-md"
                 />
 
-                {/* Main Card */}
+                {/* Pure Azan Card: Minimalist, clean, focused purely on the Azan recitation */}
                 <motion.div 
-                    initial={{ scale: 0.9, opacity: 0, y: 30 }}
+                    initial={{ scale: 0.94, opacity: 0, y: 15 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.9, opacity: 0, y: 30 }}
-                    className="relative z-10 w-full max-w-lg bg-gradient-to-b from-indigo-950 via-slate-900 to-indigo-950 rounded-3xl p-6 sm:p-8 text-white shadow-2xl border-4 border-amber-400 overflow-hidden text-center"
+                    exit={{ scale: 0.94, opacity: 0, y: 15 }}
+                    className="relative z-10 w-full max-w-xl bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 rounded-[2.5rem] p-6 sm:p-8 text-white shadow-2xl border-4 border-amber-400 text-center overflow-hidden my-auto"
                 >
-                    {/* Glowing golden background light */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 bg-amber-400/15 rounded-full blur-3xl pointer-events-none" />
+                    {/* Golden Ambient Glow */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-400/15 rounded-full blur-3xl pointer-events-none" />
 
                     {/* Close button */}
                     <button 
                         onClick={onClose}
-                        className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer"
-                        title="Dismiss Azan"
+                        className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer"
+                        title="Dismiss"
                     >
-                        <X size={20} strokeWidth={3} />
+                        <X size={18} strokeWidth={2.5} />
                     </button>
 
-                    {/* Top Mosque / Azan Icon Badge */}
-                    <div className="relative inline-block mb-3">
-                        <motion.div 
-                            animate={{ scale: [1, 1.12, 1], opacity: [0.7, 1, 0.7] }}
-                            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                            className="absolute inset-0 bg-amber-400 rounded-3xl blur-md"
+                    {/* Top Simple Azan Indicator */}
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-black uppercase tracking-widest border border-amber-400/30 mb-6">
+                        <Sparkles size={14} className="text-amber-400" />
+                        <span>The Call to Prayer (الأذان)</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                    </div>
+
+                    {/* Dynamic Synchronized Phrase Display: Previous phrase fades away, active phrase shines */}
+                    <div className="min-h-[220px] sm:min-h-[240px] flex flex-col items-center justify-center py-4 px-2">
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={activePhraseIdx}
+                                initial={{ opacity: 0, y: 18, scale: 0.96 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -18, scale: 0.96 }}
+                                transition={{ duration: 0.45, ease: "easeOut" }}
+                                className="w-full text-center"
+                            >
+                                {/* 1. Active Arabic Calligraphy Phrase */}
+                                <h2 
+                                    className="text-3xl sm:text-4xl md:text-5xl font-black text-amber-300 leading-relaxed sm:leading-loose tracking-wide drop-shadow-[0_2px_15px_rgba(251,191,36,0.3)] mb-4"
+                                    style={{ fontFamily: 'Amiri, Traditional Arabic, serif' }}
+                                    dir="rtl"
+                                >
+                                    {currentPhrase.arabic}
+                                </h2>
+
+                                {/* 2. Transliteration */}
+                                <p className="text-xs sm:text-sm font-bold text-amber-100/90 tracking-wide mb-3">
+                                    "{currentPhrase.transliteration}"
+                                </p>
+
+                                {/* 3. Urdu Translation */}
+                                <div className="my-2.5 py-1 px-3 bg-white/5 rounded-xl border border-white/10 max-w-md mx-auto">
+                                    <p 
+                                        className="text-base sm:text-lg font-bold text-amber-200 leading-relaxed"
+                                        style={{ fontFamily: 'Noto Nastaliq Urdu, Traditional Arabic, serif' }}
+                                        dir="rtl"
+                                    >
+                                        {currentPhrase.urdu}
+                                    </p>
+                                </div>
+
+                                {/* 4. English Translation */}
+                                <p className="text-xs sm:text-sm text-slate-300 font-medium italic mt-2 max-w-md mx-auto">
+                                    "{currentPhrase.english}"
+                                </p>
+                            </motion.div>
+                        </AnimatePresence>
+                    </div>
+
+                    {/* Phrase Indicator Dots (1 to 12) */}
+                    <div className="flex items-center justify-center gap-1.5 my-4">
+                        {AZAN_PHRASES.map((_, i) => (
+                            <button
+                                key={i}
+                                type="button"
+                                onClick={() => handleSeekPhrase(i)}
+                                className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                                    i === activePhraseIdx 
+                                        ? 'w-6 bg-amber-400 shadow-sm shadow-amber-400' 
+                                        : 'w-1.5 bg-white/20 hover:bg-white/40'
+                                }`}
+                                title={`Jump to phrase ${i + 1}`}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Audio Progress Bar */}
+                    <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mb-5">
+                        <div 
+                            className="bg-gradient-to-r from-amber-400 to-yellow-300 h-full rounded-full transition-all duration-300"
+                            style={{ width: `${Math.min(100, Math.max(0, progressPercent))}%` }}
                         />
-                        <div className="relative w-20 h-20 bg-gradient-to-tr from-amber-400 to-yellow-300 rounded-3xl flex items-center justify-center shadow-lg border-2 border-white text-3xl">
-                            🕌
-                        </div>
                     </div>
 
-                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-black uppercase tracking-wider border border-amber-400/30 mb-2">
-                        <Bell size={14} className="animate-bounce" />
-                        It is Prayer Time!
-                    </div>
+                    {/* Clean Audio Controls */}
+                    <div className="bg-white/5 rounded-2xl p-3 border border-white/10 flex items-center justify-between gap-3 flex-wrap">
+                        {/* Prev phrase */}
+                        <button
+                            type="button"
+                            onClick={() => handleSeekPhrase(activePhraseIdx - 1)}
+                            disabled={activePhraseIdx <= 0}
+                            className="p-2 rounded-xl text-white/70 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 transition-all cursor-pointer"
+                            title="Previous phrase"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
 
-                    <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-                        {prayerName} Azan
-                    </h2>
-
-                    {/* Arabic Calligraphy Callout */}
-                    <div className="my-4 py-3 px-4 bg-white/5 rounded-2xl border border-white/10">
-                        <p className="text-2xl sm:text-3xl font-serif text-amber-300 tracking-wide font-bold" dir="rtl">
-                            حَيَّ عَلَى الصَّلَاةِ • حَيَّ عَلَى الْفَلَاحِ
-                        </p>
-                        <p className="text-xs sm:text-sm text-yellow-100/90 font-medium mt-1">
-                            "Come to Prayer • Come to Success"
-                        </p>
-                    </div>
-
-                    {/* Audio Status Notice */}
-                    <div className="bg-emerald-500/20 border border-emerald-400/30 rounded-xl py-2 px-3 text-xs font-bold text-emerald-300 mb-4 inline-flex items-center gap-2">
-                        <Sparkles size={14} />
-                        All background app audio has paused for the sacred call to prayer
-                    </div>
-
-                    {/* Play/Pause & Sound Controls */}
-                    <div className="bg-white/10 rounded-2xl p-4 border border-white/15 mb-4">
-                        <div className="flex items-center justify-center gap-4">
+                        {/* Main Play/Pause Button */}
+                        <div className="flex items-center gap-3">
                             <motion.button
                                 whileHover={{ scale: 1.08 }}
-                                whileTap={{ scale: 0.92 }}
+                                whileTap={{ scale: 0.94 }}
                                 onClick={handleTogglePlay}
-                                className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg border-2 border-white cursor-pointer ${
+                                className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg border-2 border-white cursor-pointer ${
                                     isPlaying 
                                         ? 'bg-amber-400 text-slate-900' 
                                         : 'bg-emerald-500 text-white animate-pulse'
@@ -189,80 +376,54 @@ export const AzanOverlayModal: React.FC<AzanOverlayModalProps> = ({
                                 title={isPlaying ? "Pause Azan" : "Play Azan"}
                             >
                                 {isPlaying ? (
-                                    <Pause size={24} strokeWidth={3} />
+                                    <Pause size={20} strokeWidth={3} />
                                 ) : (
-                                    <Play size={24} className="ml-0.5 fill-current" strokeWidth={3} />
+                                    <Play size={20} className="ml-0.5 fill-current" strokeWidth={3} />
                                 )}
                             </motion.button>
 
                             <button
-                                onClick={handleToggleMute}
-                                className="w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition-all cursor-pointer"
+                                onClick={() => setIsMuted(prev => !prev)}
+                                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer"
                                 title={isMuted ? "Unmute" : "Mute"}
                             >
-                                {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
                             </button>
 
                             {/* Volume Slider */}
-                            <div className="flex items-center gap-2 max-w-[120px]">
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="1"
-                                    step="0.05"
-                                    value={isMuted ? 0 : volume}
-                                    onChange={(e) => {
-                                        setVolume(parseFloat(e.target.value));
-                                        if (isMuted) setIsMuted(false);
-                                    }}
-                                    className="w-full accent-amber-400 h-2 bg-white/20 rounded-lg cursor-pointer"
-                                />
-                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.05"
+                                value={isMuted ? 0 : volume}
+                                onChange={(e) => {
+                                    setVolume(parseFloat(e.target.value));
+                                    if (isMuted) setIsMuted(false);
+                                }}
+                                className="w-16 sm:w-24 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-amber-400"
+                                title="Adjust Volume"
+                            />
                         </div>
 
-                        <p className="text-xs font-bold text-yellow-200 mt-2">
-                            {isPlaying ? "Playing Holy Makkah Azan 🎵" : "Azan Paused / Click Play"}
-                        </p>
-
-                        {audioError && (
-                            <p className="text-xs text-rose-300 mt-1">
-                                Notice: Browser autoplay was prevented. Click Play above to listen.
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Dua after Azan Toggle */}
-                    <div className="mb-4">
+                        {/* Next phrase */}
                         <button
-                            onClick={() => setShowDua(prev => !prev)}
-                            className="text-xs font-bold text-amber-300 hover:text-amber-200 underline cursor-pointer"
+                            type="button"
+                            onClick={() => handleSeekPhrase(activePhraseIdx + 1)}
+                            disabled={activePhraseIdx >= AZAN_PHRASES.length - 1}
+                            className="p-2 rounded-xl text-white/70 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 transition-all cursor-pointer"
+                            title="Next phrase"
                         >
-                            {showDua ? "Hide Dua After Azan" : "🤲 Read Dua After Azan (Supplication)"}
+                            <ChevronRight size={20} />
                         </button>
-
-                        {showDua && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                className="mt-2 text-left bg-black/30 p-3.5 rounded-xl border border-white/10 text-xs text-yellow-100 leading-relaxed font-sans"
-                            >
-                                <p className="font-serif text-sm text-right text-yellow-200 mb-1" dir="rtl">
-                                    اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ الْقَائِمَةِ، آتِ مُحَمَّدًا الْوَسِيلَةَ وَالْفَضِيلَةَ، وَابْعَثْهُ مَقَامًا مَحْمُودًا الَّذِي وَعَدْتَهُ
-                                </p>
-                                <p className="text-white/80 italic text-[11px]">
-                                    "O Allah, Lord of this perfect call and established prayer, grant Muhammad the status of intercession and nobility, and resurrect him to the praised station which You have promised."
-                                </p>
-                            </motion.div>
-                        )}
                     </div>
 
-                    {/* Action buttons */}
-                    <div className="flex gap-3">
+                    <div className="mt-4">
                         <button
                             onClick={onClose}
-                            className="flex-1 py-3 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-slate-900 font-black rounded-2xl shadow-md transition-all cursor-pointer"
+                            className="w-full py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
                         >
-                            Dismiss / Ready for Prayer
+                            Close Azan
                         </button>
                     </div>
                 </motion.div>

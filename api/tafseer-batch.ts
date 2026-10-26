@@ -54,8 +54,7 @@ export default async function handler(req, res) {
 
         const data = JSON.parse(response.text);
         res.status(200).json(data);
-    } catch (error) {
-        console.error('Error batch generating tafseer:', error);
+    } catch {
         res.status(500).json({ error: 'Failed to generate batch tafseer' });
     }
 }

@@ -98,6 +98,21 @@ export const DailyStreakWidget: React.FC = () => {
         } catch {
             // fallback gracefully
         }
+
+        const handleStreakClaimed = (e: any) => {
+            const detail = e.detail;
+            if (detail) {
+                setStreak(detail.streak);
+                setIsCheckedInToday(true);
+                setRewardBonus(detail.bonusXp);
+                setRecentDays(prev => prev.map(d => d.isToday ? { ...d, isCompleted: true } : d));
+            }
+        };
+
+        window.addEventListener('app:daily_streak_claimed', handleStreakClaimed);
+        return () => {
+            window.removeEventListener('app:daily_streak_claimed', handleStreakClaimed);
+        };
     }, []);
 
     const handleClaimDailyCheckIn = () => {

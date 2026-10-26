@@ -240,16 +240,16 @@ const HadithViewer = () => {
                                 </div>
                             </div>
                             
-                            {/* 1. URDU HADITH FIRST: EXACT SAME LARGE BOLD FONT AND QUOTES */}
-                            <div className="mb-10 relative px-2 sm:px-6 text-center" dir="rtl">
-                                <span className="absolute -top-10 sm:-top-12 right-0 sm:right-4 text-7xl sm:text-9xl text-amber-100 font-serif opacity-70 select-none">”</span>
+                            {/* 1. URDU HADITH: NATURAL, BEAUTIFUL READABLE SIZE */}
+                            <div className="mb-8 relative px-2 sm:px-6 text-center" dir="rtl">
+                                <span className="absolute -top-6 sm:-top-8 right-2 sm:right-6 text-4xl sm:text-6xl text-amber-200/70 font-serif opacity-70 select-none">”</span>
                                 <p 
-                                    className="text-2xl sm:text-3xl md:text-5xl font-black text-slate-800 leading-[2.2] md:leading-[2.3] relative z-10 drop-shadow-sm px-2 sm:px-6"
+                                    className="text-lg sm:text-xl md:text-2xl font-bold text-slate-800 leading-[2] sm:leading-[2.2] relative z-10 max-w-4xl mx-auto px-2 sm:px-6"
                                     style={{ fontFamily: 'Noto Nastaliq Urdu, Traditional Arabic, serif' }}
                                 >
                                     {hadith.hadithUrdu}
                                 </p>
-                                <span className="absolute -bottom-14 sm:-bottom-16 left-0 sm:left-4 text-7xl sm:text-9xl text-amber-100 font-serif opacity-70 select-none">“</span>
+                                <span className="absolute -bottom-8 sm:-bottom-10 left-2 sm:left-6 text-4xl sm:text-6xl text-amber-200/70 font-serif opacity-70 select-none">“</span>
                             </div>
 
                             {/* Voice playback action for Urdu */}
@@ -271,10 +271,10 @@ const HadithViewer = () => {
                                 </button>
                             </div>
 
-                            {/* 2. ENGLISH TRANSLATION */}
-                            <div className="pt-8 border-t-2 border-amber-100/90 mb-8 relative px-2 sm:px-6 text-center" dir="ltr">
+                            {/* 2. ENGLISH TRANSLATION: NATURAL COMFORTABLE FONT SIZE */}
+                            <div className="pt-6 border-t-2 border-amber-100/90 mb-8 relative px-2 sm:px-6 text-center" dir="ltr">
                                 <div className="flex items-center justify-center gap-3 mb-4 flex-wrap">
-                                    <span className="inline-block bg-amber-100/80 text-amber-900 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
+                                    <span className="inline-block bg-amber-100/90 text-amber-900 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider border border-amber-200">
                                         English Translation
                                     </span>
                                     <button
@@ -287,13 +287,13 @@ const HadithViewer = () => {
                                         }`}
                                     >
                                         {speakingTrack === 'english' ? (
-                                            <><Square size={12} fill="currentColor" /> Stop</>
+                                            <><Square size={13} fill="currentColor" /> Stop English Voice</>
                                         ) : (
-                                            <><Volume2 size={13} /> Listen English</>
+                                            <><Volume2 size={15} /> Listen English Voice</>
                                         )}
                                     </button>
                                 </div>
-                                <p className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-700 leading-relaxed max-w-4xl mx-auto drop-shadow-xs italic">
+                                <p className="text-sm sm:text-base md:text-lg font-medium text-slate-700 leading-relaxed max-w-3xl mx-auto">
                                     “{hadith.hadithEnglish}”
                                 </p>
                             </div>
